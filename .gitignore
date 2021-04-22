@@ -1,0 +1,6 @@
+*.tasty
+*.class
+.bloop
+.metals
+.vscode
+out
