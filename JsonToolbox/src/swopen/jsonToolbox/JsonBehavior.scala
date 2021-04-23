@@ -1,81 +1,65 @@
-package swopen.jsonSchema
+package swopen.jsonToolbox
 
 import scala.deriving.*
 import scala.compiletime.*
 import shapeless3.deriving.*
 
-// TODO validations
-sealed trait Validator
-case class VType()
-
-
-case class ItemKey(name:String) // 这里应包含所有field的元数据,包括 required， 
-
-enum Schema:
-  case OObject(items: Vector[(ItemKey, Schema)])
-  case OMap(valueSchema: Schema)
-  case OArray(itemSchema: Schema)
-  case OInt32
-  case OInt64
-  case OFloat32
-  case OFloat64
-  case OBoolean
-  case OString
-  case OBytes
-  case OUnion(itemSchemas: Vector[Schema])
+import swopen.jsonToolbox.json.Json
 
 // 只针对参数,外层有 routes， 内层有参数列表
-trait JsonSchema[T]:
+trait JsonBehavior[T]:
   def schema:Schema
+  def Encode[T](t:T):Json = ???
+  def Decode[T](s:Json):T = ???
 
 
-object JsonSchema:
-  def schema[T](using o:JsonSchema[T]):Schema = o.schema
+object JsonBehavior:
+  def schema[T](using o:JsonBehavior[T]):Schema = o.schema
 
-  given [T](using value: JsonSchema[T]):JsonSchema[Map[String,T]] =
-    new JsonSchema[Map[String,T]]:
+  given [T](using value: JsonBehavior[T]):JsonBehavior[Map[String,T]] =
+    new JsonBehavior[Map[String,T]]:
       def schema:Schema = Schema.OMap(value.schema)
 
-  given [T](using value: JsonSchema[T]):JsonSchema[List[T]] =
-    new JsonSchema[List[T]]:
+  given [T](using value: JsonBehavior[T]):JsonBehavior[List[T]] =
+    new JsonBehavior[List[T]]:
       def schema:Schema = Schema.OArray(value.schema)
 
-  given [T](using value: JsonSchema[T]):JsonSchema[Vector[T]] =
-    new JsonSchema[Vector[T]]:
+  given [T](using value: JsonBehavior[T]):JsonBehavior[Vector[T]] =
+    new JsonBehavior[Vector[T]]:
       def schema:Schema = Schema.OArray(value.schema)
 
-  given [T](using value: JsonSchema[T]):JsonSchema[Seq[T]] =
-    new JsonSchema[Seq[T]]:
+  given [T](using value: JsonBehavior[T]):JsonBehavior[Seq[T]] =
+    new JsonBehavior[Seq[T]]:
       def schema:Schema = Schema.OArray(value.schema)
 
-  given [T](using value: JsonSchema[T]):JsonSchema[Array[T]] =
-    new JsonSchema[Array[T]]:
+  given [T](using value: JsonBehavior[T]):JsonBehavior[Array[T]] =
+    new JsonBehavior[Array[T]]:
       def schema:Schema = Schema.OArray(value.schema)
 
-  given JsonSchema[Int] with
+  given JsonBehavior[Int] with
     def schema:Schema = Schema.OInt32
 
-  given JsonSchema[Long] with
+  given JsonBehavior[Long] with
     def schema:Schema = Schema.OInt64
 
-  given JsonSchema[Float] with
+  given JsonBehavior[Float] with
     def schema:Schema = Schema.OFloat32
 
-  given JsonSchema[Double] with
+  given JsonBehavior[Double] with
     def schema:Schema = Schema.OFloat64
 
-  given JsonSchema[Boolean] with
+  given JsonBehavior[Boolean] with
     def schema:Schema = Schema.OBoolean
 
-  given JsonSchema[String] with
+  given JsonBehavior[String] with
     def schema:Schema = Schema.OString
 
-  given JsonSchema[Array[Byte]] with
+  given JsonBehavior[Array[Byte]] with
     def schema:Schema = Schema.OBytes
 
   inline def summonAll[T <: Tuple]: List[Schema] = 
     inline erasedValue[T] match
-        case _: (t *: ts) => summonInline[JsonSchema[t]].schema :: summonAll[ts]
+        case _: (t *: ts) => summonInline[JsonBehavior[t]].schema :: summonAll[ts]
         case _: EmptyTuple => Nil
 
   def sum(element: List[Schema]): Schema = 
@@ -91,7 +75,7 @@ object JsonSchema:
       case h *: t => h.asInstanceOf[String] :: tuple2List(t)
       case EmptyTuple => Nil
 
-  inline given [T](using m: Mirror.Of[T]): JsonSchema[T] = 
+  inline given derived[T](using m: Mirror.Of[T]): JsonBehavior[T] = 
     val items = summonAll[m.MirroredElemTypes]
     val labels = summonValues[m.MirroredElemLabels]
     val schemas = inline m match
@@ -100,8 +84,8 @@ object JsonSchema:
           case p: Mirror.ProductOf[T] => 
               product(items,tuple2List(labels).toVector)
 
-    new JsonSchema[T]:
+    new JsonBehavior[T]:
       def schema =  schemas
 
-end JsonSchema
+end JsonBehavior
 
