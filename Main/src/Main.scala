@@ -1,28 +1,20 @@
-import swopen.jsonToolbox.JsonBehavior
-import swopen.jsonToolbox.ItemEnum
-import swopen.jsonToolbox.json.Json
-// import swopen.jsonToolbox.utils.given
-
-import scala.jdk.CollectionConverters.*
+import swopen.jsonToolbox.schema.JsonSchema
 
 import shapeless3.deriving.*
+import swopen.jsonToolbox.constraint.{Constraint,NumberConstraint}
+import swopen.jsonToolbox.json.{Json,JsonNumber}
 
 
-case class A(a: Int) extends scala.annotation.Annotation
-case class B(
+case class A(
+   // @Constraint(Vector(Json.JNull,Json.JNumber(JsonNumber.JInt(1))))
+   @NumberConstraint(Vector(Json.JNull,Json.JNumber(JsonNumber.JInt(2))))
    a: Int,
-
-   b: Opt[Int]
-) 
-
-enum Opt[+T]{
-   case Sm(t: T)
-   case NnE
-}
+   b: String,
+   ) derives JsonSchema
 
 @main def test(): Unit = 
-   // val anns = Annotations[ItemEnum, B].apply()
-   // println(anns(0).get.values.asJson)
-   // println(JsonBehavior.schema[Opt.Sm[Int]])
-   println(Json.parseJson(""" {"a": [1,2,"a"]} """))
-   println(JsonBehavior.schema[B])
+   println(JsonSchema.schema[A])
+   // println(Json.deserialize("""{"a":[1231,2,"a"]} """).toOption.get.serialize)
+   // println(JsonBehavior.schema[B])
+   // println(A(1).encode)
+   

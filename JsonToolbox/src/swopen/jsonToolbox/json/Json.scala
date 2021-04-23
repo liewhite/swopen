@@ -25,11 +25,36 @@ enum Json:
   case JArray(value: Vector[Json])
   case JObject(value: Map[String, Json])
 
+  def serialize: String = 
+    val s = JSONValue.toJSONString(toJavaObject)
+    s
 
-class ParseUnknownException extends ParseException(ParseException.ERROR_UNEXPECTED_EXCEPTION)
+  def toJavaObject:Object = 
+    this match
+      case JNull => null
+      case JNumber(value) => 
+        value match
+          case JsonNumber.JLong(value) => java.lang.Long.valueOf(value)
+          case JsonNumber.JDouble(value) => java.lang.Double.valueOf(value)
+          case e:JsonNumber => throw new Exception("number type:"+ e.toString)
+
+      case JBool(value) => java.lang.Boolean.valueOf(value)
+      case JString(value) => value
+      case JArray(values) => 
+          val list = new ArrayList[Object]()
+          values.foreach(item => list.add(item.toJavaObject))
+          list
+
+      case JObject(value) => 
+        val obj = new HashMap[String,Object]()
+        value.foreach{
+          case (k,v) => obj.put(k, v.toJavaObject)
+        }
+        obj
+
 
 object Json:
-  def parseJson(s:String): Either[ParseException,Json] = 
+  def deserialize(s:String): Either[ParseException,Json] = 
     val jsonParser:JSONParser = new JSONParser()
     try
       val node = jsonParser.parse(s)
@@ -39,7 +64,7 @@ object Json:
       case _ => Left(new ParseUnknownException)
 
 
-  def nodeAsJson(item: Any): Json = 
+  private def nodeAsJson(item: Any): Json = 
     val data = 
       if item == null then 
         Json.JNull
@@ -77,3 +102,5 @@ object Json:
       else
         throw new Exception("unknown json type:" + item.getClass.getName)
     data
+
+class ParseUnknownException extends ParseException(ParseException.ERROR_UNEXPECTED_EXCEPTION)
