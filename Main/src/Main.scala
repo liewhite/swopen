@@ -1,26 +1,22 @@
 import swopen.jsonToolbox.JsonBehavior.encode
 import swopen.jsonToolbox.JsonBehavior.decode
 import swopen.jsonToolbox.json.{Json,JsonNumber}
-
-
-case class A(
-   a: Int,
-   b: String,
-)
+import scala.io.Source
+import scala.math.BigInt
 
 enum E:
    case A(a:Int)
    case B
    case C
 
+case class A(
+   a: BigInt
+)
+
+
 
 @main def test(): Unit = 
-   // println(E.A(1).encode.serialize)
-   // println(E.C.encode.serialize)
-   // println(E.A(1).ordinal)
-   val a = E.A(1)
-   val b = E.B
-   val c = E.C
-   println(c.encode.decode[E])
+   // val jsonFile = Source.fromFile("openapi.json").getLines.mkString("\n")
+   println(Json.deserialize("""{"a":1111111111111111111111111111111111111111111111111111111111111}""").toOption.get.decode[A])
    // println(Json.JObject(Map("a" -> Json.JNumber(JsonNumber.JInt(1)))).decode[E])
    

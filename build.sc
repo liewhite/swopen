@@ -4,6 +4,7 @@ object JsonToolbox extends ScalaModule {
     def scalaVersion = "3.0.0-RC3"
     def ivyDeps = Agg(
         ivy"com.googlecode.json-simple:json-simple:1.1.1",
+        ivy"com.fasterxml.jackson.core:jackson-databind:2.12.3",
 
         ivy"org.typelevel::shapeless3-deriving:3.0.0-M3",
         ivy"org.typelevel::shapeless3-data:3.0.0-M3",

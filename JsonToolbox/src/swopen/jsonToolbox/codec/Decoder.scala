@@ -2,9 +2,10 @@ package swopen.jsonToolbox.codec
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import scala.deriving.*
-import scala.Product
 import shapeless3.deriving.*
 import shapeless3.deriving.ErasedProductInstances.ArrayProduct
+import java.math.BigInteger
+import scala.reflect.ClassTag
 
 class DecodeException(val message:String) extends Exception(message)
 
@@ -13,32 +14,114 @@ trait Decoder[T]:
 end Decoder
 
 
+// int, long, float, double, BigInteger, BigDecimal, bool,string, option[T], List,Array,Vector, Map
 object Decoder:
+
+  def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
+
+
+  def decodeSeq[T:Decoder](data:Json): Either[DecodeException,List[T]] = 
+    val innerDecoder = summon[Decoder[T]]
+    data match
+      case Json.JArray(array) => 
+        val decodedArray = array.map(innerDecoder.decode(_))
+        val failed = decodedArray.find(_.isLeft)
+        failed match 
+          case Some(failItem) => Left(failItem.left.toOption.get)
+          case None => Right(decodedArray.map(_.toOption.get).toList)
+      case otherTypeValue => decodeError("Json.JArray", data)
+
+  given [T:Decoder]: Decoder[Map[String,T]] with
+    def decode(data:Json):Either[DecodeException, Map[String,T]] = 
+      val innerDecoder = summon[Decoder[T]]
+      data match
+        case Json.JObject(map) => 
+          val decodedArray = map.map{case (k,v) => (k,innerDecoder.decode(v))}
+          val failed = decodedArray.find(_._2.isLeft)
+          failed match 
+            case Some(failItem) => Left(failItem._2.left.toOption.get)
+            case None => Right(decodedArray.map{case (k,v) => (k,v.toOption.get)})
+        case otherTypeValue => decodeError("Json.JObject", data)
+
+  given [T:Decoder]: Decoder[List[T]] with
+    def decode(data:Json):Either[DecodeException, List[T]] = 
+      decodeSeq[T](data)
+
+  given [T:Decoder]: Decoder[Vector[T]] with
+    def decode(data:Json):Either[DecodeException, Vector[T]] = 
+      decodeSeq[T](data).map(_.toVector)
+
+  given [T:Decoder:ClassTag]: Decoder[Array[T]] with
+    def decode(data:Json):Either[DecodeException, Array[T]] = 
+      decodeSeq[T](data).map(_.toSeq.toArray)
+
+  given [T:Decoder]: Decoder[Option[T]] with
+    def decode(data:Json):Either[DecodeException, Option[T]] = 
+      val innerDecoder = summon[Decoder[T]]
+      innerDecoder.decode(data) match
+        case Right(v) => Right(Some(v))
+        case Left(e) => Right(None)
+
+  given Decoder[Boolean] with
+    def decode(data:Json):Either[DecodeException, Boolean] = 
+      data match
+        case Json.JBool(v) => Right(v)
+        case otherTypeValue => decodeError("Json.JBool", data)
+
+  given Decoder[BigInt] with
+    def decode(data:Json):Either[DecodeException, BigInt] = 
+      data match
+        case Json.JNumber(JsonNumber.JBigInt(v)) => Right(v)
+        case otherTypeValue => decodeError("JsonNumber.JBigInt", data)
+
+  given Decoder[BigDecimal] with
+    def decode(data:Json):Either[DecodeException, BigDecimal] = 
+      data match
+        case Json.JNumber(JsonNumber.JBigDecimal(v)) => Right(v)
+        case otherTypeValue => decodeError("JsonNumber.JBigDecimal", data)
+
+  given Decoder[Float] with
+    def decode(data:Json):Either[DecodeException, Float] = 
+      data match
+        case Json.JNumber(JsonNumber.JDouble(v)) => Right(v.asInstanceOf[Float])
+        case otherTypeValue => decodeError("JsonNumber.JDouble", data)
+
+  given Decoder[Double] with
+    def decode(data:Json):Either[DecodeException, Double] = 
+      data match
+        case Json.JNumber(JsonNumber.JDouble(v)) => Right(v.asInstanceOf[Double])
+        case otherTypeValue => decodeError("JsonNumber.JDouble", data)
+
   given Decoder[Int] with
     def decode(data:Json):Either[DecodeException, Int] = 
       data match
-        case Json.JNumber(JsonNumber.JInt(v)) => Right(v)
         case Json.JNumber(JsonNumber.JLong(v)) => 
           if v > Int.MaxValue then
             Left(DecodeException(s" too large for int: ${v}"))
           else
             Right(v.asInstanceOf[Int])
-        case otherTypeValue => Left(DecodeException(s"expect JsonNumber.JInt, but ${otherTypeValue.serialize} found"))
+        case otherTypeValue => decodeError("JsonNumber.JLong", data)
 
   given Decoder[Long] with
     def decode(data:Json):Either[DecodeException, Long] = 
       data match
         case Json.JNumber(JsonNumber.JLong(v)) => Right(v)
-        case otherTypeValue => Left(DecodeException(s"expect JsonNumber.JLong, but ${otherTypeValue.serialize} found"))
+        case otherTypeValue => decodeError("JsonNumber.JLong", otherTypeValue)
+
+  given Decoder[String] with
+    def decode(data:Json):Either[DecodeException, String] = 
+      data match
+        case Json.JString(v) => Right(v)
+        case otherTypeValue => decodeError("JsonNumber.JString", otherTypeValue)
 
   def product[T](inst: K0.ProductInstances[Decoder, T], labelling: Labelling[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val labels = labelling.elemLabels.toVector
         val label = labelling.label
-        println((label,labels, data))
         try
-          val itemsData = data match
+          val itemsData: Json.JObject = data match
+            // 如果是字符串， 那么可能是 遇到 没有参数的 Enum了
             case Json.JString(s) => 
               if s == label then 
                 Json.JObject(Map.empty) 
@@ -48,17 +131,15 @@ object Decoder:
             case _ => 
                 throw new DecodeException("label not equals enum name")
 
-          val result = itemsData match 
-            case Json.JObject(obj) =>
-              var index = 0
-              inst.construct([t] => (itemDecoder: Decoder[t]) => 
-                val value = obj.get(labels(index)).get
-                val item = itemDecoder.decode(value)
-                index += 1
-                item match
-                  case Right(v) => v
-                  case Left(e) => throw e
-              )
+          var index = 0
+          val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
+            val value = itemsData.value.get(labels(index)).get
+            val item = itemDecoder.decode(value)
+            index += 1
+            item match
+              case Right(v) => v
+              case Left(e) => throw e
+          )
           Right(result)
         catch
           case e: DecodeException => Left(e)
@@ -70,11 +151,7 @@ object Decoder:
           // 按名称序列化
           case Json.JString(s) => 
             val ordinal = labelling.elemLabels.indexOf(s)
-            println(s"index $ordinal")
             inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => (s, rt.decode(json).toOption)) match
-            // inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => 
-              // val mirror = summon[Mirror.ProductOf[t]]
-              // (s, Some(mirror.fromProduct(new ArrayProduct(new Array(0)))))) match
               case (s, None) => Left(DecodeException(s"cant decode to :${labelling.label}" + json.serialize))
               case (tl, Some(t)) => Right(t)
 
