@@ -59,7 +59,6 @@ object JsonSchema:
   given JsonSchema[BigDecimal] with
     def schema:Schema = Schema.SchemaNumber(SchemaNumberImpl.SchemaBigDecimal)
 
-
   given JsonSchema[Boolean] with
     def schema:Schema = Schema.SchemaBoolean
 
