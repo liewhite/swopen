@@ -72,41 +72,77 @@ object Decoder:
     def decode(data:Json):Either[DecodeException, BigInt] = 
       data match
         case Json.JNumber(JsonNumber.JBigInt(v)) => Right(v)
+        case Json.JNumber(JsonNumber.JLong(v)) => Right(BigInt(v))
         case otherTypeValue => decodeError("JsonNumber.JBigInt", data)
 
   given Decoder[BigDecimal] with
     def decode(data:Json):Either[DecodeException, BigDecimal] = 
       data match
         case Json.JNumber(JsonNumber.JBigDecimal(v)) => Right(v)
+        case Json.JNumber(JsonNumber.JLong(v)) => Right(BigDecimal.valueOf(v))
+        case Json.JNumber(JsonNumber.JDouble(v)) => Right(BigDecimal.valueOf(v))
+        case Json.JNumber(JsonNumber.JBigInt(v)) => Right(BigDecimal(v))
         case otherTypeValue => decodeError("JsonNumber.JBigDecimal", data)
 
   given Decoder[Float] with
     def decode(data:Json):Either[DecodeException, Float] = 
       data match
-        case Json.JNumber(JsonNumber.JDouble(v)) => Right(v.asInstanceOf[Float])
-        case otherTypeValue => decodeError("JsonNumber.JDouble", data)
+        case Json.JNumber(JsonNumber.JDouble(v)) =>
+          Right(v.floatValue)
+        case Json.JNumber(JsonNumber.JBigInt(v)) =>
+          if v.isValidFloat then
+            Right(v.floatValue)
+          else
+            Left(DecodeException("float value out of range: " + v.toString))
+        case Json.JNumber(JsonNumber.JBigDecimal(v)) =>
+            // 可能会丢失精度
+            Right(v.floatValue)
+
+        case Json.JNumber(JsonNumber.JLong(v)) => Right(v.floatValue)
+        case otherTypeValue => decodeError("JsonNumber.JFloat", data)
 
   given Decoder[Double] with
     def decode(data:Json):Either[DecodeException, Double] = 
       data match
         case Json.JNumber(JsonNumber.JDouble(v)) => Right(v.asInstanceOf[Double])
+        case Json.JNumber(JsonNumber.JBigInt(v)) =>
+          if v.isValidDouble then
+            Right(v.doubleValue)
+          else
+            Left(DecodeException("double value out of range: " + v.toString))
+        case Json.JNumber(JsonNumber.JBigDecimal(v)) =>
+            // 可能会丢失精度
+            Right(v.doubleValue)
+
+        case Json.JNumber(JsonNumber.JLong(v)) => Right(v.doubleValue)
         case otherTypeValue => decodeError("JsonNumber.JDouble", data)
 
   given Decoder[Int] with
     def decode(data:Json):Either[DecodeException, Int] = 
       data match
         case Json.JNumber(JsonNumber.JLong(v)) => 
-          if v > Int.MaxValue then
-            Left(DecodeException(s" too large for int: ${v}"))
+          if v.isValidInt then
+            Right(v.intValue)
           else
-            Right(v.asInstanceOf[Int])
+            Left(DecodeException(s"invalid int value: ${v}"))
+        case Json.JNumber(JsonNumber.JBigInt(v)) => 
+          if v.isValidInt then
+            Right(v.intValue)
+          else
+            Left(DecodeException(s"invalid int value: ${v}"))
         case otherTypeValue => decodeError("JsonNumber.JLong", data)
 
   given Decoder[Long] with
     def decode(data:Json):Either[DecodeException, Long] = 
       data match
-        case Json.JNumber(JsonNumber.JLong(v)) => Right(v)
-        case otherTypeValue => decodeError("JsonNumber.JLong", otherTypeValue)
+        case Json.JNumber(JsonNumber.JLong(v)) => 
+            Right(v)
+        case Json.JNumber(JsonNumber.JBigInt(v)) => 
+          if v.isValidLong then
+            Right(v.longValue)
+          else
+            Left(DecodeException(s"invalid long value: ${v}"))
+        case otherTypeValue => decodeError("JsonNumber.JLong", data)
 
   given Decoder[String] with
     def decode(data:Json):Either[DecodeException, String] = 
