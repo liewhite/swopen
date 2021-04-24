@@ -11,6 +11,8 @@ object JsonToolbox extends ScalaModule {
         ivy"org.typelevel::shapeless3-typeable:3.0.0-M3",
         ivy"org.typelevel::shapeless3-test:3.0.0-M3",
     )
+    object test extends Tests with TestModule.Junit{
+    }
 }
 
 object Main extends ScalaModule {

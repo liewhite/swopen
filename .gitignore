@@ -4,3 +4,7 @@
 .metals
 .vscode
 out
+*/target
+project/project
+metals.sbt
+target
