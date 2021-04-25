@@ -22,3 +22,5 @@ lazy val main = (project in file("Main"))
   .settings(
     commonSettings
   ).dependsOn(JsonToolbox)
+
+lazy val root = (project in file(".")).aggregate(main,JsonToolbox)

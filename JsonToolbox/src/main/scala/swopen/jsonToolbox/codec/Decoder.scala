@@ -1,6 +1,7 @@
 package swopen.jsonToolbox.codec
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
+import swopen.jsonToolbox.modifier.Modifier
 import scala.deriving.*
 import shapeless3.deriving.*
 import shapeless3.deriving.ErasedProductInstances.ArrayProduct
@@ -150,11 +151,26 @@ object Decoder:
         case Json.JString(v) => Right(v)
         case otherTypeValue => decodeError("JsonNumber.JString", otherTypeValue)
 
-  def product[T](inst: K0.ProductInstances[Decoder, T], labelling: Labelling[T]): Decoder[T] =
+  def product[T](
+    inst: K0.ProductInstances[Decoder, T],
+    labelling: Labelling[T], 
+    modifiers: Annotations[Modifier,T],
+    productModifer: Option[Annotation[Modifier,T]],
+    ): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val labels = labelling.elemLabels.toVector
-        val label = labelling.label
+        val modifers: List[Option[Modifier]] = modifiers.apply().toList.asInstanceOf
+        val fieldsName = modifers.zip(labels).map{
+          case(m,l) => m match 
+            case Some(mod) => mod.rename
+            case None => l
+        }
+        
+        // val label = labelling.label
+        val label = productModifer match 
+          case Some(mod) => mod.apply().rename
+          case None => labelling.label
         try
           val itemsData: Json.JObject = data match
             // 如果是字符串， 那么可能是 遇到 没有参数的 Enum了
@@ -169,7 +185,7 @@ object Decoder:
 
           var index = 0
           val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
-            val value = itemsData.value.get(labels(index)).get
+            val value = itemsData.value.get(fieldsName(index)).get
             val item = itemDecoder.decode(value)
             index += 1
             item match
@@ -206,6 +222,20 @@ object Decoder:
   inline given derived[A](using gen: K0.Generic[A]): Decoder[A] =
     inline gen match
       case s:Mirror.ProductOf[A] => 
-        product[A](summon[K0.ProductInstances[Decoder, A]], summon[Labelling[A]])
+
+        // val modifer = try
+        //   Some(summon[Annotation[Modifier,A]])
+        // catch
+        //   case _ => None
+
+        product[A](
+          summon[K0.ProductInstances[Decoder, A]],
+          summon[Labelling[A]],
+          summon[Annotations[Modifier,A]],
+          None
+          )
       case s:Mirror.SumOf[A] =>
-        sum[A](summon[K0.CoproductInstances[Decoder, A]], summon[Labelling[A]])
+        sum[A](
+          summon[K0.CoproductInstances[Decoder, A]], 
+          summon[Labelling[A]],
+          )

@@ -30,7 +30,7 @@ enum Json:
 
   def serialize: String = 
     val mapper = ObjectMapper()
-    val s = mapper.writeValueAsString(toJacksonTree)
+    val s = mapper.writeValueAsString(this.toJacksonTree)
     s
 
   def toJacksonTree:JsonNode = 
@@ -52,9 +52,12 @@ enum Json:
 
       case JObject(value) => 
         val obj = new ObjectNode(JsonNodeFactory.instance)
-        value.foreach{
-          case (k,v) => obj.set(k, v.toJacksonTree)
-        }
+        // println(value)
+        // 使用case匹配貌似有bug,会多匹配一次
+        value.foreach(item => obj.set(item._1,item._2.toJacksonTree))
+        //   case (k,v) => obj.set(k, v.toJacksonTree)
+        //   case err => println(s"this: $this,     err: $err")
+        // }
         obj
 
 
