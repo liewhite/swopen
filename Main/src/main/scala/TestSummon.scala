@@ -27,7 +27,7 @@ enum X:
   case B
 
 @main def testSummon(): Unit = 
-  ???
+  // ???
   // import shapeless3.deriving.*
-  // println(summon[K0.CoproductInstances[Encoder, X]])
+  println(summon[K0.Generic[X]])
   // println(S.f2[String].hello)

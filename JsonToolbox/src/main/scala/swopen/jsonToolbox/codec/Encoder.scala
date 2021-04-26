@@ -1,25 +1,20 @@
 package swopen.jsonToolbox.codec
 
-import scala.compiletime.{erasedValue,summonInline}
-import scala.deriving.Mirror
-import scala.util.{NotGiven,LowPriorityNotGiven}
+import scala.math.{BigDecimal,BigInt}
+import scala.deriving.*
 import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.modifier.Modifier
 import swopen.jsonToolbox.utils.OptionGiven
-import scala.math.{BigDecimal,BigInt}
 
 
 trait Encoder[T]:
-  def encode(t:T):Json
-
-
+  def encode(t: T):Json
 end Encoder
 
 
 object Encoder:
-
   /**
    *  map encoder
    */
@@ -116,18 +111,22 @@ object Encoder:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
   
   // inline 会在展开处进行 using的寻找
-  inline given derived[T](using gen: K0.Generic[T] ): Encoder[T] =
-    val modifier = summon[OptionGiven[Annotation[Modifier,T]]]
+  // mirror和shapeless不能混用
+  inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
+  // inline given derived[T](using gen: Mirror.Of[T]): Encoder[T] =
     inline gen match
-      case s:Mirror.ProductOf[T] => 
-        product[T](
+      // case s: Mirror.ProductOf[T] => 
+      case s @ given K0.ProductGeneric[T] => 
+        val modifier = summon[OptionGiven[Annotation[Modifier,T]]]
+        product(
           summon[K0.ProductInstances[Encoder, T]], 
           summon[Labelling[T]],
           summon[Annotations[Modifier,T]],
           // None
           modifier.give
           )
-      case s:Mirror.SumOf[T] => 
+      case s @ given K0.CoproductGeneric[T]  =>
+        // val inst:K0.CoproductInstances[Encoder,T] = ErasedCoproductInstances[K0.type, Encoder[T], K0.LiftP[Encoder, s.MirroredElemTypes]](s)
         sum[T](summon[K0.CoproductInstances[Encoder, T]])
-
+        // sum[T](inst)
 end Encoder
