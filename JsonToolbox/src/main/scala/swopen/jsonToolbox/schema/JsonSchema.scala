@@ -8,6 +8,7 @@ import shapeless3.deriving.*
 import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.schema.{Schema,SchemaNumberImpl}
 import swopen.jsonToolbox.codec.{Encoder,Decoder}
+import swopen.jsonToolbox.utils.SummonUtils
 
 /**
  *  负责json 的序列化， 反序列化， jsonSchema生成， 以及validation
@@ -87,7 +88,8 @@ object JsonSchema:
       case EmptyTuple => Nil
 
   inline given derived[T](using m: Mirror.Of[T]): JsonSchema[T] = 
-    val items = summonAll[m.MirroredElemTypes]
+    // val items = summonAll[m.MirroredElemTypes]
+    val items = SummonUtils.summonAll[JsonSchema, m.MirroredElemTypes].map(_.schema)
     val labels = summonValues[m.MirroredElemLabels]
     val schemas = inline m match
           case s: Mirror.SumOf[T]     => 

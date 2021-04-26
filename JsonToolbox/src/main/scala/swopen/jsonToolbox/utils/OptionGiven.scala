@@ -9,5 +9,5 @@ object OptionGiven:
   given exist[T](using NotGiven[T]): OptionGiven[T] with
     def give = None
 
-  given notExist[T](using t:T): OptionGiven[T] with
+  given notExist[T](using t: T): OptionGiven[T] with
     def give = Some(t)

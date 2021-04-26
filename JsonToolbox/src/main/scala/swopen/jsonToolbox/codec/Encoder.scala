@@ -7,6 +7,7 @@ import shapeless3.deriving.*
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.modifier.Modifier
 import swopen.jsonToolbox.utils.OptionGiven
+import swopen.jsonToolbox.utils.SummonUtils
 
 
 trait Encoder[T]:
@@ -81,20 +82,29 @@ object Encoder:
     def encode(t:Null) = Json.JNull
 
   def product[T](
-    inst: K0.ProductInstances[Encoder, T],
-    labelling: Labelling[T], 
-    modifier: Annotations[Modifier,T],
-    productModifer: Option[Annotation[Modifier,T]],
+    productModifer: Option[Annotation[Modifier,T]], //  using 会失败， 必须提前summon
+    modifier: Option[Annotations[Modifier,T]],  // using 会失败， 必须提前summon
+    )(
+    using inst: K0.ProductInstances[Encoder, T],
+    labelling: Labelling[T],
+    // productModifer: OptionGiven[Annotation[Modifier,T]], //  using 会失败， 必须提前summon
+    // modifier: OptionGiven[Annotations[Modifier,T]],  // 这里会导致enum case失败会失败， 必须提前summon
     ): Encoder[T] =   
     new Encoder[T]:
       def encode(t: T): Json = 
-        val modifers: List[Option[Modifier]] = modifier.apply().toList.asInstanceOf
+        val modifers: List[Option[Modifier]] = modifier match
+          case Some(m) => m.apply().toList.asInstanceOf[List[Option[Modifier]]]
+          case None => List.empty[Option[Modifier]]
         
-        val fieldsName = modifers.zip(labelling.elemLabels).map{
-          case(m,l) => m match 
-            case Some(mod) => mod.rename
-            case None => l
-        }
+        val fieldsName = if modifers.nonEmpty then
+          modifers.zip(labelling.elemLabels).map{
+            case(m,l) => m match 
+              case Some(mod) => mod.rename
+              case None => l
+            }
+          else
+            labelling.elemLabels
+
         if(fieldsName.isEmpty) then
           val name = productModifer match
             case Some(m) => m.apply().rename
@@ -106,27 +116,19 @@ object Encoder:
           )
           Json.JObject(fieldsName.zip(elems.reverse).toMap)
 
-  def sum[T](inst: K0.CoproductInstances[Encoder, T]): Encoder[T]  =
+  def sum[T](using inst:  K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
   
-  // inline 会在展开处进行 using的寻找
-  // mirror和shapeless不能混用
   inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
-  // inline given derived[T](using gen: Mirror.Of[T]): Encoder[T] =
     inline gen match
-      // case s: Mirror.ProductOf[T] => 
       case s @ given K0.ProductGeneric[T] => 
-        val modifier = summon[OptionGiven[Annotation[Modifier,T]]]
+        val modifier = summon[OptionGiven[Annotation[Modifier,T]]] 
+        val modifiers = summon[OptionGiven[Annotations[Modifier,T]]]
         product(
-          summon[K0.ProductInstances[Encoder, T]], 
-          summon[Labelling[T]],
-          summon[Annotations[Modifier,T]],
-          // None
-          modifier.give
+          modifier.give,
+          modifiers.give
           )
       case s @ given K0.CoproductGeneric[T]  =>
-        // val inst:K0.CoproductInstances[Encoder,T] = ErasedCoproductInstances[K0.type, Encoder[T], K0.LiftP[Encoder, s.MirroredElemTypes]](s)
-        sum[T](summon[K0.CoproductInstances[Encoder, T]])
-        // sum[T](inst)
+        sum[T]
 end Encoder
