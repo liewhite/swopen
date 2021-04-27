@@ -5,8 +5,6 @@ import scala.deriving.*
 import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
-import swopen.jsonToolbox.modifier.Modifier
-import swopen.jsonToolbox.utils.OptionGiven
 import swopen.jsonToolbox.utils.SummonUtils
 
 
