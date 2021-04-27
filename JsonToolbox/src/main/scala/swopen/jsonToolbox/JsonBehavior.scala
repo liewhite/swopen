@@ -9,6 +9,13 @@ import scala.util.NotGiven
 import shapeless3.deriving.*
 
 
+/**
+ * 
+ * encode -> (modify) -> validate -> serialize
+ * deserialize -> validate -> (modify) -> decode 
+ * //暂时可以不实现modify, 就rennme一个需求。 可以直接用反引号写
+ * 
+ */
 object JsonBehavior:
 
   extension [T:Encoder](t:T)

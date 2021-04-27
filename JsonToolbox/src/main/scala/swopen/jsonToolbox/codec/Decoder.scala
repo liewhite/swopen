@@ -155,34 +155,14 @@ object Decoder:
         case Json.JString(v) => Right(v)
         case otherTypeValue => decodeError("JsonNumber.JString", otherTypeValue)
 
-  def product[T]
-    (
-    modifier: Option[Annotations[Modifier,T]],
-    productModifer: Option[Annotation[Modifier,T]])
-    (
+  def product[T](
     using inst: K0.ProductInstances[Decoder, T],
-    labelling: Labelling[T])
-    : Decoder[T] =
+    labelling: Labelling[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
-        val labels = labelling.elemLabels.toVector
-        val modifers: List[Option[Modifier]] = modifier match
-          case Some(m) => m.apply().toList.asInstanceOf[List[Option[Modifier]]]
-          case None => List.empty[Option[Modifier]]
+        val fieldsName = labelling.elemLabels
         
-        val fieldsName = if modifers.nonEmpty then
-          modifers.zip(labelling.elemLabels).map{
-            case(m,l) => m match 
-              case Some(mod) => mod.rename
-              case None => l
-            }
-          else
-            labelling.elemLabels
-        
-        // val label = labelling.label
-        val label = productModifer match 
-          case Some(mod) => mod.apply().rename
-          case None => labelling.label
+        val label = labelling.label
         try
           val itemsData: Json.JObject = data match
             // 如果是字符串， 那么可能是 遇到 没有参数的 Enum了
@@ -234,11 +214,6 @@ object Decoder:
   inline given derived[T](using gen: K0.Generic[T]): Decoder[T] =
     inline gen match
       case s @ given K0.ProductGeneric[T] => 
-        val modifier = summon[OptionGiven[Annotation[Modifier,T]]] 
-        val modifiers = summon[OptionGiven[Annotations[Modifier,T]]]
-        product(
-          modifiers.give,
-          modifier.give
-          )
+        product[T]
       case s @ given K0.CoproductGeneric[T]  =>
         sum[T]

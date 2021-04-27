@@ -85,34 +85,15 @@ object Encoder:
     def encode(t:Json) = t
 
   def product[T](
-    productModifer: Option[Annotation[Modifier,T]], //  using 会失败， 必须提前summon
-    modifier: Option[Annotations[Modifier,T]],  // using 会失败， 必须提前summon
-    )(
     using inst: K0.ProductInstances[Encoder, T],
     labelling: Labelling[T],
-    // productModifer: OptionGiven[Annotation[Modifier,T]], //  using 会失败， 必须提前summon
-    // modifier: OptionGiven[Annotations[Modifier,T]],  // 这里会导致enum case失败会失败， 必须提前summon
     ): Encoder[T] =   
     new Encoder[T]:
       def encode(t: T): Json = 
-        val modifers: List[Option[Modifier]] = modifier match
-          case Some(m) => m.apply().toList.asInstanceOf[List[Option[Modifier]]]
-          case None => List.empty[Option[Modifier]]
-        
-        val fieldsName = if modifers.nonEmpty then
-          modifers.zip(labelling.elemLabels).map{
-            case(m,l) => m match 
-              case Some(mod) => mod.rename
-              case None => l
-            }
-          else
-            labelling.elemLabels
+        val fieldsName = labelling.elemLabels
 
         if(fieldsName.isEmpty) then
-          val name = productModifer match
-            case Some(m) => m.apply().rename
-            case None => labelling.label
-          Json.JString(name)
+          Json.JString(labelling.label)
         else 
           val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
             [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
@@ -126,12 +107,7 @@ object Encoder:
   inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
     inline gen match
       case s @ given K0.ProductGeneric[T] => 
-        val modifier = summon[OptionGiven[Annotation[Modifier,T]]] 
-        val modifiers = summon[OptionGiven[Annotations[Modifier,T]]]
-        product(
-          modifier.give,
-          modifiers.give
-          )
+        product[T]
       case s @ given K0.CoproductGeneric[T]  =>
         sum[T]
 end Encoder
