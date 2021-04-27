@@ -44,6 +44,10 @@ object Decoder:
             case None => Right(decodedArray.map{case (k,v) => (k,v.toOption.get)})
         case otherTypeValue => decodeError("Json.JObject", data)
 
+  given Decoder[Json] with
+    def decode(data:Json):Either[DecodeException, Json] = 
+      Right(data)
+
   given [T:Decoder]: Decoder[List[T]] with
     def decode(data:Json):Either[DecodeException, List[T]] = 
       decodeSeq[T](data)
