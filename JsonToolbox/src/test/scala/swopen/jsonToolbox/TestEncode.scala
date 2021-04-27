@@ -1,11 +1,14 @@
 package swopen.jsonToolbox
 
 import org.junit.*
-// import swopen.jsonToolbox.codec.{Encoder,Decoder}
 import swopen.jsonToolbox.JsonBehavior.{encode,decode}
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.modifier.Modifier
 
+enum E:
+  case A(a:Int)
+  case B
+  case C
 
 class TestEncode:
   @Test
@@ -49,4 +52,14 @@ class TestEncode:
 
     val newObj = Json.deserialize(str).toOption.get.decode[A].toOption.get
     assert(obj == newObj)
+  
     
+  @Test 
+  def enumEncode = 
+    val a = E.A(3)
+    val b = E.B
+    val c = E.C
+
+    assert(a == Json.deserialize(a.encode.serialize).toOption.get.decode[E].toOption.get)
+    assert(b == Json.deserialize(b.encode.serialize).toOption.get.decode[E].toOption.get)
+    assert(c == Json.deserialize(c.encode.serialize).toOption.get.decode[E].toOption.get)

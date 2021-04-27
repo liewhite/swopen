@@ -81,6 +81,9 @@ object Encoder:
   given Encoder[Null] with
     def encode(t:Null) = Json.JNull
 
+  given Encoder[Json] with
+    def encode(t:Json) = t
+
   def product[T](
     productModifer: Option[Annotation[Modifier,T]], //  using 会失败， 必须提前summon
     modifier: Option[Annotations[Modifier,T]],  // using 会失败， 必须提前summon

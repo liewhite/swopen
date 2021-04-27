@@ -2,9 +2,9 @@ package swopen.jsonToolbox.codec
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.modifier.Modifier
+import swopen.jsonToolbox.utils.OptionGiven
 import scala.deriving.*
 import shapeless3.deriving.*
-import shapeless3.deriving.ErasedProductInstances.ArrayProduct
 import java.math.BigInteger
 import scala.reflect.ClassTag
 
@@ -151,21 +151,29 @@ object Decoder:
         case Json.JString(v) => Right(v)
         case otherTypeValue => decodeError("JsonNumber.JString", otherTypeValue)
 
-  def product[T](
-    inst: K0.ProductInstances[Decoder, T],
-    labelling: Labelling[T], 
-    modifiers: Annotations[Modifier,T],
-    productModifer: Option[Annotation[Modifier,T]],
-    ): Decoder[T] =
+  def product[T]
+    (
+    modifier: Option[Annotations[Modifier,T]],
+    productModifer: Option[Annotation[Modifier,T]])
+    (
+    using inst: K0.ProductInstances[Decoder, T],
+    labelling: Labelling[T])
+    : Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val labels = labelling.elemLabels.toVector
-        val modifers: List[Option[Modifier]] = modifiers.apply().toList.asInstanceOf
-        val fieldsName = modifers.zip(labels).map{
-          case(m,l) => m match 
-            case Some(mod) => mod.rename
-            case None => l
-        }
+        val modifers: List[Option[Modifier]] = modifier match
+          case Some(m) => m.apply().toList.asInstanceOf[List[Option[Modifier]]]
+          case None => List.empty[Option[Modifier]]
+        
+        val fieldsName = if modifers.nonEmpty then
+          modifers.zip(labelling.elemLabels).map{
+            case(m,l) => m match 
+              case Some(mod) => mod.rename
+              case None => l
+            }
+          else
+            labelling.elemLabels
         
         // val label = labelling.label
         val label = productModifer match 
@@ -196,7 +204,7 @@ object Decoder:
         catch
           case e: DecodeException => Left(e)
         
-  def sum[T](inst: K0.CoproductInstances[Decoder, T], labelling: Labelling[T]): Decoder[T] = 
+  def sum[T](using inst: K0.CoproductInstances[Decoder, T], labelling: Labelling[T]): Decoder[T] = 
     new Decoder[T]:
       def decode(json: Json): Either[DecodeException, T] = 
         json match
@@ -219,23 +227,14 @@ object Decoder:
               case None => Left(DecodeException("cant decode :" + labelling.label))
   
 
-  inline given derived[A](using gen: K0.Generic[A]): Decoder[A] =
+  inline given derived[T](using gen: K0.Generic[T]): Decoder[T] =
     inline gen match
-      case s:Mirror.ProductOf[A] => 
-
-        // val modifer = try
-        //   Some(summon[Annotation[Modifier,A]])
-        // catch
-        //   case _ => None
-
-        product[A](
-          summon[K0.ProductInstances[Decoder, A]],
-          summon[Labelling[A]],
-          summon[Annotations[Modifier,A]],
-          None
+      case s @ given K0.ProductGeneric[T] => 
+        val modifier = summon[OptionGiven[Annotation[Modifier,T]]] 
+        val modifiers = summon[OptionGiven[Annotations[Modifier,T]]]
+        product(
+          modifiers.give,
+          modifier.give
           )
-      case s:Mirror.SumOf[A] =>
-        sum[A](
-          summon[K0.CoproductInstances[Decoder, A]], 
-          summon[Labelling[A]],
-          )
+      case s @ given K0.CoproductGeneric[T]  =>
+        sum[T]
