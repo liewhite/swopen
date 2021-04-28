@@ -78,7 +78,7 @@ object JsonSchema:
       Schema.SchemaUnion(element.toVector)
   
   def product(elements:List[Schema], labels:Vector[String] /*todo annotations 放这里*/): Schema = 
-    val itemKeys = labels.map(ItemKey(_))
+    val itemKeys = labels
     Schema.SchemaObject(itemKeys.zip(elements).toVector)
   
 
