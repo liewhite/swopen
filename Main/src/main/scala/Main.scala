@@ -1,28 +1,38 @@
-import swopen.jsonToolbox.JsonBehavior.*
-import swopen.jsonToolbox.modifier.Modifier
-import swopen.jsonToolbox.utils.OptionGiven
-// import swopen.jsonToolbox.codec.Encoder
-// import scala.deriving.*
-// import scala.compiletime.*
-import shapeless3.deriving.*
+import shapeless3.deriving.Annotation
+import scala.compiletime.summonFrom
+import scala.util.NotGiven
+import swopen.jsonToolbox.schema.DefaultValue
+
+class Modifier() extends scala.annotation.Annotation
+
+trait OptionGiven[T]:
+  def give: Option[T]
+
+object OptionGiven:
+  given exist[T](using NotGiven[T]): OptionGiven[T] with
+    def give = None
+
+  given notExist[T](using t: T): OptionGiven[T] with
+    def give = Some(t)
 
 
-enum Opt:
-  val x = 3
-  val y = 4
-  case A(a:String)
-  case B
-  case C
+case class A(nodefalt:Int,a:Int = 1,b:Vector[Map[String,Int]] = Vector(Map("asd" -> 123)))
 
 
-case class A(a:Int)
+def f[T](using a: OptionGiven[T]) = a
 
 
-def f[T](using a: OptionGiven[Annotation[Modifier,T]]) = a
+inline def mySummon[T] = summonFrom {
+  case t: T => t
+  case _ => print("-----------------------:"); println(_)
+}
 
+given Int = 3
+
+def default[A](using a:DefaultValue[A]) = a.defaults
 @main def test(): Unit = 
-  // summon[OptionGiven[Annotation[Modifier,A]]]
-  // println(f[A]) //此处报错
-  println(Opt.B.encode)
-  println(Opt.A("a").encode)
-  
+  val ok = mySummon[Double]
+  println(ok)
+  println(default[A])
+  // val compileError = println(f[Int].give) //No Annotation of type Modifier for type A
+  myMacro

@@ -102,7 +102,13 @@ object Encoder:
     new Encoder[T]:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
   
+  import shapeless3.deriving.Annotation
+  import swopen.jsonToolbox.modifier.Modifier
+  import swopen.jsonToolbox.utils.OptionGiven
+
   inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
+    // val modifier = scala.Predef.summon[OptionGiven[Annotation[Modifier,T]]]
+    // println(modifier)
     inline gen match
       case s @ given K0.ProductGeneric[T] => 
         product[T]

@@ -5,6 +5,6 @@ import scala.util.NotGiven
 import swopen.jsonToolbox.json.Json
 
 
-// encode -> modifier -> validator -> serializer
-// deserializer -> validator -> modifier -> serializer
+// encoder -> modifier -> validator -> serializer
+// deserializer -> validator -> modifier -> decoder
 class Modifier(val rename: String) extends scala.annotation.Annotation
