@@ -1,0 +1,1 @@
+# Scala Web framework with OpenApi 3.0

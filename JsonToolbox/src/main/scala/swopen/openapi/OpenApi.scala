@@ -19,7 +19,7 @@ object OpenApiObject:
       spec match
         case Json.JObject(obj) =>
           val extraKv = t.additionalInfo match
-            case Some(info) => info.encode.asInstanceOf[Json.JObject].value
+            case Some(info) => info.encode().asInstanceOf[Json.JObject].value
             case None => Map.empty
           val newMap = obj ++ extraKv
           Json.JObject(newMap)

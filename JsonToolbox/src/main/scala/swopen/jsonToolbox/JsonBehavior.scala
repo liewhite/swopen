@@ -18,7 +18,7 @@ import shapeless3.deriving.*
 object JsonBehavior:
 
   extension [T](t:T)
-    def encode(modify: Boolean = true, validate:Boolean = true)(using encoder:Encoder[T],schema:JsonSchema[T]):Json =
+    def encode(modify: Boolean = true, validate:Boolean = true)(using encoder:Encoder[T], schema: JsonSchema[T]):Json =
       encoder.encode(t)
 
   extension (t:Json)

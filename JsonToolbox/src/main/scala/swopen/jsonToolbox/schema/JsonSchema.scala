@@ -87,7 +87,7 @@ object JsonSchema:
   def sum(element: List[Schema]): Schema = 
       Schema.SchemaUnion(element.toVector)
   
-  def product(elements:List[Schema], labels:Vector[String] /*todo annotations 放这里*/): Schema = 
+  def product(elements:List[Schema], labels:Vector[String], defaults:Map[String,Any] /*todo annotations 放这里*/): Schema = 
     val itemKeys = labels
     Schema.SchemaObject(itemKeys.zip(elements).toVector)
   
@@ -105,7 +105,8 @@ object JsonSchema:
           case s: Mirror.SumOf[T]     => 
               sum(items)
           case p: Mirror.ProductOf[T] => 
-              product(items,tuple2List(labels).toVector)
+              val defaults = summon[DefaultValue[T]]
+              product(items,tuple2List(labels).toVector, defaults.defaults)
 
     new JsonSchema[T]:
       def schema =  schemas
