@@ -1,6 +1,7 @@
 package swopen.jsonToolbox.schema
 
 import java.math.{BigDecimal,BigInteger}
+import scala.math.{BigDecimal as ScalaBigDecimal,BigInt}
 import scala.deriving.*
 import scala.compiletime.*
 import shapeless3.deriving.*
@@ -57,7 +58,13 @@ object JsonSchema:
   given JsonSchema[BigInteger] with
     def schema:Schema = Schema.SchemaNumber(SchemaNumberImpl.SchemaBigInt)
 
+  given JsonSchema[BigInt] with
+    def schema:Schema = Schema.SchemaNumber(SchemaNumberImpl.SchemaBigInt)
+
   given JsonSchema[BigDecimal] with
+    def schema:Schema = Schema.SchemaNumber(SchemaNumberImpl.SchemaBigDecimal)
+
+  given JsonSchema[ScalaBigDecimal] with
     def schema:Schema = Schema.SchemaNumber(SchemaNumberImpl.SchemaBigDecimal)
 
   given JsonSchema[Boolean] with
