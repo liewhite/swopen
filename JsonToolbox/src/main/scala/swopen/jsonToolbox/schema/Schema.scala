@@ -29,4 +29,4 @@ enum Schema:
   case SchemaString
   case SchemaBytes
   case SchemaUnion(itemSchemas: Vector[Schema])
-  
+  case SchemaAny

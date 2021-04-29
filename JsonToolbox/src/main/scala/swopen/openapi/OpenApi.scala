@@ -2,6 +2,7 @@ package swopen.openapi
 
 import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.JsonBehavior.*
+import swopen.jsonToolbox.schema.JsonSchema
 import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 
 /**
@@ -12,7 +13,7 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 class OpenApiObject[T](val spec:T,val additionalInfo: Option[Map[String,Json]])
 
 object OpenApiObject:
-  given [T](using encoder: Encoder[T]): Encoder[OpenApiObject[T]] with
+  given [T:Encoder:JsonSchema](using encoder: Encoder[T]): Encoder[OpenApiObject[T]] with
     def encode(t: OpenApiObject[T]) = 
       val spec = encoder.encode(t.spec)
       spec match
@@ -24,7 +25,7 @@ object OpenApiObject:
           Json.JObject(newMap)
         case other => other
 
-  given [T:Decoder]: Decoder[OpenApiObject[T]] with
+  given [T:Decoder:JsonSchema]: Decoder[OpenApiObject[T]] with
     def decode(data:Json): Either[DecodeException, OpenApiObject[T]] = 
       data match
         case Json.JObject(obj) =>

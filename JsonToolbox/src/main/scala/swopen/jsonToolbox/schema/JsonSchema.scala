@@ -69,6 +69,9 @@ object JsonSchema:
   given JsonSchema[Array[Byte]] with
     def schema:Schema = Schema.SchemaBytes
 
+  given JsonSchema[Json] with
+    def schema:Schema = Schema.SchemaAny
+
   inline def summonAll[T <: Tuple]: List[Schema] = 
     inline erasedValue[T] match
         case _: (t *: ts) => summonInline[JsonSchema[t]].schema :: summonAll[ts]
