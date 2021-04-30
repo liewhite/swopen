@@ -1,8 +1,10 @@
-package swopen.openapi
+package swopen.openapi.v3_0_3
 
 import swopen.jsonToolbox.json.Json
 
-case class HeaderInternal(
+case class ParameterInternal(
+  name: String,
+  in: String,
   description: Option[String],
   required: Option[Boolean],
   deprecated: Option[Boolean],
@@ -17,4 +19,4 @@ case class HeaderInternal(
 
   content: Option[Map[String, MediaType]]
 )
-type Header = WithExtensions[HeaderInternal]
+type Parameter = WithExtensions[ParameterInternal]

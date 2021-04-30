@@ -1,4 +1,4 @@
-package swopen.openapi
+package swopen.openapi.v3_0_3
 
 
 /**
@@ -7,7 +7,7 @@ package swopen.openapi
 case class ServerInternal(
   url: String,
   description: Option[String],
-  variables: Option[Map[String,WithExtensions[ServerVariable]]]
+  variables: Option[Map[String,ServerVariable]]
 )
 
 type Server = WithExtensions[ServerInternal]

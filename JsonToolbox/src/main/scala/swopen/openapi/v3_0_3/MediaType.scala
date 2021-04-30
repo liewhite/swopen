@@ -1,4 +1,4 @@
-package swopen.openapi
+package swopen.openapi.v3_0_3
 
 
 import swopen.jsonToolbox.json.Json
