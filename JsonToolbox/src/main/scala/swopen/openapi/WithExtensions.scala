@@ -10,11 +10,11 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
  * @param spec OpenApi标准内的字段
  * @param addtionalInfo 扩展字段， 多为 `x-` 开头
  */
-class OpenApiObject[T](val spec:T,val additionalInfo: Option[Map[String,Json]])
+class WithExtensions[T](val spec:T,val additionalInfo: Option[Map[String,Json]])
 
-object OpenApiObject:
-  given [T:Encoder:JsonSchema](using encoder: Encoder[T]): Encoder[OpenApiObject[T]] with
-    def encode(t: OpenApiObject[T]) = 
+object WithExtensions:
+  given [T:Encoder:JsonSchema](using encoder: Encoder[T]): Encoder[WithExtensions[T]] with
+    def encode(t: WithExtensions[T]) = 
       val spec = encoder.encode(t.spec)
       spec match
         case Json.JObject(obj) =>
@@ -25,8 +25,8 @@ object OpenApiObject:
           Json.JObject(newMap)
         case other => other
 
-  given [T:Decoder:JsonSchema]: Decoder[OpenApiObject[T]] with
-    def decode(data:Json): Either[DecodeException, OpenApiObject[T]] = 
+  given [T:Decoder:JsonSchema]: Decoder[WithExtensions[T]] with
+    def decode(data:Json): Either[DecodeException, WithExtensions[T]] = 
       data match
         case Json.JObject(obj) =>
           val spec = Json.JObject(obj.filter(item => !item._1.startsWith("x-"))).decode[T] 
@@ -35,9 +35,9 @@ object OpenApiObject:
             case Right(s) => extra match
               case Right(e) => 
                 if e.isEmpty then
-                  Right(new OpenApiObject(s, None))
+                  Right(new WithExtensions(s, None))
                 else
-                  Right(new OpenApiObject(s, Some(e)))
+                  Right(new WithExtensions(s, Some(e)))
               case Left(err) => Left(err)
             case Left(serr) => Left(serr)
         case other => Left(new DecodeException(s"must be object, got: ${data.serialize}"))
