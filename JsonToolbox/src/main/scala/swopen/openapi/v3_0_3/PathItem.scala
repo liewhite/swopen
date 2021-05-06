@@ -4,7 +4,7 @@ package swopen.openapi.v3_0_3
 /**
  *  paths
  * */
-case class PathItem(
+case class PathItemInternal(
   `$ref`: Option[String],
   summary: Option[String],
   description: Option[String],
@@ -21,3 +21,5 @@ case class PathItem(
   servers: Option[Vector[Server]],
   parameters: Option[Vector[OrRef[Parameter]]]
 )
+
+type PathItem = WithExtensions[PathItemInternal]

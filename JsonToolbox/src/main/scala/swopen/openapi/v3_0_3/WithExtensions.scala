@@ -10,7 +10,7 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
  * @param spec OpenApi标准内的字段
  * @param addtionalInfo 扩展字段， 多为 `x-` 开头
  */
-class WithExtensions[T](val spec:T,val additionalInfo: Option[Map[String,Json]])
+case class WithExtensions[T](spec:T,additionalInfo: Option[Map[String,Json]] = None)
 
 object WithExtensions:
   given [T:Encoder:JsonSchema](using encoder: Encoder[T]): Encoder[WithExtensions[T]] with

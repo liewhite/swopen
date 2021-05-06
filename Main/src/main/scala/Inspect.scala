@@ -2,14 +2,11 @@ import scala.quoted.*
 import scala.compiletime._
 import scala.deriving.*
 
-def impl(x: Expr[Int])(using Quotes):Expr[Any] = 
+def impl[T:Type](using Quotes):Expr[Any] = 
   import quotes.reflect._
-  println(s"expr: ${x.show}")
-  if x.value == None then 
-    "ok"
-  else
-    report.error(s"-----------------report error--------------------${x.value}")
-  x
+  val tpe: TypeRepr = TypeRepr.of[T]
+  println(tpe.typeSymbol.fullName)
+  Expr(123)
 
-inline def myMacro[T](using inline x:Int): Any = 
-  ${impl('x)}
+inline def myMacro[T]: Any = 
+  ${impl[T]}

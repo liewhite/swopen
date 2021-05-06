@@ -12,7 +12,8 @@ case class OpenApiRoot(
   info: Info, 
   servers: Option[Vector[Server]],
   paths: Vector[WithExtensions[Map[String,PathItem]]],
-  // components: Option[OpenApiComponents],
+  components: Option[Components],
+  // todo support keys below
   // security: Option[Vector[OpenApiSecurity]],
   // tags: Option[Vector[OpenApiTag]],
   // externalDocs: Option[Vector[OpenApiExternalDoc]],

@@ -13,7 +13,7 @@ case class ParameterInternal(
   style: Option[String],
   explode: Option[Boolean],
   allowReserved: Option[Boolean],
-  schema: Option[OrRef[Schema]],
+  schema: Option[Schema],
   example: Option[Json],
   examples: Option[Map[String,OrRef[Example]]],
 

@@ -5,6 +5,7 @@ import scala.deriving.*
 import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
+import swopen.jsonToolbox.schema.JsonSchema
 import swopen.jsonToolbox.utils.SummonUtils
 
 
@@ -106,9 +107,10 @@ object Encoder:
   import swopen.jsonToolbox.modifier.Modifier
   import swopen.jsonToolbox.utils.OptionGiven
 
-  inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
+  inline given derived[T](using gen: K0.Generic[T], schema: JsonSchema[T]): Encoder[T] =
     // val modifier = scala.Predef.summon[OptionGiven[Annotation[Modifier,T]]]
     // println(modifier)
+    // 支持递归数据结构， 要先支持schema引用
     inline gen match
       case s @ given K0.ProductGeneric[T] => 
         product[T]
