@@ -172,17 +172,21 @@ object Decoder:
               else
                 throw new DecodeException("label not equals enum name")
             case json:Json.JObject => json
-            case _ => 
-                throw new DecodeException("label not equals enum name")
+            case json:Json => 
+                throw new DecodeException( s"expect product, got: ${json.serialize}")
 
           var index = 0
           val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
-            val value = itemsData.value.get(fieldsName(index)).get
-            val item = itemDecoder.decode(value)
+            val value = itemsData.value.get(fieldsName(index))
+            
+            // val item = itemDecoder.decode(value)
+            val item = value match
+              case Some(v) => itemDecoder.decode(v) match
+                case Right(o) => o
+                case Left(e) => throw e
+              case None => throw DecodeException(s"key not exist: ${fieldsName(index)}")
             index += 1
-            item match
-              case Right(v) => v
-              case Left(e) => throw e
+            item
           )
           Right(result)
         catch
@@ -246,7 +250,7 @@ object Decoder:
           case '[t] =>
             '{new Decoder[T] {
               def decode(data:Json):Either[DecodeException,T] = 
-                val o1 = summonInline[Decoder[t]]
-                o1.decode(data).map(_.asInstanceOf[T])
+                val o1 = summonInline[Decoder[t]].asInstanceOf[Decoder[T]]
+                o1.decode(data)
             }
             }

@@ -16,12 +16,6 @@ end Encoder
 
 
 object Encoder:
-  // given [A:Encoder,B:Encoder](using encoderA:Encoder[A], encoderB:Encoder[B]): Encoder[A|B] = 
-  //   new Encoder[A|B]:
-  //     def encode(t:A|B): Json = 
-  //       t match
-  //         case a:A => encoderA.encode(a)
-  //         case b:B => encoderB.encode(b)
   /**
    *  map encoder
    */
@@ -84,8 +78,8 @@ object Encoder:
   given Encoder[Boolean] with
     def encode(t:Boolean) = Json.JBool(t)
 
-  // given Encoder[Null] with
-  //   def encode(t:Null) = Json.JNull
+  given Encoder[Null] with
+    def encode(t:Null) = Json.JNull
 
   given Encoder[Json] with
     def encode(t:Json) = t
@@ -150,10 +144,8 @@ object Encoder:
           case '[t] =>
             '{new Encoder[T] {
               def encode(data:T) = 
-                val o1 = summonInline[Encoder[t]]
-                data match
-                  case o:t => o1.encode(o)
-                  case null => ???
+                val o1 = summonInline[Encoder[t]].asInstanceOf[Encoder[T]]
+                o1.encode(data)
             }
             }
 

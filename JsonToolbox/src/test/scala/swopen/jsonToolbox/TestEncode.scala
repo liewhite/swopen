@@ -63,6 +63,8 @@ class TestEncode:
     val ab2: A|B = B(1)
     assert(ab1.encode().serialize  == """{"a":1}""")
     assert(ab2.encode().serialize  == """{"b":1}""")
+    assert(ab1.encode().decode[A|B].toOption.get  == ab1)
+    assert(ab2.encode().decode[A|B].toOption.get  == ab2)
 
   @Test 
   def enumEncode = 
