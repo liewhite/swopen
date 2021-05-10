@@ -10,6 +10,9 @@ enum E:
   case B
   case C
 
+case class A(a:Int)
+case class B(b:Int)
+
 class TestEncode:
   @Test
   def simpleEncode = 
@@ -54,6 +57,13 @@ class TestEncode:
     assert(obj == newObj)
   
     
+  @Test 
+  def unionEncode = 
+    val ab1: A|B = A(1)
+    val ab2: A|B = B(1)
+    assert(ab1.encode().serialize  == """{"a":1}""")
+    assert(ab2.encode().serialize  == """{"b":1}""")
+
   @Test 
   def enumEncode = 
     val a = E.A(3)

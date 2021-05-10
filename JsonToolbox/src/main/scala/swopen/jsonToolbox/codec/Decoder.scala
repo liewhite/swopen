@@ -2,6 +2,8 @@ package swopen.jsonToolbox.codec
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import scala.deriving.*
+import scala.quoted.*
+import scala.compiletime.*
 import shapeless3.deriving.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
@@ -206,7 +208,7 @@ object Decoder:
             }).find(_.isDefined).flatten
             result match
               case Some(v) => Right(v)
-              case None => Left(DecodeException("cant decode :" + labelling.label))
+              case None => Left(DecodeException("can't decode :" + labelling.label))
   
 
   inline given derived[T](using gen: K0.Generic[T]): Decoder[T] =
@@ -215,3 +217,36 @@ object Decoder:
         product[T]
       case s @ given K0.CoproductGeneric[T]  =>
         sum[T]
+
+  inline given [T]: Decoder[T] = ${ impl[T] }
+
+  def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
+    import q.reflect._
+
+    val repr = TypeRepr.of[T];
+    repr match
+      case OrType(a,b) => 
+        (a.asType,b.asType) match
+          case ('[t1],'[t2]) => 
+            '{new Decoder[T] {
+              def decode(data:Json) = 
+                val o1 = summonInline[Decoder[t1]]
+                val o2 = summonInline[Decoder[t2]]
+                (o1.decode(data) match{
+                  case Right(o) => Right(o.asInstanceOf[T])
+                  case Left(_) => o2.decode(data) match {
+                    case Right(o) => Right(o.asInstanceOf[T])
+                    case Left(e) => Left(e)
+                  }
+                })
+            }
+            }
+      case other => 
+        other.asType match
+          case '[t] =>
+            '{new Decoder[T] {
+              def decode(data:Json):Either[DecodeException,T] = 
+                val o1 = summonInline[Decoder[t]]
+                o1.decode(data).map(_.asInstanceOf[T])
+            }
+            }

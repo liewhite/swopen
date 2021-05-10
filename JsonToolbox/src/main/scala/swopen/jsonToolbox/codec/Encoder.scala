@@ -2,10 +2,11 @@ package swopen.jsonToolbox.codec
 
 import scala.math.{BigDecimal,BigInt}
 import scala.deriving.*
+import scala.quoted.*
+import scala.compiletime.*
 import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
-import swopen.jsonToolbox.schema.JsonSchema
 import swopen.jsonToolbox.utils.SummonUtils
 
 
@@ -15,6 +16,12 @@ end Encoder
 
 
 object Encoder:
+  // given [A:Encoder,B:Encoder](using encoderA:Encoder[A], encoderB:Encoder[B]): Encoder[A|B] = 
+  //   new Encoder[A|B]:
+  //     def encode(t:A|B): Json = 
+  //       t match
+  //         case a:A => encoderA.encode(a)
+  //         case b:B => encoderB.encode(b)
   /**
    *  map encoder
    */
@@ -77,8 +84,8 @@ object Encoder:
   given Encoder[Boolean] with
     def encode(t:Boolean) = Json.JBool(t)
 
-  given Encoder[Null] with
-    def encode(t:Null) = Json.JNull
+  // given Encoder[Null] with
+  //   def encode(t:Null) = Json.JNull
 
   given Encoder[Json] with
     def encode(t:Json) = t
@@ -102,12 +109,13 @@ object Encoder:
   def sum[T](using inst:  K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
-  
+
+    
   import shapeless3.deriving.Annotation
   import swopen.jsonToolbox.modifier.Modifier
   import swopen.jsonToolbox.utils.OptionGiven
 
-  inline given derived[T](using gen: K0.Generic[T], schema: JsonSchema[T]): Encoder[T] =
+  inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
     // val modifier = scala.Predef.summon[OptionGiven[Annotation[Modifier,T]]]
     // println(modifier)
     // 支持递归数据结构， 要先支持schema引用
@@ -116,4 +124,37 @@ object Encoder:
         product[T]
       case s @ given K0.CoproductGeneric[T]  =>
         sum[T]
+
+  // // for union type 
+  inline given [T]: Encoder[T] = ${ impl[T] }
+
+  def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
+    import q.reflect._
+
+    val repr = TypeRepr.of[T];
+    repr match
+      case OrType(a,b) => 
+        (a.asType,b.asType) match
+          case ('[t1],'[t2]) => 
+            '{new Encoder[T] {
+              def encode(data:T) = 
+                val o1 = summonInline[Encoder[t1]]
+                val o2 = summonInline[Encoder[t2]]
+                data match
+                  case o:t1 => o1.encode(o)
+                  case o:t2 => o2.encode(o)
+            }
+            }
+      case other => 
+        other.asType match
+          case '[t] =>
+            '{new Encoder[T] {
+              def encode(data:T) = 
+                val o1 = summonInline[Encoder[t]]
+                data match
+                  case o:t => o1.encode(o)
+                  case null => ???
+            }
+            }
+
 end Encoder

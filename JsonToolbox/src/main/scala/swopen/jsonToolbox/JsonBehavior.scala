@@ -20,10 +20,11 @@ object JsonBehavior:
 
   extension [T](t:T)
     // 递归类型没有 Schema
-    def encode(modify: Boolean = true, validate:Boolean = true)(using encoder:Encoder[T], schema: JsonSchema[T]):Json =
+    def encode(modify: Boolean = true, validate:Boolean = true)
+    (using encoder:Encoder[T]):Json =
       encoder.encode(t)
 
   extension (t:Json)
-    def decode[T](using decoder:Decoder[T],schema:JsonSchema[T]):Either[DecodeException, T] = decoder.decode(t)
+    def decode[T](using decoder:Decoder[T]):Either[DecodeException, T] = decoder.decode(t)
   
   // inline def schema[T:JsonSchema:QualifiedName](using o: JsonSchema[T]):SchemaInternal = o.schema
