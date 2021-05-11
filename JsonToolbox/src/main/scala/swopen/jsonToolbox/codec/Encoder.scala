@@ -84,10 +84,8 @@ object Encoder:
   given Encoder[Json] with
     def encode(t:Json) = t
 
-  def product[T](
-    using inst: K0.ProductInstances[Encoder, T],
-    labelling: Labelling[T],
-    ): Encoder[T] =   
+  def product[T](using inst: => K0.ProductInstances[Encoder, T])(using labelling: Labelling[T]): Encoder[T] =  
+    // val inst = summonInline[K0.ProductInstances[Encoder, T]]
     new Encoder[T]:
       def encode(t: T): Json = 
         val fieldsName = labelling.elemLabels
@@ -100,7 +98,7 @@ object Encoder:
           )
           Json.JObject(fieldsName.zip(elems.reverse).toMap)
 
-  def sum[T](using inst:  K0.CoproductInstances[Encoder, T]): Encoder[T]  =
+  def sum[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
 
@@ -110,9 +108,6 @@ object Encoder:
   import swopen.jsonToolbox.utils.OptionGiven
 
   inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
-    // val modifier = scala.Predef.summon[OptionGiven[Annotation[Modifier,T]]]
-    // println(modifier)
-    // 支持递归数据结构， 要先支持schema引用
     inline gen match
       case s @ given K0.ProductGeneric[T] => 
         product[T]

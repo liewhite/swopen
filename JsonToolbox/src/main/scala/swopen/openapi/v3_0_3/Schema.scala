@@ -20,6 +20,7 @@ case class SchemaInternal(
   minProperties: Option[Int] = None,
   required: Option[Vector[String]] = None,
   `enum`: Option[Vector[Json]] = None,
+  const: Option[Json] = None,
   // changed from json schema
   `type`: Option[SchemaType] = None,
   allOf: Option[Vector[Schema]] = None,

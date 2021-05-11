@@ -11,13 +11,13 @@ enum OrRef[+T]:
 end OrRef
 
 object OrRef:
-  given [T:Encoder:JsonSchema](using encoder: Encoder[T]): Encoder[OrRef[T]] with
+  given [T:Encoder](using encoder: Encoder[T]): Encoder[OrRef[T]] with
     def encode(t:OrRef[T]):Json = 
       t match
         case Id(t) => encoder.encode(t)
         case Ref(ref) => Encoder.given_Encoder_Map.encode(Map("$ref" -> ref))
 
-  given [T:Encoder:JsonSchema](using decoder: Decoder[T]): Decoder[OrRef[T]] with
+  given [T:Decoder](using decoder: Decoder[T]): Decoder[OrRef[T]] with
     def decode(t:Json):Either[DecodeException, OrRef[T]] = 
       t match
         case Json.JObject(map) => 

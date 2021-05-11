@@ -13,6 +13,8 @@ import swopen.openapi.v3_0_3.*
 import swopen.jsonToolbox.codec.{Encoder,Decoder}
 import swopen.jsonToolbox.utils.SummonUtils
 
+// 
+// case class FullSchema(component: Map[String, Schema], schema:Schema)
 /**
  *  负责json 的序列化， 反序列化， jsonSchema生成， 以及validation
  **/
@@ -22,7 +24,7 @@ end JsonSchema
 
 object JsonSchema:
   // 需要线程安全
-  val component: concurrent.Map[String, Schema] = concurrent.TrieMap.empty
+  val component: concurrent.Map[String, WithExtensions[SchemaInternal]] = concurrent.TrieMap.empty
 
   def schema[T](using o:JsonSchema[T]):Schema = o.schema
 
@@ -139,25 +141,43 @@ object JsonSchema:
         case _: (t *: ts) => summonInline[JsonSchema[t]].schema :: summonAll[ts]
         case _: EmptyTuple => Nil
 
+  def schemaDeref(schema:Schema):WithExtensions[SchemaInternal] = 
+    schema match
+      case OrRef.Id(s) => s
+      case OrRef.Ref(ref) => component(ref)
+
   // 真的one of， 或者enum
   def sum(element: List[Schema]): Schema = 
-    if element.find(item => item match
-      case OrRef.Id(WithExtensions(spec: SchemaInternal,addtionalInfo)) => spec.`type` != SchemaType.string
-      case _ => true
+    if element.find(item => 
+      val schema = schemaDeref(item).spec
+      schema.`type` != SchemaType.string
     ).isEmpty then
-      // 全是string， 说明是enum
-      null
+      val es = element.map(item =>
+        val schema = schemaDeref(item).spec
+        schema.const.get
+      ).toVector
+      OrRef.Id(WithExtensions(SchemaInternal(
+        `type` = Some(SchemaType.string),
+        `enum` = Some(es)
+        )))
     else
-      null
+      OrRef.Id(WithExtensions(SchemaInternal(
+        oneOf = Some(element.toVector),
+        )))
   
   def product(elements:List[Schema],label:String, labels:Vector[String], defaults:Map[String,Any] /*todo annotations 放这里*/): Schema = 
     val itemKeys = labels
     if itemKeys.isEmpty then
-      null
-      // Schema.SchemaString(label)
+      OrRef.Id(WithExtensions(SchemaInternal(
+        `type` = Some(SchemaType.string),
+        const = Some(Json.JString(label))
+        )))
     else
-      null
-      // Schema.SchemaObject(itemKeys.zip(elements).toVector)
+      val schema = SchemaInternal(
+        `type` = Some(SchemaType.`object`),
+        properties = Some(WithExtensions(labels.zip(elements).toMap))
+      )
+      OrRef.Id(WithExtensions(schema))
   
 
   def tuple2List[T<: Tuple](data:T): List[String] = 
@@ -165,25 +185,33 @@ object JsonSchema:
       case h *: t => h.asInstanceOf[String] :: tuple2List(t)
       case EmptyTuple => Nil
 
-  inline given derived[T](using m: Mirror.Of[T],labelling:Labelling[T], q:QualifiedName[T]): JsonSchema[T] = 
+  inline given derived[T](using labelling:Labelling[T], q:QualifiedName[T])(using m: Mirror.Of[T]): JsonSchema[T] = 
     val name = q.fullName
-    if !component.contains(name) then
-      val items = SummonUtils.summonAll[JsonSchema, m.MirroredElemTypes].map(_.schema)
-      // val labels = summonValues[m.MirroredElemLabels]
-      val labels = labelling.elemLabels.toVector
-      val label = labelling.label
-      val schemas = inline m match
-            case s: Mirror.SumOf[T]     => 
-                sum(items)
-            case p: Mirror.ProductOf[T] => 
-                val defaults = summon[DefaultValue[T]]
-                product(items,label,labels, defaults.defaults)
-
-      component.addOne(name, schemas)
+    val schemaObj = 
+      if !component.contains(name) then
+        // 占位
+        component.addOne(name,null)
+        val items = SummonUtils.summonAll[JsonSchema, m.MirroredElemTypes].map(_.schema)
+        val labels = labelling.elemLabels.toVector
+        val label = labelling.label
+        val schemas = inline m match
+          case s: Mirror.SumOf[T]     => 
+              sum(items)
+          case p: Mirror.ProductOf[T] => 
+              val defaults = summon[DefaultValue[T]]
+              product(items,label,labels, defaults.defaults)
+        schemas match
+          case (OrRef.Id(s)) =>
+            component.addOne(name,s)
+            OrRef.Ref(name)
+          case other => throw Exception(s"schema error, expect OrRef.Id,got: ${other}")
+        schemas
+      else
+        OrRef.Ref(name)
+    
+    println(s"after schemas, $name")
     new JsonSchema[T]:
-      def schema =
-        null
-        // Schema.SchemaRef(name)
+      def schema = schemaObj
 
 end JsonSchema
 

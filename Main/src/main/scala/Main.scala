@@ -1,13 +1,12 @@
 import swopen.jsonToolbox.JsonBehavior.*
+import swopen.jsonToolbox.schema.JsonSchema
+import swopen.openapi.v3_0_3.AdditionalProperties
 
 case class A(a:Int|String,b:String)
-case class B(a:Boolean,b:Double)
+case class B(a:Boolean,b:Option[B])
 case class C(c:Double,d:String|Boolean)
-@main def test(): Unit =
-  val a : A | B |C = A(1,"asd")
-  val b : A | B |C = B(true,1.2)
-  val c : A | B |C = C(1.2,"c")
-  assert(a.encode().decode[A|B|C].toOption.get == a)
-  assert(b.encode().decode[A|B|C].toOption.get == b)
-  assert(c.encode().decode[A|B|C].toOption.get == c)
 
+@main def test(): Unit =
+  // println(summon[JsonSchema[B]].schema.encode().serialize)
+  // val b = AdditionalProperties.B(true)
+  println(B(true, Some(B(true, None))).encode().serialize)

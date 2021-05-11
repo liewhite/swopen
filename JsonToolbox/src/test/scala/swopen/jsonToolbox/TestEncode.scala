@@ -77,9 +77,9 @@ class TestEncode:
 
   @Test 
   def enumEncode = 
-    val a = E.A(3)
-    val b = E.B
-    val c = E.C
+    val a:E = E.A(3)
+    val b:E = E.B
+    val c:E = E.C
 
     assert(a == Json.deserialize(a.encode().serialize).toOption.get.decode[E].toOption.get)
     assert(b == Json.deserialize(b.encode().serialize).toOption.get.decode[E].toOption.get)
