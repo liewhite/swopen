@@ -250,6 +250,7 @@ object Decoder:
           case '[t] =>
             '{new Decoder[T] {
               def decode(data:Json):Either[DecodeException,T] = 
+                // this won't occur a recusively call, but i dont know why
                 val o1 = summonInline[Decoder[t]].asInstanceOf[Decoder[T]]
                 o1.decode(data)
             }

@@ -144,6 +144,7 @@ object Encoder:
           case '[t] =>
             '{new Encoder[T] {
               def encode(data:T) = 
+                // this won't occur a recusively call, but i dont know why
                 val o1 = summonInline[Encoder[t]].asInstanceOf[Encoder[T]]
                 o1.encode(data)
             }

@@ -13,6 +13,9 @@ enum E:
 case class A(a:Int)
 case class B(b:Int)
 
+case class UnionA(a:Int|String,b:String)
+case class UnionB(a:Boolean,b:Double)
+case class UnionC(c:Double,d:String|Boolean)
 class TestEncode:
   @Test
   def simpleEncode = 
@@ -65,6 +68,12 @@ class TestEncode:
     assert(ab2.encode().serialize  == """{"b":1}""")
     assert(ab1.encode().decode[A|B].toOption.get  == ab1)
     assert(ab2.encode().decode[A|B].toOption.get  == ab2)
+    val a : UnionA | UnionB |UnionC = UnionA(1,"asd")
+    val b : UnionA | UnionB |UnionC = UnionB(true,1.2)
+    val c : UnionA | UnionB |UnionC = UnionC(1.2,"c")
+    assert(a.encode().decode[UnionA | UnionB |UnionC].toOption.get == a)
+    assert(b.encode().decode[UnionA | UnionB |UnionC].toOption.get == b)
+    assert(c.encode().decode[UnionA | UnionB |UnionC].toOption.get == c)
 
   @Test 
   def enumEncode = 
