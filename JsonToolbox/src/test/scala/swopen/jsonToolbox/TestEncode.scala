@@ -16,6 +16,9 @@ case class B(b:Int)
 case class UnionA(a:Int|String,b:String)
 case class UnionB(a:Boolean,b:Double)
 case class UnionC(c:Double,d:String|Boolean)
+
+
+case class RecursiveC(c:Int,d:Option[RecursiveC])
 class TestEncode:
   @Test
   def simpleEncode = 
@@ -80,7 +83,13 @@ class TestEncode:
     val a:E = E.A(3)
     val b:E = E.B
     val c:E = E.C
-
     assert(a == Json.deserialize(a.encode().serialize).toOption.get.decode[E].toOption.get)
     assert(b == Json.deserialize(b.encode().serialize).toOption.get.decode[E].toOption.get)
     assert(c == Json.deserialize(c.encode().serialize).toOption.get.decode[E].toOption.get)
+    
+  @Test 
+  def testRecursiveAdt = 
+    val b = RecursiveC(1,Some(RecursiveC(1,None)))
+    println(b.encode())
+    // assert(a == Json.deserialize(a.encode().serialize).toOption.get.decode[RecursiveC].toOption.get)
+    // assert(b == Json.deserialize(b.encode().serialize).toOption.get.decode[RecursiveC].toOption.get)

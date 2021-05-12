@@ -10,7 +10,67 @@ import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.utils.SummonUtils
 
 
-trait Encoder[T]:
+trait MacroEncoder
+
+object MacroEncoder:
+  inline given [T]: Encoder[T] = ${ MacroEncoder.impl[T] }
+  def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
+    import q.reflect._
+
+    val repr = TypeRepr.of[T];
+    repr match
+      case OrType(a,b) => 
+        (a.asType,b.asType) match
+          case ('[t1],'[t2]) => 
+            '{new Encoder[T] {
+              def encode(data:T) = 
+                val o1 = summonInline[Encoder[t1]]
+                val o2 = summonInline[Encoder[t2]]
+                data match
+                  case o:t1 => o1.encode(o)
+                  case o:t2 => o2.encode(o)
+            }
+            }
+      case other => 
+        other.asType match
+          case '[t] =>
+            '{new Encoder[T] {
+              def encode(data:T) = 
+                // this won't occur a recusively call, but i dont know why
+                val o1 = summonInline[Encoder[t]].asInstanceOf[Encoder[T]]
+                o1.encode(data)
+            }
+            }
+trait CoproductEncoder extends MacroEncoder
+object CoproductEncoder:
+  inline given coproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
+    new Encoder[T]:
+      def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
+
+trait ProductEncoder extends CoproductEncoder
+object ProductEncoder:
+  inline given product[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
+    new Encoder[T]:
+      def encode(t: T): Json = 
+        val fieldsName = labelling.elemLabels
+
+        if(fieldsName.isEmpty) then
+          Json.JString(labelling.label)
+        else 
+          val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
+            [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
+          )
+          Json.JObject(fieldsName.zip(elems.reverse).toMap)
+  // 直接given product和coproduct会导致enum 歧义, 既可以是product也可以是coproduct
+  // 通过继承trait手动控制优先级， 先使用product再使用coproduct，最后使用macro处理union type
+  // inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
+  //   inline gen match
+  //     case s @ given K0.ProductGeneric[T] => 
+  //       product[T]
+  //     case s @ given K0.CoproductGeneric[T]  =>
+  //       coproduct[T]
+
+trait Encoder[T] extends ProductEncoder:
   def encode(t: T):Json
 end Encoder
 
@@ -45,10 +105,10 @@ object Encoder:
   /**
    *  option encoder
    */
-  given [T:Encoder]: Encoder[Option[T]] with
+  given [T](using e:Encoder[T]): Encoder[Option[T]] with
     def encode(t:Option[T]) = 
       t match
-        case Some(v) => summon[Encoder[T]].encode(v)
+        case Some(v) => e.encode(v)
         case None => Json.JNull
 
   /**
@@ -84,65 +144,5 @@ object Encoder:
   given Encoder[Json] with
     def encode(t:Json) = t
 
-  def product[T](using inst: => K0.ProductInstances[Encoder, T])(using labelling: Labelling[T]): Encoder[T] =  
-    // val inst = summonInline[K0.ProductInstances[Encoder, T]]
-    new Encoder[T]:
-      def encode(t: T): Json = 
-        val fieldsName = labelling.elemLabels
-
-        if(fieldsName.isEmpty) then
-          Json.JString(labelling.label)
-        else 
-          val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
-            [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
-          )
-          Json.JObject(fieldsName.zip(elems.reverse).toMap)
-
-  def sum[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
-    new Encoder[T]:
-      def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
-
-    
-  import shapeless3.deriving.Annotation
-  import swopen.jsonToolbox.modifier.Modifier
-  import swopen.jsonToolbox.utils.OptionGiven
-
-  inline given derived[T](using gen: K0.Generic[T]): Encoder[T] =
-    inline gen match
-      case s @ given K0.ProductGeneric[T] => 
-        product[T]
-      case s @ given K0.CoproductGeneric[T]  =>
-        sum[T]
-
-  // // for union type 
-  inline given [T]: Encoder[T] = ${ impl[T] }
-
-  def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
-    import q.reflect._
-
-    val repr = TypeRepr.of[T];
-    repr match
-      case OrType(a,b) => 
-        (a.asType,b.asType) match
-          case ('[t1],'[t2]) => 
-            '{new Encoder[T] {
-              def encode(data:T) = 
-                val o1 = summonInline[Encoder[t1]]
-                val o2 = summonInline[Encoder[t2]]
-                data match
-                  case o:t1 => o1.encode(o)
-                  case o:t2 => o2.encode(o)
-            }
-            }
-      case other => 
-        other.asType match
-          case '[t] =>
-            '{new Encoder[T] {
-              def encode(data:T) = 
-                // this won't occur a recusively call, but i dont know why
-                val o1 = summonInline[Encoder[t]].asInstanceOf[Encoder[T]]
-                o1.encode(data)
-            }
-            }
 
 end Encoder
