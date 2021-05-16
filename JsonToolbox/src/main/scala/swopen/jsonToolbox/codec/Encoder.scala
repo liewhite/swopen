@@ -30,9 +30,9 @@ object UnionEncoder:
                 data match
                   case o:t1 => o1.encode(o)
                   case o:t2 => o2.encode(o)
-            }
-      // case other => 
-      //   report.error(s"not support type:,$other");???
+            }}
+      case other => 
+        report.error(s"not support type:,$other");???
 
 trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
