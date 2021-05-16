@@ -19,9 +19,8 @@ import shapeless3.deriving.*
 object JsonBehavior:
 
   extension [T](t:T)
-    // 递归类型没有 Schema
-    def encode(modify: Boolean = true, validate:Boolean = true)
-    (using encoder:Encoder[T]):Json =
+    inline def encode:Json =
+      val encoder = summon[Encoder[T]]
       encoder.encode(t)
 
   extension (t:Json)

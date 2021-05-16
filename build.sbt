@@ -21,6 +21,14 @@ lazy val JsonToolbox = (project in file("JsonToolbox"))
 
 lazy val main = (project in file("Main"))
   .settings(
+    libraryDependencies ++= Seq(
+        "com.fasterxml.jackson.core"%"jackson-databind"%"2.12.3",
+
+        "org.typelevel"%%"shapeless3-deriving"%"3.0.0-M3",
+        "org.typelevel"%%"shapeless3-data"%"3.0.0-M3",
+        "org.typelevel"%%"shapeless3-typeable"%"3.0.0-M3",
+        "org.typelevel"%%"shapeless3-test"%"3.0.0-M3",
+    ),
     commonSettings
   ).dependsOn(JsonToolbox)
 

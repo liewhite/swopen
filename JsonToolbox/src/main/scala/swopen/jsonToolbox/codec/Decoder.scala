@@ -1,8 +1,10 @@
 package swopen.jsonToolbox.codec
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
+import swopen.jsonToolbox.schema.QualifiedName
 import scala.deriving.*
 import scala.quoted.*
+import scala.util.NotGiven
 import scala.compiletime.*
 import shapeless3.deriving.*
 import java.math.BigInteger
@@ -12,7 +14,7 @@ class DecodeException(val message:String) extends Exception(message)
 
 trait MacroDecoder
 object MacroDecoder:
-  inline given [T]: Decoder[T] = ${ impl[T] }
+  inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
   def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
     import q.reflect._
 
@@ -34,25 +36,16 @@ object MacroDecoder:
                 })
             }
             }
-      case other => 
-        other.asType match
-          case '[t] =>
-            '{new Decoder[T] {
-              def decode(data:Json):Either[DecodeException,T] = 
-                // this won't occur a recusively call, but i dont know why
-                val o1 = summonInline[Decoder[t]].asInstanceOf[Decoder[T]]
-                o1.decode(data)
-            }
-            }
 
 trait CoproductDecoder extends MacroDecoder
 object CoproductDecoder:
-  inline given coproduct[T](using inst: K0.CoproductInstances[Decoder, T], labelling: Labelling[T]): Decoder[T] = 
+  given [T](using inst: => K0.CoproductInstances[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
     new Decoder[T]:
       def decode(json: Json): Either[DecodeException, T] = 
         json match
           // 按名称序列化
           case Json.JString(s) => 
+            println(s)
             val ordinal = labelling.elemLabels.indexOf(s)
             inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => (s, rt.decode(json).toOption)) match
               case (s, None) => Left(DecodeException(s"cant decode to :${labelling.label}" + json.serialize))
@@ -69,9 +62,18 @@ object CoproductDecoder:
               case Some(v) => Right(v)
               case None => Left(DecodeException("can't decode :" + labelling.label))
 
-trait ProductDecoder extends CoproductDecoder
-object ProductDecoder:
-  inline given product[T](using inst: K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
+trait Decoder[T] extends CoproductDecoder:
+  def decode(data:Json): Either[DecodeException, T]
+end Decoder
+
+
+// int, long, float, double, BigInteger, BigDecimal, bool,string, option[T], List,Array,Vector, Map
+object Decoder:
+
+  def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
+
+
+  given [T](using inst: K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val fieldsName = labelling.elemLabels
@@ -105,17 +107,6 @@ object ProductDecoder:
           Right(result)
         catch
           case e: DecodeException => Left(e)
-
-trait Decoder[T] extends ProductDecoder:
-  def decode(data:Json): Either[DecodeException, T]
-end Decoder
-
-
-// int, long, float, double, BigInteger, BigDecimal, bool,string, option[T], List,Array,Vector, Map
-object Decoder:
-
-  def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
-
 
   def decodeSeq[T:Decoder](data:Json): Either[DecodeException,List[T]] = 
     val innerDecoder = summon[Decoder[T]]
@@ -250,13 +241,3 @@ object Decoder:
       data match
         case Json.JString(v) => Right(v)
         case otherTypeValue => decodeError("JsonNumber.JString", otherTypeValue)
-
-        
-  
-
-  // inline given derived[T](using gen: K0.Generic[T]): Decoder[T] =
-  //   inline gen match
-  //     case s @ given K0.ProductGeneric[T] => 
-  //       product[T]
-  //     case s @ given K0.CoproductGeneric[T]  =>
-  //       sum[T]

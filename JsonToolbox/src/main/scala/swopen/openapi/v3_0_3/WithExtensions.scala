@@ -13,19 +13,19 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 case class WithExtensions[T](spec:T,additionalInfo: Option[Map[String,Json]] = None)
 
 object WithExtensions:
-  given [T:Encoder](using encoder: Encoder[T]): Encoder[WithExtensions[T]] with
+  given [T](using encoder: => Encoder[T]): Encoder[WithExtensions[T]] with
     def encode(t: WithExtensions[T]) = 
       val spec = encoder.encode(t.spec)
       spec match
         case Json.JObject(obj) =>
           val extraKv = t.additionalInfo match
-            case Some(info) => info.encode().asInstanceOf[Json.JObject].value
+            case Some(info) => info.encode.asInstanceOf[Json.JObject].value
             case None => Map.empty
           val newMap = obj ++ extraKv
           Json.JObject(newMap)
         case other => other
 
-  given [T:Decoder]: Decoder[WithExtensions[T]] with
+  given [T](using decoder: => Decoder[T]): Decoder[WithExtensions[T]] with
     def decode(data:Json): Either[DecodeException, WithExtensions[T]] = 
       data match
         case Json.JObject(obj) =>

@@ -5,6 +5,8 @@ import scala.math.{BigDecimal as ScalaBigDecimal,BigInt}
 import scala.deriving.*
 import scala.collection.concurrent
 import scala.compiletime.*
+import scala.util.NotGiven
+import scala.quoted.*
 import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.Json
@@ -13,20 +15,48 @@ import swopen.openapi.v3_0_3.*
 import swopen.jsonToolbox.codec.{Encoder,Decoder}
 import swopen.jsonToolbox.utils.SummonUtils
 
-// 
-// case class FullSchema(component: Map[String, Schema], schema:Schema)
+trait MacroSchema
+
+object MacroSchema:
+  inline given [T](using NotGiven[JsonSchema[T]]): JsonSchema[T] = ${ MacroSchema.impl[T] }
+
+  def impl[T:Type](using q: Quotes): Expr[JsonSchema[T]] = 
+    import q.reflect._
+
+    val repr = TypeRepr.of[T];
+    repr match
+      case OrType(a,b) => 
+        (a.asType,b.asType) match
+          case ('[t1],'[t2]) => 
+            '{new JsonSchema[T] {
+              def schema = 
+                val o1 = summonInline[JsonSchema[t1]]
+                val o2 = summonInline[JsonSchema[t2]]
+                OrRef.Id(WithExtensions(SchemaInternal(
+                  oneOf = Some(Vector(o1.schema,o2.schema))
+                )))
+            }
+            }
+      // case other => 
+      //   other.asType match
+      //     case '[t] =>
+      //       '{new JsonSchema[T] {
+      //         def schema(data:T) = 
+      //           // this won't occur a recusively call, but i dont know why
+      //           val o1 = summonInline[JsonSchema[t]].asInstanceOf[JsonSchema[T]]
+      //           o1.schema
+      //       }
+      //       }
 /**
  *  负责json 的序列化， 反序列化， jsonSchema生成， 以及validation
  **/
-trait JsonSchema[T]:
+trait JsonSchema[T] extends MacroSchema:
   def schema: Schema
 end JsonSchema
 
 object JsonSchema:
   // 需要线程安全
   val component: concurrent.Map[String, WithExtensions[SchemaInternal]] = concurrent.TrieMap.empty
-
-  def schema[T](using o:JsonSchema[T]):Schema = o.schema
 
   given [T](using value: JsonSchema[T]):JsonSchema[Map[String,T]] =
     new JsonSchema[Map[String,T]]:
@@ -67,6 +97,11 @@ object JsonSchema:
           `type` = Some(SchemaType.array),
           items = Some(value.schema)
           )))
+
+  given [T](using value: => JsonSchema[T]):JsonSchema[Option[T]] =
+    new JsonSchema[Option[T]]:
+      def schema:Schema =
+        value.schema
 
   given JsonSchema[Int] with
     def schema:Schema =
@@ -144,9 +179,10 @@ object JsonSchema:
   def schemaDeref(schema:Schema):WithExtensions[SchemaInternal] = 
     schema match
       case OrRef.Id(s) => s
-      case OrRef.Ref(ref) => component(ref)
+      case OrRef.Ref(ref) => 
+        println(component(ref))
+        component(ref)
 
-  // 真的one of， 或者enum
   def sum(element: List[Schema]): Schema = 
     if element.find(item => 
       val schema = schemaDeref(item).spec
@@ -185,33 +221,34 @@ object JsonSchema:
       case h *: t => h.asInstanceOf[String] :: tuple2List(t)
       case EmptyTuple => Nil
 
-  inline given derived[T](using labelling:Labelling[T], q:QualifiedName[T])(using m: Mirror.Of[T]): JsonSchema[T] = 
-    val name = q.fullName
-    val schemaObj = 
-      if !component.contains(name) then
-        // 占位
-        component.addOne(name,null)
-        val items = SummonUtils.summonAll[JsonSchema, m.MirroredElemTypes].map(_.schema)
-        val labels = labelling.elemLabels.toVector
-        val label = labelling.label
-        val schemas = inline m match
-          case s: Mirror.SumOf[T]     => 
-              sum(items)
-          case p: Mirror.ProductOf[T] => 
-              val defaults = summon[DefaultValue[T]]
-              product(items,label,labels, defaults.defaults)
-        schemas match
-          case (OrRef.Id(s)) =>
-            component.addOne(name,s)
-            OrRef.Ref(name)
-          case other => throw Exception(s"schema error, expect OrRef.Id,got: ${other}")
-        schemas
-      else
-        OrRef.Ref(name)
-    
-    println(s"after schemas, $name")
+  
+  /**
+   * 如果当前component里不存在该类型的 schema， 则生成一个
+   * 返回 OrRef.ref
+   * 
+   * SchemaItems 需要summon mirror.elementTypes 的JsonSchema
+   **/
+  given [T](using labelling:Labelling[T], q:QualifiedName[T],m: => SchemaItems[T]): JsonSchema[T] = 
     new JsonSchema[T]:
-      def schema = schemaObj
+      def schema = 
+        val schemaObj = 
+          val name = q.fullName
+          if !component.contains(name) then
+            // 第一时间占位， 下次进入product分支就直接返回ref了
+            component.addOne(name,null)
+            val items = m.items
+            val defaults = summon[DefaultValue[T]]
+            val labels = labelling.elemLabels.toVector
+            val label = labelling.label
+
+            val schemas = 
+              if m.productOrSum == "product" then
+                product(items,label,labels, defaults.defaults)
+              else
+                sum(items)
+            schemas
+          else
+            OrRef.Ref(name)
+        schemaObj
 
 end JsonSchema
-
