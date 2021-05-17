@@ -13,7 +13,7 @@ import swopen.jsonToolbox.utils.SummonUtils
 
 trait UnionEncoder
 object UnionEncoder:
-  inline given [T](using NotGiven[Encoder[T]]): Encoder[T] = ${ impl[T] }
+  transparent inline given [T](using NotGiven[Encoder[T]]): Encoder[T] = ${ impl[T] }
 
   def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
     import q.reflect._
@@ -39,8 +39,10 @@ object CoproductEncoder:
   given coproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
       def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
+
 trait Encoder[T] extends CoproductEncoder:
   def encode(t: T):Json
+  
 end Encoder
 
 
@@ -60,27 +62,23 @@ object Encoder:
   /**
    *  map encoder
    */
-  given [T:Encoder]: Encoder[Map[String,T]] with
+  given [T](using encoder: Encoder[T]): Encoder[Map[String,T]] with
     def encode(t:Map[String,T]) = 
-      val encoder = summon[Encoder[T]]
       Json.JObject(t.map{case (k,v) => (k, encoder.encode(v))})
 
   /**
    *  seq encoder
    */
-  given [T:Encoder]: Encoder[Vector[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[Vector[T]] with
     def encode(t:Vector[T]) = 
-      val encoder = summon[Encoder[T]]
       Json.JArray(t.map(encoder.encode(_)))
 
-  given [T:Encoder]: Encoder[List[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[List[T]] with
     def encode(t:List[T]) = 
-      val encoder = summon[Encoder[T]]
       Json.JArray(t.map(encoder.encode(_)))
 
-  given [T:Encoder]: Encoder[Array[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[Array[T]] with
     def encode(t:Array[T]) = 
-      val encoder = summon[Encoder[T]]
       Json.JArray(Vector.from(t).map(encoder.encode(_)))
 
   /**

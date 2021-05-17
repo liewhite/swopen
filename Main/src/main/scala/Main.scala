@@ -6,7 +6,8 @@ import swopen.jsonToolbox.codec.Encoder
 import swopen.openapi.v3_0_3.Schema
 import shapeless3.deriving.*
 import scala.deriving.*
-// import swopen.openapi.v3_0_3.*
+import scala.compiletime.summonInline
+import swopen.openapi.v3_0_3.*
 
 enum E:
   case A(i:Int|String)
@@ -37,8 +38,9 @@ enum E:
   // println(summon[Mirror.SumOf[E.C.type]])
   // println(E.B(Vector(E.C)).encode.decode[E])
   // println(summon[Encoder[SchemaType]])
-  // println(summon[Encoder[Schema]].encode())
-  println(schema[E])
+  // println(summon[Encoder[Schema]])
+  // println(summon[Encoder[Schema]].encode(schema[E]))
+  println(schema[E].encode)
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[E]])
   // println(summon[Show[E]].show(E.B(None)))

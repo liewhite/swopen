@@ -7,7 +7,8 @@ import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.modifier.Modifier
 import swopen.openapi.v3_0_3.Schema
 import scala.util.NotGiven
-import shapeless3.deriving.*
+import scala.compiletime.summonInline
+// import shapeless3.deriving.*
 
 
 /**
@@ -19,8 +20,7 @@ import shapeless3.deriving.*
 object JsonBehavior:
 
   extension [T](t:T)
-    inline def encode:Json =
-      val encoder = summon[Encoder[T]]
+    def encode(using encoder: Encoder[T]):Json =
       encoder.encode(t)
 
   extension (t:Json)

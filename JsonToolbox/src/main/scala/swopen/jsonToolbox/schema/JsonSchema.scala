@@ -228,7 +228,7 @@ object JsonSchema:
    * 
    * SchemaItems 需要summon mirror.elementTypes 的JsonSchema
    **/
-  given [T](using labelling:Labelling[T], q:QualifiedName[T],m: => SchemaItems[T]): JsonSchema[T] = 
+  given [T](using labelling:Labelling[T], defaults: DefaultValue[T], q:QualifiedName[T],m: => SchemaItems[T]): JsonSchema[T] = 
     new JsonSchema[T]:
       def schema = 
         val schemaObj = 
@@ -237,7 +237,6 @@ object JsonSchema:
             // 第一时间占位， 下次进入product分支就直接返回ref了
             component.addOne(name,null)
             val items = m.items
-            val defaults = summon[DefaultValue[T]]
             val labels = labelling.elemLabels.toVector
             val label = labelling.label
 

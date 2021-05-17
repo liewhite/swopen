@@ -14,7 +14,7 @@ class DecodeException(val message:String) extends Exception(message)
 
 trait MacroDecoder
 object MacroDecoder:
-  inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
+  transparent inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
   def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
     import q.reflect._
 
@@ -36,6 +36,8 @@ object MacroDecoder:
                 })
             }
             }
+      case other => 
+        report.error(s"not support type:,$other");???
 
 trait CoproductDecoder extends MacroDecoder
 object CoproductDecoder:
@@ -108,8 +110,7 @@ object Decoder:
         catch
           case e: DecodeException => Left(e)
 
-  def decodeSeq[T:Decoder](data:Json): Either[DecodeException,List[T]] = 
-    val innerDecoder = summon[Decoder[T]]
+  def decodeSeq[T:Decoder](data:Json)(using innerDecoder: Decoder[T]): Either[DecodeException,List[T]] = 
     data match
       case Json.JArray(array) => 
         val decodedArray = array.map(innerDecoder.decode(_))
@@ -119,9 +120,8 @@ object Decoder:
           case None => Right(decodedArray.map(_.toOption.get).toList)
       case otherTypeValue => decodeError("Json.JArray", data)
 
-  given [T:Decoder]: Decoder[Map[String,T]] with
+  given [T](using innerDecoder: Decoder[T]): Decoder[Map[String,T]] with
     def decode(data:Json):Either[DecodeException, Map[String,T]] = 
-      val innerDecoder = summon[Decoder[T]]
       data match
         case Json.JObject(map) => 
           val decodedArray = map.map{case (k,v) => (k,innerDecoder.decode(v))}
@@ -147,9 +147,8 @@ object Decoder:
     def decode(data:Json):Either[DecodeException, Array[T]] = 
       decodeSeq[T](data).map(_.toSeq.toArray)
 
-  given [T:Decoder]: Decoder[Option[T]] with
+  given [T](using innerDecoder: Decoder[T]): Decoder[Option[T]] with
     def decode(data:Json):Either[DecodeException, Option[T]] = 
-      val innerDecoder = summon[Decoder[T]]
       innerDecoder.decode(data) match
         case Right(v) => Right(Some(v))
         case Left(e) => Right(None)
