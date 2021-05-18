@@ -34,13 +34,16 @@ enum E:
 
 // def f[T](data:T)(using encoder: Encoder[T]) = encoder.encode(data)
 
+def encode[T](data:T)(using e: => Encoder[T]) = e.encode(data)
 @main def test(): Unit =
   // println(summon[Mirror.SumOf[E.C.type]])
   // println(E.B(Vector(E.C)).encode.decode[E])
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[Schema]])
   // println(summon[Encoder[Schema]].encode(schema[E]))
-  println(schema[E].encode)
+  val encoder = summon[Encoder[Schema]]
+  // val value = schema[E]
+  // println(encode(value))
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[E]])
   // println(summon[Show[E]].show(E.B(None)))

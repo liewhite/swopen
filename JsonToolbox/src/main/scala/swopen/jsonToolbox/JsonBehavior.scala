@@ -18,9 +18,8 @@ import scala.compiletime.summonInline
  * 
  */
 object JsonBehavior:
-
   extension [T](t:T)
-    def encode(using encoder: Encoder[T]):Json =
+    def encode(using encoder:  Encoder[T]):Json =
       encoder.encode(t)
 
   extension (t:Json)
