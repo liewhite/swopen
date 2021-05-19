@@ -2,7 +2,6 @@ package swopen.openapi.v3_0_3
 
 import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.JsonBehavior.*
-import swopen.jsonToolbox.schema.JsonSchema
 import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 
 enum OrRef[+T]:

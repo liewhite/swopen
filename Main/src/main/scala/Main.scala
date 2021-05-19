@@ -8,7 +8,7 @@ import scala.deriving.*
 import scala.compiletime.summonInline
 import swopen.openapi.v3_0_3.*
 
-case class Pdt(i:Int,b: Boolean|Pdt)
+case class Pdt(i:Int,b: Boolean|Option[Pdt])
 enum E:
   case A(i:Int|String)
   case B(e: Vector[E] | Option[E])
@@ -36,13 +36,17 @@ enum E:
 
 def encode[T](data:T)(using e: => Encoder[T]) = e.encode(data)
 @main def test(): Unit =
-  // println(summon[Mirror.SumOf[E.C.type]])
+  // println(Pdt(1,true).encode.decode[Pdt])
+  // println(E.C.encode.decode[E])
   // println(E.B(Vector(E.C)).encode.decode[E])
-  // println(summon[Encoder[SchemaType]])
-  // println(summon[Encoder[Schema]])
+  // println(SchemaType.array.encode)
+  val d = OrRef.Id(WithExtensions(Pdt(1, None)))
+  println(d.encode)
+  val data = OrRef.Id(WithExtensions(SchemaInternal()))
+  println(data.encode)
   // println(summon[Encoder[Schema]].encode(schema[E]))
   // val encoder = summon[Encoder[Schema]]
-  println(schema[E])
+  // println(encoder.encode(schema[E]))
   // println(E.C.encode)
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[E]])

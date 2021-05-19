@@ -1,6 +1,6 @@
 package swopen.jsonToolbox
 
-import swopen.jsonToolbox.schema.{JsonSchema,QualifiedName}
+// import swopen.jsonToolbox.schema.{JsonSchema,QualifiedName}
 import swopen.jsonToolbox.codec.Encoder
 import swopen.jsonToolbox.codec.{DecodeException,Decoder}
 import swopen.jsonToolbox.json.Json
@@ -25,5 +25,5 @@ object JsonBehavior:
   extension (t:Json)
     def decode[T](using decoder:Decoder[T]):Either[DecodeException, T] = decoder.decode(t)
   
-  inline def schema[T](using o: JsonSchema[T]):Schema =
-    o.schema
+  // inline def schema[T](using o: JsonSchema[T]):Schema =
+  //   o.schema

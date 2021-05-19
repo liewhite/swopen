@@ -4,7 +4,7 @@ import swopen.jsonToolbox.json.Json
 
 case class SchemaInternal(
   // same with json schema
-  title: Option[String] = None,
+  // title: Option[String] = None,
   // multipleOf: Option[Int] = None,
   // maximum: Option[Int] = None,
   // exclusiveMaximum: Option[Int] = None,
@@ -19,14 +19,14 @@ case class SchemaInternal(
   // maxProperties: Option[Int] = None,
   // minProperties: Option[Int] = None,
   // required: Option[Vector[String]] = None,
-  `enum`: Option[Vector[Json]] = None,
-  const: Option[Json] = None,
+  // `enum`: Option[Vector[Json]] = None,
+  // const: Option[Json] = None,
   // changed from json schema
-  `type`: Option[SchemaType] = None,
-  // allOf: Option[Vector[Schema]] = None,
+  // `type`: Option[SchemaType] = None,
+  allOf: Option[Vector[Schema]] = None,
   oneOf: Option[Vector[Schema]] = None,
-  // anyOf: Option[Vector[Schema]] = None,
-  // not: Option[Schema] = None,
+  anyOf: Option[Vector[Schema]] = None,
+  not: Option[Schema] = None,
   items: Option[Schema] = None,
   properties: Option[WithExtensions[Map[String, Schema]]] = None,
   additionalProperties: Option[AdditionalProperties] = None,

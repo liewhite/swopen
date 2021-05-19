@@ -29,10 +29,10 @@ object UnionEncoder:
                 lazy val o1 = summonInline[Encoder[t1]]
                 lazy val o2 = summonInline[Encoder[t2]]
                 data match
-                  // case o:t1 => o1.encode(o)(Expr.summon[Encoder[t1]])
-                  // case o:t2 => o2.encode(o)(Expr.summon[Encoder[t2]])
-                  case o:t1 => ${Expr.summon[Encoder[t1]].get}.encode(o)
-                  case o:t2 => ${Expr.summon[Encoder[t2]].get}.encode(o)
+                  case o:t1 => o1.encode(o)
+                  case o:t2 => o2.encode(o)
+                  // case o:t1 => ${Expr.summon[Encoder[t1]].get}.encode(o)
+                  // case o:t2 => ${Expr.summon[Encoder[t2]].get}.encode(o)
             }}
       case other => 
         report.error(s"not support type:,$other");???
@@ -65,18 +65,6 @@ object Encoder:
             encoder.encode(elemsValue.productElement(index))
           })
           Json.JObject(fieldsName.zip(elems).toMap)
-  // given product[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
-  //   new Encoder[T]:
-  //     def encode(t: T): Json = 
-  //       val fieldsName = labelling.elemLabels
-
-  //       if(fieldsName.isEmpty) then
-  //         Json.JString(labelling.label)
-  //       else 
-  //         val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
-  //           [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
-  //         )
-  //         Json.JObject(fieldsName.zip(elems.reverse).toMap)
   /**
    *  map encoder
    */
