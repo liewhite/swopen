@@ -4,11 +4,11 @@ import swopen.jsonToolbox.codec.Encoder
 // import swopen.jsonToolbox.schema.JsonSchema
 // import swopen.jsonToolbox.codec.Encoder
 import swopen.openapi.v3_0_3.Schema
-import shapeless3.deriving.*
 import scala.deriving.*
 import scala.compiletime.summonInline
 import swopen.openapi.v3_0_3.*
 
+case class Pdt(i:Int,b: Boolean|Pdt)
 enum E:
   case A(i:Int|String)
   case B(e: Vector[E] | Option[E])
@@ -41,9 +41,9 @@ def encode[T](data:T)(using e: => Encoder[T]) = e.encode(data)
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[Schema]])
   // println(summon[Encoder[Schema]].encode(schema[E]))
-  val encoder = summon[Encoder[Schema]]
-  // val value = schema[E]
-  // println(encode(value))
+  // val encoder = summon[Encoder[Schema]]
+  println(schema[E])
+  // println(E.C.encode)
   // println(summon[Encoder[SchemaType]])
   // println(summon[Encoder[E]])
   // println(summon[Show[E]].show(E.B(None)))

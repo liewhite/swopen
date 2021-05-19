@@ -7,13 +7,12 @@ import scala.collection.concurrent
 import scala.compiletime.*
 import scala.util.NotGiven
 import scala.quoted.*
-import shapeless3.deriving.*
 
 import swopen.jsonToolbox.json.Json
+import swopen.jsonToolbox.typeclasses.Labelling
 import swopen.openapi.v3_0_3.*
 // import swopen.jsonToolbox.schema.{Schema,SchemaNumberImpl}
 import swopen.jsonToolbox.codec.{Encoder,Decoder}
-import swopen.jsonToolbox.utils.SummonUtils
 
 trait MacroSchema
 

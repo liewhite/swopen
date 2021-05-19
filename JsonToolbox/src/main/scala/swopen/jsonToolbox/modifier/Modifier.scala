@@ -1,6 +1,5 @@
 package swopen.jsonToolbox.modifier
 
-import shapeless3.deriving.Annotation
 import scala.util.NotGiven
 import swopen.jsonToolbox.json.Json
 

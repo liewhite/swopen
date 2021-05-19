@@ -6,65 +6,64 @@ import scala.deriving.*
 import scala.quoted.*
 import scala.util.NotGiven
 import scala.compiletime.*
-import shapeless3.deriving.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
 
 class DecodeException(val message:String) extends Exception(message)
 
-trait MacroDecoder
-object MacroDecoder:
-  transparent inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
-  def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
-    import q.reflect._
+// trait MacroDecoder
+// object MacroDecoder:
+//   transparent inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
+//   def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
+//     import q.reflect._
 
-    val repr = TypeRepr.of[T];
-    repr match
-      case OrType(a,b) => 
-        (a.asType,b.asType) match
-          case ('[t1],'[t2]) => 
-            '{new Decoder[T] {
-              def decode(data:Json) = 
-                val o1 = summonInline[Decoder[t1]]
-                val o2 = summonInline[Decoder[t2]]
-                (o1.decode(data) match{
-                  case Right(o) => Right(o.asInstanceOf[T])
-                  case Left(_) => o2.decode(data) match {
-                    case Right(o) => Right(o.asInstanceOf[T])
-                    case Left(e) => Left(e)
-                  }
-                })
-            }
-            }
-      case other => 
-        report.error(s"not support type:,$other");???
+//     val repr = TypeRepr.of[T];
+//     repr match
+//       case OrType(a,b) => 
+//         (a.asType,b.asType) match
+//           case ('[t1],'[t2]) => 
+//             '{new Decoder[T] {
+//               def decode(data:Json) = 
+//                 val o1 = summonInline[Decoder[t1]]
+//                 val o2 = summonInline[Decoder[t2]]
+//                 (o1.decode(data) match{
+//                   case Right(o) => Right(o.asInstanceOf[T])
+//                   case Left(_) => o2.decode(data) match {
+//                     case Right(o) => Right(o.asInstanceOf[T])
+//                     case Left(e) => Left(e)
+//                   }
+//                 })
+//             }
+//             }
+//       case other => 
+//         report.error(s"not support type:,$other");???
 
-trait CoproductDecoder extends MacroDecoder
-object CoproductDecoder:
-  given [T](using inst: => K0.CoproductInstances[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
-    new Decoder[T]:
-      def decode(json: Json): Either[DecodeException, T] = 
-        json match
-          // 按名称序列化
-          case Json.JString(s) => 
-            println(s)
-            val ordinal = labelling.elemLabels.indexOf(s)
-            inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => (s, rt.decode(json).toOption)) match
-              case (s, None) => Left(DecodeException(s"cant decode to :${labelling.label}" + json.serialize))
-              case (tl, Some(t)) => Right(t)
+// trait CoproductDecoder extends MacroDecoder
+// object CoproductDecoder:
+//   given [T](using inst: => K0.CoproductInstances[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
+//     new Decoder[T]:
+//       def decode(json: Json): Either[DecodeException, T] = 
+//         json match
+//           // 按名称序列化
+//           case Json.JString(s) => 
+//             println(s)
+//             val ordinal = labelling.elemLabels.indexOf(s)
+//             inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => (s, rt.decode(json).toOption)) match
+//               case (s, None) => Left(DecodeException(s"cant decode to :${labelling.label}" + json.serialize))
+//               case (tl, Some(t)) => Right(t)
 
-          case other:Json => 
-            val result = labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
-              val (label, i) = p
-              inst.project[Json](i)(other)([t] => (s: Json, rt: Decoder[t]) => (other,rt.decode(s).toOption)) match 
-                case (s, None) => None
-                case (tl, Some(t)) => Some(t)
-            }).find(_.isDefined).flatten
-            result match
-              case Some(v) => Right(v)
-              case None => Left(DecodeException("can't decode :" + labelling.label))
+//           case other:Json => 
+//             val result = labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
+//               val (label, i) = p
+//               inst.project[Json](i)(other)([t] => (s: Json, rt: Decoder[t]) => (other,rt.decode(s).toOption)) match 
+//                 case (s, None) => None
+//                 case (tl, Some(t)) => Some(t)
+//             }).find(_.isDefined).flatten
+//             result match
+//               case Some(v) => Right(v)
+//               case None => Left(DecodeException("can't decode :" + labelling.label))
 
-trait Decoder[T] extends CoproductDecoder:
+trait Decoder[T]:
   def decode(data:Json): Either[DecodeException, T]
 end Decoder
 
@@ -75,40 +74,40 @@ object Decoder:
   def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
 
 
-  given [T](using inst: K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
-    new Decoder[T]:
-      def decode(data: Json): Either[DecodeException, T] =  
-        val fieldsName = labelling.elemLabels
+  // given [T](using inst: K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
+  //   new Decoder[T]:
+  //     def decode(data: Json): Either[DecodeException, T] =  
+  //       val fieldsName = labelling.elemLabels
         
-        val label = labelling.label
-        try
-          val itemsData: Json.JObject = data match
-            // 如果是字符串， 那么可能是 遇到 没有参数的 Enum了
-            case Json.JString(s) => 
-              if s == label then 
-                Json.JObject(Map.empty) 
-              else
-                throw new DecodeException("label not equals enum name")
-            case json:Json.JObject => json
-            case json:Json => 
-                throw new DecodeException( s"expect product, got: ${json.serialize}")
+  //       val label = labelling.label
+  //       try
+  //         val itemsData: Json.JObject = data match
+  //           // 如果是字符串， 那么可能是 遇到 没有参数的 Enum了
+  //           case Json.JString(s) => 
+  //             if s == label then 
+  //               Json.JObject(Map.empty) 
+  //             else
+  //               throw new DecodeException("label not equals enum name")
+  //           case json:Json.JObject => json
+  //           case json:Json => 
+  //               throw new DecodeException( s"expect product, got: ${json.serialize}")
 
-          var index = 0
-          val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
-            val value = itemsData.value.get(fieldsName(index))
+  //         var index = 0
+  //         val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
+  //           val value = itemsData.value.get(fieldsName(index))
             
-            // val item = itemDecoder.decode(value)
-            val item = value match
-              case Some(v) => itemDecoder.decode(v) match
-                case Right(o) => o
-                case Left(e) => throw e
-              case None => throw DecodeException(s"key not exist: ${fieldsName(index)}")
-            index += 1
-            item
-          )
-          Right(result)
-        catch
-          case e: DecodeException => Left(e)
+  //           // val item = itemDecoder.decode(value)
+  //           val item = value match
+  //             case Some(v) => itemDecoder.decode(v) match
+  //               case Right(o) => o
+  //               case Left(e) => throw e
+  //             case None => throw DecodeException(s"key not exist: ${fieldsName(index)}")
+  //           index += 1
+  //           item
+  //         )
+  //         Right(result)
+  //       catch
+  //         case e: DecodeException => Left(e)
 
   def decodeSeq[T:Decoder](data:Json)(using innerDecoder: Decoder[T]): Either[DecodeException,List[T]] = 
     data match
