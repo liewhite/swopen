@@ -14,7 +14,8 @@ import swopen.jsonToolbox.typeclasses.{ProductInst,CoproductInst}
 
 trait UnionEncoder
 object UnionEncoder:
-  inline given [T](using NotGiven[Encoder[T]]): Encoder[T] = ${ impl[T] }
+  // inline given union[T](using NotGiven[Encoder[T]]): Encoder[T] = ${ impl[T] }
+  inline given union[T]: Encoder[T] = ${ impl[T] }
 
   def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
     import q.reflect._
@@ -51,6 +52,19 @@ end Encoder
 
 
 object Encoder:
+  // inline def derived[T](using m: Mirror.Of[T]): Encoder[T] =
+  //   inline m match
+  //     case s: Mirror.SumOf[T]     =>
+  //       given Mirror.SumOf[T] = m.asInstanceOf
+  //       lazy val coproductInst: CoproductInst[Encoder,T] = summon[CoproductInst[Encoder, T]]
+  //       CoproductEncoder.coproduct(using coproductInst)
+  //     case p: Mirror.ProductOf[T] => 
+  //       given Mirror.ProductOf[T] = m.asInstanceOf
+  //       lazy val productInst: ProductInst[Encoder,T] = summon[ProductInst[Encoder, T]]
+  //       product(using productInst)
+  //       product
+  //     case _ => UnionEncoder.union
+
   given product[T](using productInst: => ProductInst[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
     new Encoder[T]:
       def encode(t: T): Json = 

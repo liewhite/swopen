@@ -36,7 +36,7 @@ enum E:
 
 def encode[T](data:T)(using e: => Encoder[T]) = e.encode(data)
 @main def test(): Unit =
-  // println(Pdt(1,true).encode.decode[Pdt])
+  println(Pdt(1,true).encode.decode[Pdt])
   // println(E.C.encode.decode[E])
   // println(E.B(Vector(E.C)).encode.decode[E])
   // println(SchemaType.array.encode)
