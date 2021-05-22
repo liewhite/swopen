@@ -6,6 +6,8 @@ import scala.quoted.*
 import scala.compiletime.*
 import scala.util.NotGiven
 
+import shapeless3.deriving.{K0,Continue}
+
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.JsonBehavior.*
 import swopen.jsonToolbox.utils.SummonUtils
@@ -40,10 +42,9 @@ object UnionEncoder:
 
 trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
-  given coproduct[T](using inst: => CoproductInst[Encoder, T]): Encoder[T]  =
+  given splsCoproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
-      def encode(t: T): Json = 
-        inst.elemT(inst.ordinal(t)).encode(t)
+      def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
 
 trait Encoder[T] extends CoproductEncoder:
   def encode(t: T):Json
@@ -52,20 +53,9 @@ end Encoder
 
 
 object Encoder:
-  // inline def derived[T](using m: Mirror.Of[T]): Encoder[T] =
-  //   inline m match
-  //     case s: Mirror.SumOf[T]     =>
-  //       given Mirror.SumOf[T] = m.asInstanceOf
-  //       lazy val coproductInst: CoproductInst[Encoder,T] = summon[CoproductInst[Encoder, T]]
-  //       CoproductEncoder.coproduct(using coproductInst)
-  //     case p: Mirror.ProductOf[T] => 
-  //       given Mirror.ProductOf[T] = m.asInstanceOf
-  //       lazy val productInst: ProductInst[Encoder,T] = summon[ProductInst[Encoder, T]]
-  //       product(using productInst)
-  //       product
-  //     case _ => UnionEncoder.union
+  inline def derived[A](using gen: K0.Generic[A]): Encoder[A] = gen.derive(splsProduct,CoproductEncoder.splsCoproduct)
 
-  given product[T](using productInst: => ProductInst[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
+  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
     new Encoder[T]:
       def encode(t: T): Json = 
         val fieldsName = labelling.elemLabels
@@ -73,12 +63,11 @@ object Encoder:
         if(fieldsName.isEmpty) then
           Json.JString(labelling.label)
         else 
-          val elemsValue = t.asInstanceOf[Product]
-          val elemsEncoder = productInst.elemT
-          val elems = elemsEncoder.zipWithIndex.map( (encoder, index) => {
-            encoder.encode(elemsValue.productElement(index))
-          })
-          Json.JObject(fieldsName.zip(elems).toMap)
+          val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
+            [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
+          )
+          Json.JObject(fieldsName.zip(elems.reverse).toMap)
+
   /**
    *  map encoder
    */

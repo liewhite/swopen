@@ -11,7 +11,7 @@ case class HeaderInternal(
   style: Option[String],
   explode: Option[Boolean],
   allowReserved: Option[Boolean],
-  schema: Option[Schema],
+  schema: Option[FullSchema],
   example: Option[Json],
   examples: Option[Map[String,OrRef[Example]]],
 

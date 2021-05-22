@@ -5,7 +5,7 @@ import swopen.jsonToolbox.codec.Encoder
 import swopen.jsonToolbox.codec.{DecodeException,Decoder}
 import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.modifier.Modifier
-import swopen.openapi.v3_0_3.Schema
+import swopen.openapi.v3_0_3.*
 import scala.util.NotGiven
 import scala.compiletime.summonInline
 // import shapeless3.deriving.*

@@ -52,7 +52,6 @@ enum Json:
 
       case JObject(value) => 
         val obj = new ObjectNode(JsonNodeFactory.instance)
-        // println(value)
         // 使用case匹配貌似有bug,会多匹配一次
         value.foreach(item => obj.set(item._1,item._2.toJacksonTree))
         //   case (k,v) => obj.set(k, v.toJacksonTree)

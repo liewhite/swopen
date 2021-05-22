@@ -1,11 +1,11 @@
 package swopen.jsonToolbox.schema
 
-import swopen.openapi.v3_0_3.Schema
+import swopen.openapi.v3_0_3.*
 import scala.deriving.*
 import scala.compiletime.*
 import swopen.jsonToolbox.utils.*
 
-class SchemaItems[T](val items: List[Schema], val productOrSum: String)
+class SchemaItems[T](val items: List[FullSchema], val productOrSum: String)
 
 
 // object SchemaItems:

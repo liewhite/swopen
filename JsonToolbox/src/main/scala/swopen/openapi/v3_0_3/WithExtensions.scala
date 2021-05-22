@@ -12,7 +12,7 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 case class WithExtensions[T](spec:T,additionalInfo: Option[Map[String,Json]] = None)
 
 object WithExtensions:
-  given [T](using encoder: => Encoder[T]): Encoder[WithExtensions[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[WithExtensions[T]] with
     def encode(t: WithExtensions[T]) = 
       val spec = encoder.encode(t.spec)
       spec match
