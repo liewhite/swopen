@@ -49,8 +49,6 @@ class TestEncode:
     val b = Json.deserialize("""{"key":[1,3,33333333333333333333333333333333333]}""").toOption.get
     val obj1 = a.encode.decode[A].toOption.get
     val obj2 = b.decode[A].toOption.get
-    // println(obj1)
-    // println(obj2)
     assert(obj1 == obj2)
 
   @Test 
@@ -89,7 +87,7 @@ class TestEncode:
     
   @Test 
   def testRecursiveAdt = 
+    val a = RecursiveC(1,None)
     val b = RecursiveC(1,Some(RecursiveC(1,None)))
-    println(b.encode)
-    // assert(a == Json.deserialize(a.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)
-    // assert(b == Json.deserialize(b.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)
+    assert(a == Json.deserialize(a.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)
+    assert(b == Json.deserialize(b.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)

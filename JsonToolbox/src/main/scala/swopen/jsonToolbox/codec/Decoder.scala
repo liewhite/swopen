@@ -8,13 +8,14 @@ import scala.util.NotGiven
 import scala.compiletime.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
-import swopen.jsonToolbox.typeclasses.{ProductInst, CoproductInst, Labelling,ArrayProduct}
+import shapeless3.deriving.*
 
 class DecodeException(val message:String) extends Exception(message)
 
 trait MacroDecoder
 object MacroDecoder:
-  transparent inline given [T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
+  inline given union[T](using NotGiven[Decoder[T]]): Decoder[T] = ${ impl[T] }
+
   def impl[T:Type](using q: Quotes): Expr[Decoder[T]] = 
     import q.reflect._
 
@@ -41,26 +42,27 @@ object MacroDecoder:
 
 trait CoproductDecoder extends MacroDecoder
 object CoproductDecoder:
-  given [T](using inst: => CoproductInst[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
+  given coproduct[T](using inst: => K0.CoproductInstances[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
     new Decoder[T]:
       def decode(json: Json): Either[DecodeException, T] = 
         json match
           // 按名称序列化
           case Json.JString(s) => 
             val ordinal = labelling.elemLabels.indexOf(s)
-            val decoder = inst.elemT(ordinal)
-            decoder.decode(json) match 
-              case Right(o) => Right(o.asInstanceOf[T])
-              case Left(e) => Left(e)
+            inst.project[Json](ordinal)(json)([t] => (s: Json, rt: Decoder[t]) => (s, rt.decode(json).toOption)) match
+              case (s, None) => Left(DecodeException(s"cant decode to :${labelling.label}" + json.serialize))
+              case (tl, Some(t)) => Right(t)
 
           case other:Json => 
-            def findCase(decoders: List[Decoder[Any]]): Either[DecodeException,T] = 
-              decoders match
-                case decoder :: rest => decoder.decode(other) match
-                  case Right(o) => Right(o.asInstanceOf[T])
-                  case Left(e) => findCase(rest)
-                case Nil => Left(DecodeException(s"${labelling.label} no enum match: $json"))
-            findCase(inst.elemT)
+            val result = labelling.elemLabels.zipWithIndex.iterator.map((p: (String, Int)) => {
+              val (label, i) = p
+              inst.project[Json](i)(other)([t] => (s: Json, rt: Decoder[t]) => (other,rt.decode(s).toOption)) match 
+                case (s, None) => None
+                case (tl, Some(t)) => Some(t)
+            }).find(_.isDefined).flatten
+            result match
+              case Some(v) => Right(v)
+              case None => Left(DecodeException("can't decode :" + labelling.label))
 
 trait Decoder[T] extends CoproductDecoder:
   def decode(data:Json): Either[DecodeException, T]
@@ -72,7 +74,9 @@ object Decoder:
 
   def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
 
-  given [T](using inst: => ProductInst[Decoder, T],labelling: Labelling[T]): Decoder[T] =
+  inline def derived[T](gen: K0.Generic[T]): Decoder[T] = gen.derive(product,CoproductDecoder.coproduct)
+
+  given product[T](using inst: =>K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val fieldsName = labelling.elemLabels
@@ -89,17 +93,18 @@ object Decoder:
             case json:Json => 
                 throw new DecodeException( s"expect product, got: ${json.serialize}")
 
-          val elemsDecoder = inst.elemT
-          val elems = elemsDecoder.zipWithIndex.map( (decoder, index) => {
-            val itemData = itemsData.value.get(fieldsName(index)) match
-              case Some(o) => o
-              case None => throw DecodeException(s"field not found: ${fieldsName(index)}")
-
-            decoder.decode(itemData) match
-              case Right(o) => o
-              case Left(e) => throw e
-          })
-          Right(inst.fromProduct(new ArrayProduct(elems.toArray)))
+          var index = 0
+          val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
+            val value = itemsData.value.get(fieldsName(index))
+            val item = value match
+              case Some(v) => itemDecoder.decode(v) match
+                case Right(o) => o
+                case Left(e) => throw e
+              case None => throw DecodeException(s"key not exist: ${fieldsName(index)}")
+            index += 1
+            item
+          )
+          Right(result)
         catch
           case e: DecodeException => Left(e)
 

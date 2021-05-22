@@ -6,13 +6,11 @@ import scala.quoted.*
 import scala.compiletime.*
 import scala.util.NotGiven
 
-import shapeless3.deriving.{K0,Continue}
+import shapeless3.deriving.{K0,Continue,Labelling}
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.JsonBehavior.*
 import swopen.jsonToolbox.utils.SummonUtils
-import swopen.jsonToolbox.typeclasses.Labelling
-import swopen.jsonToolbox.typeclasses.{ProductInst,CoproductInst}
 
 trait UnionEncoder
 object UnionEncoder:

@@ -1,7 +1,7 @@
 package swopen.openapi.v3_0_3
 import swopen.jsonToolbox.codec.*
 
-enum SchemaType derives Encoder:
+enum SchemaType:
   case array	
   case boolean
   case integer

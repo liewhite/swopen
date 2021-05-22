@@ -13,4 +13,4 @@ case class X(x: Int)
 
 @main def test(): Unit =
   println(FullSchema(SchemaInternal()).encode)
-  // println(summon[Encoder[E]])
+  println(E.C.encode)

@@ -37,7 +37,7 @@ case class SchemaInternal(
   default: Option[Json] = None,
 
   // new in openapi, not support yet
-) 
+) derives Encoder
 
 type FullSchema = OrRef[WithExtensions[SchemaInternal]]
 object FullSchema:
