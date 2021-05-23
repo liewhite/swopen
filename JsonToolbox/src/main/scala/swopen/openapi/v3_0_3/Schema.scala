@@ -1,8 +1,10 @@
 package swopen.openapi.v3_0_3
 
 import swopen.jsonToolbox.codec.Encoder
+import swopen.jsonToolbox.codec.IgnoreNull
 import swopen.jsonToolbox.json.Json
 
+@IgnoreNull()
 case class SchemaInternal(
   // same with json schema
   title: Option[String] = None,
@@ -31,7 +33,7 @@ case class SchemaInternal(
   anyOf: Option[Vector[FullSchema]] = None,
   not: Option[FullSchema] = None,
   items: Option[FullSchema] = None,
-  additionalProperties: Option[AdditionalProperties] = None,
+  additionalProperties: Option[Boolean | FullSchema] = None,
   description: Option[String] = None,
   format: Option[String] = None,
   default: Option[Json] = None,
@@ -39,6 +41,7 @@ case class SchemaInternal(
   // new in openapi, not support yet
 ) derives Encoder
 
-type FullSchema = OrRef[WithExtensions[SchemaInternal]]
+type FullSchema = WithExtensions[SchemaInternal] | RefTo
+
 object FullSchema:
-  def apply(schema: SchemaInternal) = OrRef.Id(WithExtensions(schema))
+  def apply(schema: SchemaInternal):FullSchema = WithExtensions(schema)

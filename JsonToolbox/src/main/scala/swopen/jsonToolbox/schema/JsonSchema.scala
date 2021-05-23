@@ -32,9 +32,9 @@ object MacroSchema:
               def schema = 
                 val o1 = summonInline[JsonSchema[t1]]
                 val o2 = summonInline[JsonSchema[t2]]
-                OrRef.Id(WithExtensions(SchemaInternal(
+                WithExtensions(SchemaInternal(
                   oneOf = Some(Vector(o1.schema,o2.schema))
-                )))
+                ))
             }
             }
       case other => 
@@ -51,42 +51,42 @@ object JsonSchema:
   given [T](using value: JsonSchema[T]):JsonSchema[Map[String,T]] =
     new JsonSchema[Map[String,T]]:
       def schema: FullSchema = 
-        OrRef.Id(WithExtensions(SchemaInternal(
+        WithExtensions(SchemaInternal(
           `type` = Some(SchemaType.`object`),
-          additionalProperties = Some(AdditionalProperties.Scm(value.schema))
-          )))
+          additionalProperties = Some(value.schema)
+          ))
 
   given [T](using value: JsonSchema[T]):JsonSchema[List[T]] =
     new JsonSchema[List[T]]:
       def schema: FullSchema = 
-        OrRef.Id(WithExtensions(SchemaInternal(
+        WithExtensions(SchemaInternal(
           `type` = Some(SchemaType.array),
           items = Some(value.schema)
-          )))
+          ))
 
   given [T](using value: JsonSchema[T]):JsonSchema[Vector[T]] =
     new JsonSchema[Vector[T]]:
       def schema: FullSchema =
-        OrRef.Id(WithExtensions(SchemaInternal(
+        WithExtensions(SchemaInternal(
           `type` = Some(SchemaType.array),
           items = Some(value.schema)
-          )))
+          ))
 
   given [T](using value: JsonSchema[T]):JsonSchema[Seq[T]] =
     new JsonSchema[Seq[T]]:
       def schema: FullSchema =
-        OrRef.Id(WithExtensions(SchemaInternal(
+        WithExtensions(SchemaInternal(
           `type` = Some(SchemaType.array),
           items = Some(value.schema)
-          )))
+          ))
 
   given [T](using value: JsonSchema[T]):JsonSchema[Array[T]] =
     new JsonSchema[Array[T]]:
       def schema: FullSchema =
-        OrRef.Id(WithExtensions(SchemaInternal(
+        WithExtensions(SchemaInternal(
           `type` = Some(SchemaType.array),
           items = Some(value.schema)
-          )))
+          ))
 
   given [T](using value: => JsonSchema[T]):JsonSchema[Option[T]] =
     new JsonSchema[Option[T]]:
@@ -95,71 +95,71 @@ object JsonSchema:
 
   given JsonSchema[Int] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[Long] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[Float] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[Double] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[BigInteger] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[BigInt] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[BigDecimal] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[ScalaBigDecimal] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.number),
-        )))
+        ))
 
   given JsonSchema[Boolean] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.boolean),
-        )))
+        ))
 
   given JsonSchema[String] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.string),
-        )))
+        ))
 
   // given JsonSchema[Array[Byte]] with
   //   def schema: FullSchema = Schema.SchemaBytes
 
   given JsonSchema[Json] with
     def schema: FullSchema =
-      OrRef.Id(WithExtensions(SchemaInternal(
-        )))
+      WithExtensions(SchemaInternal(
+        ))
 
   inline def summonAll[T <: Tuple]: List[FullSchema] = 
     inline erasedValue[T] match
@@ -168,10 +168,10 @@ object JsonSchema:
 
   def schemaDeref(schema: FullSchema):WithExtensions[SchemaInternal] = 
     schema match
-      case OrRef.Id(s) => s
-      case OrRef.Ref(ref) => 
-        println(component(ref))
+      case RefTo(ref) => 
+        // println(component(ref))
         component(ref)
+      case s:WithExtensions[SchemaInternal] => s
 
   def sum(element: List[FullSchema]): FullSchema = 
     if element.find(item => 
@@ -182,28 +182,28 @@ object JsonSchema:
         val schema = schemaDeref(item).spec
         schema.const.get
       ).toVector
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.string),
         `enum` = Some(es)
-        )))
+        ))
     else
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         oneOf = Some(element.toVector),
-        )))
+        ))
   
   def product(elements:List[FullSchema],label:String, labels:Vector[String], defaults:Map[String,Any] /*todo annotations 放这里*/): FullSchema = 
     val itemKeys = labels
     if itemKeys.isEmpty then
-      OrRef.Id(WithExtensions(SchemaInternal(
+      WithExtensions(SchemaInternal(
         `type` = Some(SchemaType.string),
         const = Some(Json.JString(label))
-        )))
+        ))
     else
       val schema = SchemaInternal(
         `type` = Some(SchemaType.`object`),
         properties = Some(WithExtensions(labels.zip(elements).toMap))
       )
-      OrRef.Id(WithExtensions(schema))
+      WithExtensions(schema)
   
 
   def tuple2List[T<: Tuple](data:T): List[String] = 
@@ -214,7 +214,7 @@ object JsonSchema:
   
   /**
    * 如果当前component里不存在该类型的 schema， 则生成一个
-   * 返回 OrRef.ref
+   * 返回 RefTo
    * 
    * SchemaItems 需要summon mirror.elementTypes 的JsonSchema
    **/
@@ -237,7 +237,7 @@ object JsonSchema:
                 sum(items)
             schemas
           else
-            OrRef.Ref(name)
+            RefTo(name)
         schemaObj
 
 end JsonSchema

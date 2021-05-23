@@ -1,9 +1,8 @@
 package swopen.openapi.v3_0_3
 
+import swopen.jsonToolbox.codec.IgnoreNull
 
-/**
- *  paths
- * */
+@IgnoreNull()
 case class PathItemInternal(
   `$ref`: Option[String],
   summary: Option[String],
@@ -19,7 +18,7 @@ case class PathItemInternal(
   trace: Option[PathOperation],
 
   servers: Option[Vector[Server]],
-  parameters: Option[Vector[OrRef[Parameter]]]
+  parameters: Option[Vector[Parameter|RefTo]]
 )
 
 type PathItem = WithExtensions[PathItemInternal]

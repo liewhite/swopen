@@ -4,6 +4,9 @@ package swopen.openapi.v3_0_3
 /**
  *  Server detail
  * */
+import swopen.jsonToolbox.codec.IgnoreNull
+
+@IgnoreNull()
 case class ServerInternal(
   url: String,
   description: Option[String],

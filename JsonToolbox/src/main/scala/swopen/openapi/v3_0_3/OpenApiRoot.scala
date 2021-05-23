@@ -6,6 +6,10 @@ import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
 
 
 
+import swopen.jsonToolbox.codec.IgnoreNull
+
+
+@IgnoreNull()
 case class OpenApiRoot(
   openapi: String,
   info: Info, 

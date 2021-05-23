@@ -1,6 +1,10 @@
 package swopen.openapi.v3_0_3
 
 
+import swopen.jsonToolbox.codec.IgnoreNull
+
+
+@IgnoreNull()
 case class InfoInternal(
   title: String,
   description: Option[String],
