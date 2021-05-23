@@ -28,8 +28,9 @@ enum Json:
   case JArray(value: Seq[Json])
   case JObject(value: Map[String, Json])
 
-  def serialize: String = 
-    val mapper = ObjectMapper()
+  def serialize(pretty: Boolean = false): String = 
+    val mapper = if pretty then ObjectMapper().writerWithDefaultPrettyPrinter() else ObjectMapper().writer()
+    // val mapper = ObjectMapper().writerWithDefaultPrettyPrinter()
     val s = mapper.writeValueAsString(this.toJacksonTree)
     s
 

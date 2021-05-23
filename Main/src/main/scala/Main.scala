@@ -14,3 +14,4 @@ case class X(x: Int)
 @main def test(): Unit =
   println(FullSchema(SchemaInternal()).encode)
   println(E.C.encode)
+  println(schema[E].encode.serialize(pretty = true))

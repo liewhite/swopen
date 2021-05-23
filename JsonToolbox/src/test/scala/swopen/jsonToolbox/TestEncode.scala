@@ -55,7 +55,7 @@ class TestEncode:
   def renameEncode = 
     case class A(@Modifier(rename="key2") key: String, keyWithoutRename: String)
     val obj = A("rename","not rename")
-    val str = obj.encode.serialize
+    val str = obj.encode.serialize()
 
     val newObj = Json.deserialize(str).toOption.get.decode[A].toOption.get
     assert(obj == newObj)
@@ -65,8 +65,8 @@ class TestEncode:
   def unionEncode = 
     val ab1: A|B = A(1)
     val ab2: A|B = B(1)
-    assert(ab1.encode.serialize  == """{"a":1}""")
-    assert(ab2.encode.serialize  == """{"b":1}""")
+    assert(ab1.encode.serialize()  == """{"a":1}""")
+    assert(ab2.encode.serialize()  == """{"b":1}""")
     assert(ab1.encode.decode[A|B].toOption.get  == ab1)
     assert(ab2.encode.decode[A|B].toOption.get  == ab2)
     val a : UnionA | UnionB |UnionC = UnionA(1,"asd")
@@ -81,13 +81,13 @@ class TestEncode:
     val a:E = E.A(3)
     val b:E = E.B
     val c:E = E.C
-    assert(a == Json.deserialize(a.encode.serialize).toOption.get.decode[E].toOption.get)
-    assert(b == Json.deserialize(b.encode.serialize).toOption.get.decode[E].toOption.get)
-    assert(c == Json.deserialize(c.encode.serialize).toOption.get.decode[E].toOption.get)
+    assert(a == Json.deserialize(a.encode.serialize()).toOption.get.decode[E].toOption.get)
+    assert(b == Json.deserialize(b.encode.serialize()).toOption.get.decode[E].toOption.get)
+    assert(c == Json.deserialize(c.encode.serialize()).toOption.get.decode[E].toOption.get)
     
   @Test 
   def testRecursiveAdt = 
     val a = RecursiveC(1,None)
     val b = RecursiveC(1,Some(RecursiveC(1,None)))
-    assert(a == Json.deserialize(a.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)
-    assert(b == Json.deserialize(b.encode.serialize).toOption.get.decode[RecursiveC].toOption.get)
+    assert(a == Json.deserialize(a.encode.serialize()).toOption.get.decode[RecursiveC].toOption.get)
+    assert(b == Json.deserialize(b.encode.serialize()).toOption.get.decode[RecursiveC].toOption.get)

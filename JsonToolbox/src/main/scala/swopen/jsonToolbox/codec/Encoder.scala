@@ -26,10 +26,10 @@ object UnionEncoder:
         (a.asType,b.asType) match
           case ('[t1],'[t2]) => 
             '{new Encoder[T] {
-              def encode(data:T) = 
+              def encode(t:T) = 
                 lazy val o1 = summonInline[Encoder[t1]]
                 lazy val o2 = summonInline[Encoder[t2]]
-                data match
+                t match
                   case o:t1 => o1.encode(o)
                   case o:t2 => o2.encode(o)
                   // case o:t1 => ${Expr.summon[Encoder[t1]].get}.encode(o)
