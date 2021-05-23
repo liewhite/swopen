@@ -10,6 +10,7 @@ import shapeless3.deriving.{K0,Continue,Labelling}
 
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.JsonBehavior.*
+import swopen.jsonToolbox.typeclasses.{RepeatableAnnotation,RepeatableAnnotations}
 import swopen.jsonToolbox.utils.SummonUtils
 
 trait UnionEncoder
@@ -53,7 +54,7 @@ end Encoder
 object Encoder:
   inline def derived[A](using gen: K0.Generic[A]): Encoder[A] = gen.derive(splsProduct,CoproductEncoder.splsCoproduct)
 
-  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T]): Encoder[T] =  
+  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T], annotation: RepeatableAnnotation[IgnoreNull,T]): Encoder[T] =  
     new Encoder[T]:
       def encode(t: T): Json = 
         val fieldsName = labelling.elemLabels
@@ -64,7 +65,13 @@ object Encoder:
           val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
             [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
           )
-          Json.JObject(fieldsName.zip(elems.reverse).toMap)
+          // val rawJson = Json.JObject(fieldsName.zip(elems.reverse).toMap)
+          val rawMap = fieldsName.zip(elems.reverse).toMap
+          Json.JObject(
+            if annotation().nonEmpty then
+              rawMap.filter(_._2 != Json.JNull)
+            else rawMap
+          ) 
 
   /**
    *  map encoder

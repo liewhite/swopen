@@ -8,43 +8,43 @@ import swopen.jsonToolbox.utils.*
  * this file is fork from shapeless3
  **/
 
-trait Annotation[A, T] extends Serializable {
+trait RepeatableAnnotation[A, T] extends Serializable {
   def apply(): List[A]
 }
 
-object Annotation {
-  def apply[A,T](implicit annotations: Annotation[A, T]): Annotation[A, T] = annotations
+object RepeatableAnnotation {
+  def apply[A,T](implicit annotations: RepeatableAnnotation[A, T]): RepeatableAnnotation[A, T] = annotations
 
-  def mkAnnotation[A, T](annotations: List[A]): Annotation[A, T] =
-    new Annotation[A, T] {
+  def mkAnnotation[A, T](annotations: List[A]): RepeatableAnnotation[A, T] =
+    new RepeatableAnnotation[A, T] {
       def apply() = annotations
     }
 
-  inline def mkAnnotation[A, T]: Annotation[A, T] = ${ AnnotationMacros.mkAnnotation }
+  inline def mkAnnotation[A, T]: RepeatableAnnotation[A, T] = ${ AnnotationMacros.mkAnnotation }
 
-  inline given [A, T]: Annotation[A, T] = mkAnnotation[A, T]
+  inline given [A, T]: RepeatableAnnotation[A, T] = mkAnnotation[A, T]
 }
 
-trait Annotations[A,T] extends Serializable {
+trait RepeatableAnnotations[A,T] extends Serializable {
 
   def apply(): List[List[A]]
 }
 
-object Annotations {
-  def apply[A, T](implicit annotations: Annotations[A,T]): Annotations[A,T] = annotations
+object RepeatableAnnotations {
+  def apply[A, T](implicit annotations: RepeatableAnnotations[A,T]): RepeatableAnnotations[A,T] = annotations
 
 
-  def mkAnnotations[A, T](annotations: List[List[A]]): Annotations[A,T] =
-    new Annotations[A, T] {
+  def mkAnnotations[A, T](annotations: List[List[A]]): RepeatableAnnotations[A,T] =
+    new RepeatableAnnotations[A, T] {
       def apply() = annotations
     }
 
-  transparent inline implicit def mkAnnotations[A, T]: Annotations[A, T] =
+  transparent inline implicit def mkAnnotations[A, T]: RepeatableAnnotations[A, T] =
     ${ AnnotationMacros.mkAnnotations[A, T] }
 }
 
 object AnnotationMacros {
-  def mkAnnotation[A: Type, T: Type](using Quotes): Expr[Annotation[A, T]] = {
+  def mkAnnotation[A: Type, T: Type](using Quotes): Expr[RepeatableAnnotation[A, T]] = {
     import quotes.reflect._
 
     val annotTpe = TypeRepr.of[A]
@@ -59,11 +59,11 @@ object AnnotationMacros {
         Expr.ofList(List.empty[Expr[A]])
       else
         Expr.ofList(anns)
-      '{ Annotation.mkAnnotation[A, T](${ex}) }
+      '{ RepeatableAnnotation.mkAnnotation[A, T](${ex}) }
     }
   }
 
-  def mkAnnotations[A: Type, T: Type](using q: Quotes): Expr[Annotations[A, T]] = {
+  def mkAnnotations[A: Type, T: Type](using q: Quotes): Expr[RepeatableAnnotations[A, T]] = {
     import quotes.reflect._
 
     val annotTpe = TypeRepr.of[A]
@@ -74,8 +74,8 @@ object AnnotationMacros {
       val r = new ReflectionUtils(q)
       import r._
 
-      def mkAnnotations(annotTrees: Seq[Expr[List[A]]]): Expr[Annotations[A, T]] =
-        '{ Annotations.mkAnnotations[A, T](${Expr.ofList(annotTrees)}) }
+      def mkAnnotations(annotTrees: Seq[Expr[List[A]]]): Expr[RepeatableAnnotations[A, T]] =
+        '{ RepeatableAnnotations.mkAnnotations[A, T](${Expr.ofList(annotTrees)}) }
 
       def findAnnotation[A: Type](annoteeSym: Symbol): Expr[List[A]] =
         val anns = annoteeSym.annotations.filter(_.tpe <:< annotTpe).map(_.asExprOf[A]).reverse

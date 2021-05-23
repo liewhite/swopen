@@ -4,6 +4,8 @@ import org.junit.*
 import swopen.jsonToolbox.JsonBehavior.{encode,decode}
 import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.modifier.Modifier
+import swopen.jsonToolbox.typeclasses.RepeatableAnnotation
+import swopen.jsonToolbox.codec.IgnoreNull
 
 enum E:
   case A(a:Int)
@@ -19,6 +21,11 @@ case class UnionC(c:Double,d:String|Boolean)
 
 
 case class RecursiveC(c:Int,d:Option[RecursiveC])
+
+@IgnoreNull
+case class SkipNull(a: Option[Int], b: Int)
+case class DontSkipNull(a: Option[Int], b: Int)
+
 class TestEncode:
   @Test
   def simpleEncode = 
@@ -91,3 +98,10 @@ class TestEncode:
     val b = RecursiveC(1,Some(RecursiveC(1,None)))
     assert(a == Json.deserialize(a.encode.serialize()).toOption.get.decode[RecursiveC].toOption.get)
     assert(b == Json.deserialize(b.encode.serialize()).toOption.get.decode[RecursiveC].toOption.get)
+
+  @Test 
+  def testIgnoreNull = 
+    val a = SkipNull(None,1)
+    assert(a.encode.serialize() == s"""{"b":1}""")
+    val b = DontSkipNull(None,1)
+    assert(b.encode.serialize().contains(s""""a":null"""))
