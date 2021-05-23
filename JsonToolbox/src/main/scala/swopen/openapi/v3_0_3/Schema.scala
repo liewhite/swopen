@@ -1,7 +1,6 @@
 package swopen.openapi.v3_0_3
 
-import swopen.jsonToolbox.codec.Encoder
-import swopen.jsonToolbox.codec.IgnoreNull
+import swopen.jsonToolbox.codec.*
 import swopen.jsonToolbox.json.Json
 
 @IgnoreNull()
@@ -39,7 +38,7 @@ case class SchemaInternal(
   default: Option[Json] = None,
 
   // new in openapi, not support yet
-) derives Encoder
+) derives Encoder,Decoder
 
 type FullSchema = WithExtensions[SchemaInternal] | RefTo
 

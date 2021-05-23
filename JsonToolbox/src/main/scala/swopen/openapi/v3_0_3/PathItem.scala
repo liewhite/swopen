@@ -1,6 +1,6 @@
 package swopen.openapi.v3_0_3
 
-import swopen.jsonToolbox.codec.IgnoreNull
+import swopen.jsonToolbox.codec.*
 
 @IgnoreNull()
 case class PathItemInternal(
@@ -19,6 +19,6 @@ case class PathItemInternal(
 
   servers: Option[Vector[Server]],
   parameters: Option[Vector[Parameter|RefTo]]
-)
+) derives Encoder,Decoder
 
 type PathItem = WithExtensions[PathItemInternal]

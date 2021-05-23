@@ -26,8 +26,8 @@ object MacroDecoder:
           case ('[t1],'[t2]) => 
             '{new Decoder[T] {
               def decode(data:Json) = 
-                val o1 = summonInline[Decoder[t1]]
-                val o2 = summonInline[Decoder[t2]]
+                lazy val o1 = summonInline[Decoder[t1]]
+                lazy val o2 = summonInline[Decoder[t2]]
                 (o1.decode(data) match{
                   case Right(o) => Right(o.asInstanceOf[T])
                   case Left(_) => o2.decode(data) match {
@@ -74,9 +74,9 @@ object Decoder:
 
   def decodeError(expect: String, got: Json) = Left(DecodeException(s"expect $expect, but ${got.serialize} found"))
 
-  inline def derived[T](gen: K0.Generic[T]): Decoder[T] = gen.derive(product,CoproductDecoder.coproduct)
+  inline def derived[T](using gen: K0.Generic[T]): Decoder[T] = gen.derive(product,CoproductDecoder.coproduct)
 
-  given product[T](using inst: =>K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
+  given product[T](using inst: => K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: Json): Either[DecodeException, T] =  
         val fieldsName = labelling.elemLabels
@@ -108,7 +108,7 @@ object Decoder:
         catch
           case e: DecodeException => Left(e)
 
-  def decodeSeq[T:Decoder](data:Json)(using innerDecoder: Decoder[T]): Either[DecodeException,List[T]] = 
+  def decodeSeq[T](data:Json)(using innerDecoder: Decoder[T]): Either[DecodeException,List[T]] = 
     data match
       case Json.JArray(array) => 
         val decodedArray = array.map(innerDecoder.decode(_))

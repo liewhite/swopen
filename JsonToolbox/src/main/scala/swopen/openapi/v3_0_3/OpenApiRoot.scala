@@ -2,11 +2,7 @@ package swopen.openapi.v3_0_3
 
 import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.JsonBehavior.*
-import swopen.jsonToolbox.codec.{Encoder,Decoder, DecodeException}
-
-
-
-import swopen.jsonToolbox.codec.IgnoreNull
+import swopen.jsonToolbox.codec.*
 
 
 @IgnoreNull()
@@ -20,4 +16,4 @@ case class OpenApiRoot(
   // security: Option[Vector[OpenApiSecurity]],
   // tags: Option[Vector[OpenApiTag]],
   // externalDocs: Option[Vector[OpenApiExternalDoc]],
-)
+) derives Encoder, Decoder

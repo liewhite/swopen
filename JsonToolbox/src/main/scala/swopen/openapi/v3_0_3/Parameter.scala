@@ -2,7 +2,7 @@ package swopen.openapi.v3_0_3
 
 import swopen.jsonToolbox.json.Json
 
-import swopen.jsonToolbox.codec.IgnoreNull
+import swopen.jsonToolbox.codec.*
 
 
 @IgnoreNull()
@@ -22,5 +22,5 @@ case class ParameterInternal(
   examples: Option[Map[String,Example|RefTo]],
 
   content: Option[Map[String, MediaType]]
-)
+) derives Encoder, Decoder
 type Parameter = WithExtensions[ParameterInternal]

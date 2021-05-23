@@ -5,4 +5,4 @@ import swopen.jsonToolbox.codec.*
 @IgnoreNull()
 case class Components(
   schemas: Option[Map[String, FullSchema]]
-) derives Encoder
+) derives Encoder,Decoder

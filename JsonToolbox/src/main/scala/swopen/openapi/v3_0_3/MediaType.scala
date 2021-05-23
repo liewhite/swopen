@@ -5,7 +5,7 @@ import swopen.jsonToolbox.json.Json
 import swopen.jsonToolbox.codec.*
 
 
-import swopen.jsonToolbox.codec.IgnoreNull
+import swopen.jsonToolbox.codec.*
 
 
 @IgnoreNull()
@@ -14,5 +14,5 @@ case class MediaTypeInternal(
   example: Option[Example|RefTo],
   examples: Option[Map[String,Example|RefTo]],
   encoding: Option[Map[String,Encoding]]
-) derives Encoder
+) derives Encoder,Decoder
 type MediaType = WithExtensions[MediaTypeInternal]
