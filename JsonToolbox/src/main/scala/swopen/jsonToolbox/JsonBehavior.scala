@@ -1,14 +1,10 @@
 package swopen.jsonToolbox
 
-// import swopen.jsonToolbox.schema.{JsonSchema,QualifiedName}
 import swopen.jsonToolbox.codec.Encoder
 import swopen.jsonToolbox.codec.{DecodeException,Decoder}
-import swopen.jsonToolbox.json.Json
-import swopen.jsonToolbox.schema.JsonSchema
-import swopen.jsonToolbox.modifier.Modifier
-import swopen.openapi.v3_0_3.*
 import scala.util.NotGiven
 import scala.compiletime.summonInline
+import com.fasterxml.jackson.databind.JsonNode
 // import shapeless3.deriving.*
 
 
@@ -20,11 +16,11 @@ import scala.compiletime.summonInline
  */
 object JsonBehavior:
   extension [T](t:T)
-    def encode(using encoder:  Encoder[T]):Json =
+    def encode(using encoder:  Encoder[T]): JsonNode =
       encoder.encode(t)
 
-  extension (t:Json)
+  extension (t:JsonNode)
     def decode[T](using decoder:Decoder[T]):Either[DecodeException, T] = decoder.decode(t)
   
-  inline def schema[T](using o: JsonSchema[T]):FullSchema =
-    o.schema
+  // inline def schema[T](using o: JsonSchema[T]):FullSchema =
+  //   o.schema

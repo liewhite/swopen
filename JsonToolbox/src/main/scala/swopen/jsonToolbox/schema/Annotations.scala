@@ -1,3 +1,3 @@
-package swopen.jsonToolbox.schema
+// package swopen.jsonToolbox.schema
 
-class BaseAnnotation()
+// class BaseAnnotation()

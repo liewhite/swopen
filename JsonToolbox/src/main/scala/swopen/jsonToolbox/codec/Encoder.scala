@@ -1,17 +1,29 @@
 package swopen.jsonToolbox.codec
 
 import scala.math.{BigDecimal,BigInt}
+import scala.jdk.CollectionConverters.*
 import scala.deriving.*
 import scala.quoted.*
 import scala.compiletime.*
 import scala.util.NotGiven
 
 import shapeless3.deriving.{K0,Continue,Labelling}
-
-import swopen.jsonToolbox.json.{Json,JsonNumber}
 import swopen.jsonToolbox.JsonBehavior.*
 import swopen.jsonToolbox.typeclasses.{RepeatableAnnotation,RepeatableAnnotations}
 import swopen.jsonToolbox.utils.SummonUtils
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.FloatNode
+import com.fasterxml.jackson.databind.node.DoubleNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.LongNode
+import com.fasterxml.jackson.databind.node.BigIntegerNode
+import com.fasterxml.jackson.databind.node.DecimalNode
+import com.fasterxml.jackson.databind.node.BooleanNode
 
 trait UnionEncoder
 object UnionEncoder:
@@ -43,10 +55,10 @@ trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
   given splsCoproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
-      def encode(t: T): Json = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
+      def encode(t: T): JsonNode = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
 
 trait Encoder[T] extends CoproductEncoder:
-  def encode(t: T):Json
+  def encode(t: T):JsonNode
   
 end Encoder
 
@@ -54,46 +66,46 @@ end Encoder
 object Encoder:
   inline def derived[A](using gen: K0.Generic[A]): Encoder[A] = gen.derive(splsProduct,CoproductEncoder.splsCoproduct)
 
-  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T], annotation: RepeatableAnnotation[IgnoreNull,T]): Encoder[T] =  
+  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T] ): Encoder[T] =  
     new Encoder[T]:
-      def encode(t: T): Json = 
+      def encode(t: T): JsonNode = 
         val fieldsName = labelling.elemLabels
 
         if(fieldsName.isEmpty) then
-          Json.JString(labelling.label)
+          TextNode(labelling.label)
         else 
-          val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
-            [t] => (acc: List[Json], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
+          val elems: List[JsonNode] = inst.foldLeft(t)(List.empty[JsonNode])(
+            [t] => (acc: List[JsonNode], st: Encoder[t], t: t) => Continue(st.encode(t) :: acc)
           )
-          // val rawJson = Json.JObject(fieldsName.zip(elems.reverse).toMap)
           val rawMap = fieldsName.zip(elems.reverse).toMap
-          Json.JObject(
-            if annotation().nonEmpty then
-              rawMap.filter(_._2 != Json.JNull)
-            else rawMap
-          ) 
+          ObjectNode(JsonNodeFactory.instance,
+            // (if annotation().nonEmpty then
+            //   rawMap.filter(_._2 != NullNode.instance)
+            // else rawMap).asJava
+            rawMap.asJava
+          )
 
   /**
    *  map encoder
    */
   given [T](using encoder: Encoder[T]): Encoder[Map[String,T]] with
-    def encode(t:Map[String,T]) = 
-      Json.JObject(t.map{case (k,v) => (k, encoder.encode(v))})
+    def encode(t:Map[String,T]): JsonNode = 
+      ObjectNode(JsonNodeFactory.instance,t.map{case (k,v) => (k, encoder.encode(v))}.asJava)
 
   /**
    *  seq encoder
    */
   given [T](using encoder: Encoder[T]): Encoder[Vector[T]] with
     def encode(t:Vector[T]) = 
-      Json.JArray(t.map(encoder.encode(_)))
+      ArrayNode(JsonNodeFactory.instance,t.map(encoder.encode(_)).asJava)
 
   given [T](using encoder: Encoder[T]): Encoder[List[T]] with
     def encode(t:List[T]) = 
-      Json.JArray(t.map(encoder.encode(_)))
+      ArrayNode(JsonNodeFactory.instance,t.map(encoder.encode(_)).asJava)
 
   given [T](using encoder: Encoder[T]): Encoder[Array[T]] with
     def encode(t:Array[T]) = 
-      Json.JArray(Vector.from(t).map(encoder.encode(_)))
+      ArrayNode(JsonNodeFactory.instance,Vector.from(t).map(encoder.encode(_)).asJava)
 
   /**
    *  option encoder
@@ -103,39 +115,39 @@ object Encoder:
       t match
         case Some(v) => 
           e.encode(v)
-        case None => Json.JNull
+        case None => NullNode.instance
 
   /**
    *  number encoder
    */
   given Encoder[Float] with
-    def encode(t:Float) = Json.JNumber(JsonNumber.JDouble(t))
+    def encode(t:Float) = FloatNode(t)
 
   given Encoder[Double] with
-    def encode(t:Double) = Json.JNumber(JsonNumber.JDouble(t))
+    def encode(t:Double) = DoubleNode(t)
 
   given Encoder[Int] with
-    def encode(t:Int) = Json.JNumber(JsonNumber.JLong(t))
+    def encode(t:Int) = IntNode(t)
 
   given Encoder[Long] with
-    def encode(t:Long) = Json.JNumber(JsonNumber.JLong(t))
+    def encode(t:Long) = LongNode(t)
 
   given Encoder[BigInt] with
-    def encode(t:BigInt) = Json.JNumber(JsonNumber.JBigInt(t))
+    def encode(t:BigInt) = BigIntegerNode(t.bigInteger)
 
   given Encoder[BigDecimal] with
-    def encode(t:BigDecimal) = Json.JNumber(JsonNumber.JBigDecimal(t))
+    def encode(t:BigDecimal) = DecimalNode(t.bigDecimal)
 
   given Encoder[String] with
-    def encode(t:String) = Json.JString(t)
+    def encode(t:String) = TextNode(t)
 
   given Encoder[Boolean] with
-    def encode(t:Boolean) = Json.JBool(t)
+    def encode(t:Boolean) = BooleanNode.valueOf(t)
 
   given Encoder[Null] with
-    def encode(t:Null) = Json.JNull
+    def encode(t:Null) = NullNode.instance
 
-  given Encoder[Json] with
-    def encode(t:Json) = t
+  given Encoder[JsonNode] with
+    def encode(t:JsonNode) = t
 
 end Encoder
