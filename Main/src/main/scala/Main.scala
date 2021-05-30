@@ -11,7 +11,7 @@ enum E:
 case class X(x: Int)
 
 @main def test(): Unit = 
-  println(E.A(1).encode.decode[E])
+  println(E.A("as").encode.toPrettyString)
   // println(FullSchema(SchemaInternal()).encode)
   // println(E.C.encode)
   // println(schema[p1.p11.E].encode.serialize(pretty = true))
