@@ -10,8 +10,8 @@ lazy val commonSettings = Seq(
     "io.swagger.parser.v3"%"swagger-parser"%"2.0.26",
 
     "org.typelevel"%%"shapeless3-deriving"%"3.0.1",
-    "org.typelevel"%%"shapeless3-typeable"%"3.0.1",
-    "org.typelevel"%%"shapeless3-test"%"3.0.1",
+    // "org.typelevel"%%"shapeless3-typeable"%"3.0.1",
+    // "org.typelevel"%%"shapeless3-test"%"3.0.1",
   ),
   libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",

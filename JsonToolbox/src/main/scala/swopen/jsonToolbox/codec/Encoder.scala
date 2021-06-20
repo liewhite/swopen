@@ -45,7 +45,8 @@ object UnionEncoder:
 trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
   given coproduct[T](using
-      inst: => K0.CoproductInstances[Encoder, T]
+      inst: => K0.CoproductInstances[Encoder, T],
+      labelling: Labelling[T]
   ): Encoder[T] =
     new Encoder[T]:
       def encode(t: T): JsonNode =

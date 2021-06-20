@@ -18,15 +18,6 @@ import swopen.jsonToolbox.codec.Decoder
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-enum E derives Encoder,Decoder:
-  case A(a:Int)
-  case B
-  case C
-enum Dft derives Encoder,Decoder:
-  case A(a:Int = 1)
-  case B(b:Int)
-  case C(b:Int)
-  case D
 
 case class A(a:Int = 1)  derives Encoder,Decoder
 case class B(b:Int) derives Encoder,Decoder
@@ -41,6 +32,16 @@ case class RecursiveC(c:Int,d:Option[RecursiveC]) derives Encoder,Decoder
 
 case class SkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
 case class DontSkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
+
+enum E:
+  case A(a:Int)
+  case B
+  case C
+enum Dft derives Encoder,Decoder:
+  case A(a:Int = 1) 
+  case B(b:Int)
+  case C(b:Int)
+  case D
 
 class TestEncode:
   val mapper = ObjectMapper()

@@ -115,23 +115,9 @@ object CoproductDecoder:
             }
           }
 
-trait Decoder[T] extends CoproductDecoder:
-  def decode(
-      data: JsonNode,
-      withDefaults: Boolean = true
-  ): Either[DecodeException, T]
-end Decoder
 
-// int, long, float, double, BigInteger, BigDecimal, bool,string, option[T], List,Array,Vector, Map
-object Decoder:
-
-  def decodeError(expect: String, got: JsonNode) = Left(
-    DecodeException(s"expect $expect, but ${got.toString} found")
-  )
-
-  inline def derived[T](using gen: K0.Generic[T]): Decoder[T] =
-    gen.derive(product, CoproductDecoder.coproduct)
-
+trait ProductDecoder extends CoproductDecoder
+object ProductDecoder{
   given product[T](using
       inst: => K0.ProductInstances[Decoder, T],
       labelling: Labelling[T],
@@ -208,12 +194,22 @@ object Decoder:
             else Map.empty[String, JsonNode]
           )
         catch
-          // case e: DecodeException =>
-          //   try
-          //     val result = decodePhase[T](inst, data, labelling, defaults.defaults)
-          //     result
-          //   catch
           case e: DecodeException => Left(e)
+
+}
+trait Decoder[T] extends ProductDecoder:
+  def decode(
+      data: JsonNode,
+      withDefaults: Boolean = true
+  ): Either[DecodeException, T]
+end Decoder
+
+object Decoder:
+  def decodeError(expect: String, got: JsonNode) = Left(
+    DecodeException(s"expect $expect, but ${got.toString} found")
+  )
+  inline def derived[T](using gen: K0.Generic[T]): Decoder[T] =
+    gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
 
   def decodeSeq[T](data: JsonNode, withDefaults: Boolean = true)(using
       innerDecoder: Decoder[T]
