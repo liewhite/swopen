@@ -18,13 +18,19 @@ import swopen.jsonToolbox.codec.Decoder
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-enum E derives Decoder:
+enum E derives Encoder,Decoder:
   case A(a:Int)
   case B
   case C
+enum Dft derives Encoder,Decoder:
+  case A(a:Int = 1)
+  case B(b:Int)
+  case C(b:Int)
+  case D
 
 case class A(a:Int = 1)  derives Encoder,Decoder
 case class B(b:Int) derives Encoder,Decoder
+case class C(c:Int) derives Encoder,Decoder
 
 case class UnionA(a:Int|String,b:String) derives Encoder,Decoder
 case class UnionB(a:Boolean,b:Double) derives Encoder,Decoder
@@ -82,13 +88,14 @@ class TestEncode:
     
   @Test 
   def unionEncode = 
-    val ab1: A|B = A(1)
-    val ab2: A|B = B(1)
+    val ab1: A|B|C = A(1)
+    val ab2: A|B|C = B(1)
+    val ab3: A|B|C = C(1)
     assert(ab1.encode.toString  == """{"a":1}""")
     assert(ab2.encode.toString  == """{"b":1}""")
-    assert(ab1.encode.decode[A|B].toOption.get  == ab1)
-    // A有默认值， 所以如果A先匹配， 那么就会返回A
-    assert(ab2.encode.decode[B|A].toOption.get  == ab2)
+    assert(ab1.encode.decode[A|B|C].toOption.get  == ab1)
+    assert(ab2.encode.decode[A|B|C].toOption.get  == ab2)
+    assert(ab3.encode.decode[A|B|C].toOption.get  == ab3)
     val a : UnionA | UnionB |UnionC = UnionA(1,"asd")
     val b : UnionA | UnionB |UnionC = UnionB(true,1.2)
     val c : UnionA | UnionB |UnionC = UnionC(1.2,"c")
@@ -112,9 +119,29 @@ class TestEncode:
     assert(a == mapper.readTree(a.encode.toString).decode[RecursiveC].toOption.get)
     assert(b == mapper.readTree(b.encode.toString).decode[RecursiveC].toOption.get)
   @Test 
-  def testDecodeDefaultValue = 
-    val data = "{}"
+  def testEncodeDefaultValue = 
+    // encode
+    assert("""{"a":1}""" == A().encode.toString)
+    // decode
     val j = ObjectNode(JsonNodeFactory.instance)
     val a = j.decode[A].toOption.get
     val shouldBe = A()
     assert(a == shouldBe)
+
+  @Test 
+  def testDecodeProductDefaultValue = 
+    val j = ObjectNode(JsonNodeFactory.instance)
+    val a = j.decode[A].toOption.get
+    val shouldBe = A()
+    assert(a == shouldBe)
+
+  @Test 
+  def testDecodeCoproductDefaultValue = 
+    val a = Dft.B(1)
+    val b = Dft.B(2)
+    val c = Dft.B(3)
+    val d = Dft.D
+    assert(a == a.encode.decode[Dft].toOption.get)
+    assert(b == b.encode.decode[Dft].toOption.get)
+    assert(c == c.encode.decode[Dft].toOption.get)
+    assert(d == d.encode.decode[Dft].toOption.get)
