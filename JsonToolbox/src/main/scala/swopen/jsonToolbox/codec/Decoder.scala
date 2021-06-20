@@ -8,6 +8,7 @@ import scala.compiletime.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
 import shapeless3.deriving.*
+import swopen.jsonToolbox.schema.DefaultValue
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
@@ -28,8 +29,8 @@ object MacroDecoder:
           case ('[t1],'[t2]) => 
             '{new Decoder[T] {
               def decode(data:JsonNode) = 
-                lazy val o1 = summonInline[Decoder[t1]]
-                lazy val o2 = summonInline[Decoder[t2]]
+                val o1 = summonInline[Decoder[t1]]
+                val o2 = summonInline[Decoder[t2]]
                 (o1.decode(data) match{
                   case Right(o) => Right(o.asInstanceOf[T])
                   case Left(_) => o2.decode(data) match {
@@ -42,7 +43,9 @@ object MacroDecoder:
       case other => 
         report.error(s"not support type:,$other");???
 
+// 对于Enum 的case， SumOf和ProductOf都可以满足， 不通过继承区分优先级的话，就会出错
 trait CoproductDecoder extends MacroDecoder
+
 object CoproductDecoder:
   given coproduct[T](using inst: => K0.CoproductInstances[Decoder, T], labelling: Labelling[T] ): Decoder[T] = 
     new Decoder[T]:
@@ -63,7 +66,6 @@ object CoproductDecoder:
               case Some(v) => Right(v)
               case None => Left(DecodeException("can't decode :" + labelling.label))
 
-
 trait Decoder[T] extends CoproductDecoder:
   def decode(data:JsonNode): Either[DecodeException, T]
 end Decoder
@@ -76,12 +78,12 @@ object Decoder:
 
   inline def derived[T](using gen: K0.Generic[T]): Decoder[T] = gen.derive(product,CoproductDecoder.coproduct)
 
-  given product[T](using inst: => K0.ProductInstances[Decoder, T],labelling: Labelling[T]): Decoder[T] =
+  given product[T](using inst: => K0.ProductInstances[Decoder, T],labelling: Labelling[T], defaults: DefaultValue[T]): Decoder[T] =
     new Decoder[T]:
       def decode(data: JsonNode): Either[DecodeException, T] =  
-        val fieldsName = labelling.elemLabels
-        val label = labelling.label
-        try
+        def decodePhase[T](inst: K0.ProductInstances[Decoder,T], data:JsonNode,labelling:Labelling[T],defaultValues: Map[String, JsonNode]) = 
+          val label = labelling.label
+          val fieldsName = labelling.elemLabels
           val itemsData: ObjectNode = 
             if data.isTextual then
               val stringValue = data.asText
@@ -97,20 +99,32 @@ object Decoder:
 
           var index = 0
           val result = inst.construct([t] => (itemDecoder: Decoder[t]) => 
-            val value = itemsData.get(fieldsName(index))
-            val item = 
-              if value != null then
-                itemDecoder.decode(value) match
-                  case Right(o) => o
-                  case Left(e) => throw e
-              else
-                throw DecodeException(s"key not exist: ${fieldsName(index)}")
+            // 处理默认值
+            val value = itemsData.get(fieldsName(index)) match 
+              case n if n == null =>
+                if defaultValues.contains(fieldsName(index)) then
+                  defaultValues(fieldsName(index))
+                else
+                  throw DecodeException(s"key not exist: ${fieldsName(index)}")
+              case v => v
+            val item = itemDecoder.decode(value) match
+              case Right(o) => o
+              case Left(e) => throw e
+
             index += 1
             item
           )
           Right(result)
+        // 先不用默认值处理一边，如果没有结果，那么加上默认值再处理一遍
+        try
+          decodePhase[T](inst, data, labelling, Map.empty[String, JsonNode])
         catch
-          case e: DecodeException => Left(e)
+          case e: DecodeException => 
+            try
+              val result = decodePhase[T](inst, data, labelling, defaults.defaults)
+              result
+            catch
+              case e: DecodeException => Left(e)
 
   def decodeSeq[T](data:JsonNode)(using innerDecoder: Decoder[T]): Either[DecodeException,List[T]] = 
     if data.isArray then

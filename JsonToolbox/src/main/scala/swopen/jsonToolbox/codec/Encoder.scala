@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.node.*
 
 trait UnionEncoder
 object UnionEncoder:
-  // inline given union[T](using NotGiven[Encoder[T]]): Encoder[T] = ${ impl[T] }
   inline given union[T]: Encoder[T] = ${ impl[T] }
 
   def impl[T:Type](using q: Quotes): Expr[Encoder[T]] = 
@@ -29,33 +28,30 @@ object UnionEncoder:
           case ('[t1],'[t2]) => 
             '{new Encoder[T] {
               def encode(t:T) = 
-                lazy val o1 = summonInline[Encoder[t1]]
-                lazy val o2 = summonInline[Encoder[t2]]
+                val o1 = summonInline[Encoder[t1]]
+                val o2 = summonInline[Encoder[t2]]
                 t match
                   case o:t1 => o1.encode(o)
                   case o:t2 => o2.encode(o)
-                  // case o:t1 => ${Expr.summon[Encoder[t1]].get}.encode(o)
-                  // case o:t2 => ${Expr.summon[Encoder[t2]].get}.encode(o)
             }}
       case other => 
         report.error(s"not support type:,$other");???
 
 trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
-  given splsCoproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
+  given coproduct[T](using inst: => K0.CoproductInstances[Encoder, T]): Encoder[T]  =
     new Encoder[T]:
       def encode(t: T): JsonNode = inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
 
 trait Encoder[T] extends CoproductEncoder:
   def encode(t: T):JsonNode
-  
 end Encoder
 
 
 object Encoder:
-  inline def derived[A](using gen: K0.Generic[A]): Encoder[A] = gen.derive(splsProduct,CoproductEncoder.splsCoproduct)
+  inline def derived[A](using gen: K0.Generic[A]): Encoder[A] = gen.derive(product,CoproductEncoder.coproduct)
 
-  given splsProduct[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T] ): Encoder[T] =  
+  given product[T](using inst: => K0.ProductInstances[Encoder, T],labelling: Labelling[T] ): Encoder[T] =  
     new Encoder[T]:
       def encode(t: T): JsonNode = 
         val fieldsName = labelling.elemLabels
@@ -68,9 +64,6 @@ object Encoder:
           )
           val rawMap = fieldsName.zip(elems.reverse).toMap
           ObjectNode(JsonNodeFactory.instance,
-            // (if annotation().nonEmpty then
-            //   rawMap.filter(_._2 != NullNode.instance)
-            // else rawMap).asJava
             rawMap.asJava
           )
 

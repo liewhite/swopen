@@ -13,24 +13,28 @@ import java.math.BigInteger
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DoubleNode
+import swopen.jsonToolbox.codec.Encoder
+import swopen.jsonToolbox.codec.Decoder
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-enum E:
+enum E derives Decoder:
   case A(a:Int)
   case B
   case C
 
-case class A(a:Int)
-case class B(b:Int)
+case class A(a:Int = 1)  derives Encoder,Decoder
+case class B(b:Int) derives Encoder,Decoder
 
-case class UnionA(a:Int|String,b:String)
-case class UnionB(a:Boolean,b:Double)
-case class UnionC(c:Double,d:String|Boolean)
+case class UnionA(a:Int|String,b:String) derives Encoder,Decoder
+case class UnionB(a:Boolean,b:Double) derives Encoder,Decoder
+case class UnionC(c:Double,d:String|Boolean) derives Encoder,Decoder
 
 
-case class RecursiveC(c:Int,d:Option[RecursiveC])
+case class RecursiveC(c:Int,d:Option[RecursiveC]) derives Encoder,Decoder
 
-case class SkipNull(a: Option[Int], b: Int)
-case class DontSkipNull(a: Option[Int], b: Int)
+case class SkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
+case class DontSkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
 
 class TestEncode:
   val mapper = ObjectMapper()
@@ -59,7 +63,7 @@ class TestEncode:
   // map
   @Test 
   def mapEncode = 
-    case class A(key: Vector[BigInt])
+    case class A(key: Vector[BigInt]) derives Encoder,Decoder
     val a = Map("key" -> Vector(BigInt(1),BigInt(3),BigInt("33333333333333333333333333333333333")))
     val b = mapper.readTree("""{"key":[1,3,33333333333333333333333333333333333]}""")
     val obj1 = a.encode.decode[A]
@@ -81,11 +85,10 @@ class TestEncode:
     val ab1: A|B = A(1)
     val ab2: A|B = B(1)
     assert(ab1.encode.toString  == """{"a":1}""")
-    
     assert(ab2.encode.toString  == """{"b":1}""")
-
     assert(ab1.encode.decode[A|B].toOption.get  == ab1)
-    assert(ab2.encode.decode[A|B].toOption.get  == ab2)
+    // A有默认值， 所以如果A先匹配， 那么就会返回A
+    assert(ab2.encode.decode[B|A].toOption.get  == ab2)
     val a : UnionA | UnionB |UnionC = UnionA(1,"asd")
     val b : UnionA | UnionB |UnionC = UnionB(true,1.2)
     val c : UnionA | UnionB |UnionC = UnionC(1.2,"c")
@@ -94,7 +97,7 @@ class TestEncode:
     assert(c.encode.decode[UnionA | UnionB |UnionC].toOption.get == c)
 
   @Test 
-  def enumEncode = 
+  def enumEncode = ()
     val a:E = E.A(3)
     val b:E = E.B
     val c:E = E.C
@@ -108,3 +111,10 @@ class TestEncode:
     val b = RecursiveC(1,Some(RecursiveC(1,None)))
     assert(a == mapper.readTree(a.encode.toString).decode[RecursiveC].toOption.get)
     assert(b == mapper.readTree(b.encode.toString).decode[RecursiveC].toOption.get)
+  @Test 
+  def testDecodeDefaultValue = 
+    val data = "{}"
+    val j = ObjectNode(JsonNodeFactory.instance)
+    val a = j.decode[A].toOption.get
+    val shouldBe = A()
+    assert(a == shouldBe)
