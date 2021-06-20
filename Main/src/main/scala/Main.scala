@@ -9,7 +9,9 @@ enum E:
   case B(e: Vector[E] | Option[E])
   case C
 
+enum Reps:
+  case Int
+
 @main def test(): Unit = 
-  summon[Mirror.ProductOf[E.C.type]]
-  summon[Mirror.SumOf[E.C.type]]
+  1
 
