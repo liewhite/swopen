@@ -44,7 +44,7 @@ object UnionEncoder:
 
 trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
-  given coproduct[T](using
+  def coproduct[T](using
       inst: => K0.CoproductInstances[Encoder, T],
       labelling: Labelling[T]
   ): Encoder[T] =
@@ -57,10 +57,10 @@ trait Encoder[T] extends CoproductEncoder:
 end Encoder
 
 object Encoder:
-  inline def derived[A](using gen: K0.Generic[A]): Encoder[A] =
+  inline given derived[A](using gen: K0.Generic[A]): Encoder[A] =
     gen.derive(product, CoproductEncoder.coproduct)
 
-  given product[T](using
+  def product[T](using
       inst: => K0.ProductInstances[Encoder, T],
       labelling: Labelling[T]
   ): Encoder[T] =

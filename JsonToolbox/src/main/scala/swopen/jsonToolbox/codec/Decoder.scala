@@ -63,7 +63,7 @@ trait CoproductDecoder extends MacroDecoder
 object CoproductDecoder:
   /** 先
     */
-  given coproduct[T](using
+  def coproduct[T](using
       inst: => K0.CoproductInstances[Decoder, T],
       labelling: Labelling[T]
   ): Decoder[T] =
@@ -118,7 +118,7 @@ object CoproductDecoder:
 
 trait ProductDecoder extends CoproductDecoder
 object ProductDecoder{
-  given product[T](using
+  def product[T](using
       inst: => K0.ProductInstances[Decoder, T],
       labelling: Labelling[T],
       defaults: DefaultValue[T]
@@ -208,7 +208,7 @@ object Decoder:
   def decodeError(expect: String, got: JsonNode) = Left(
     DecodeException(s"expect $expect, but ${got.toString} found")
   )
-  inline def derived[T](using gen: K0.Generic[T]): Decoder[T] =
+  inline given derived[T](using gen: K0.Generic[T], labelling: Labelling[T]): Decoder[T] =
     gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
 
   def decodeSeq[T](data: JsonNode, withDefaults: Boolean = true)(using

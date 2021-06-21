@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 case class A(a:Int = 1)  derives Encoder,Decoder
 case class B(b:Int) derives Encoder,Decoder
 case class C(c:Int) derives Encoder,Decoder
+case class D(d:Int) derives Encoder,Decoder
 
 case class UnionA(a:Int|String,b:String) derives Encoder,Decoder
 case class UnionB(a:Boolean,b:Double) derives Encoder,Decoder
@@ -48,7 +49,7 @@ class TestEncode:
 
   @Test
   def simpleEncode = 
-    assert(1.encode == IntNode(1))
+    assert(2.encode == IntNode(2))
     assert(1.1.encode == DoubleNode(1.1))
     assert("1".encode == TextNode("1"))
     assert(true.encode == BooleanNode.TRUE)
@@ -77,19 +78,9 @@ class TestEncode:
     val obj2 = b.decode[A]
     assert(obj1 == obj2)
 
-  // @Test 
-  // def renameEncode = 
-  //   case class A(@Modifier(rename="key2") key: String, keyWithoutRename: String)
-  //   val obj = A("rename","not rename")
-  //   val str = obj.encode.toString
-
-  //   val newObj = mapper.readTree(str).decode[A]
-  //   assert(obj == newObj)
-  
-    
   @Test 
   def unionEncode = 
-    val ab1: A|B|C = A(1)
+    val ab1: A|B|C = A()
     val ab2: A|B|C = B(1)
     val ab3: A|B|C = C(1)
     assert(ab1.encode.toString  == """{"a":1}""")
