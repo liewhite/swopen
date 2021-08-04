@@ -1,9 +1,9 @@
-package swopen.jsonToolbox
+package com.liewhite.json
 
 import org.junit.*
-import swopen.jsonToolbox.typeclasses.RepeatableAnnotation
-import swopen.jsonToolbox.typeclasses.RepeatableAnnotations
-import swopen.jsonToolbox.codec.*
+import com.liewhite.json.typeclass.RepeatableAnnotation
+import com.liewhite.json.typeclass.RepeatableAnnotations
+import com.liewhite.json.codec.*
 
 class Ann(val value:String) extends scala.annotation.Annotation
 class AnnExtend(value:String) extends Ann(value)

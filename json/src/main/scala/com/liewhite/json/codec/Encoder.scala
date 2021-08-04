@@ -1,4 +1,4 @@
-package swopen.jsonToolbox.codec
+package com.liewhite.json.codec
 
 import scala.math.{BigDecimal, BigInt}
 import scala.jdk.CollectionConverters.*
@@ -8,14 +8,15 @@ import scala.compiletime.*
 import scala.util.NotGiven
 
 import shapeless3.deriving.{K0, Continue, Labelling}
-import swopen.jsonToolbox.JsonBehavior.*
-import swopen.jsonToolbox.typeclasses.{
+import com.liewhite.json.JsonBehavior.*
+import com.liewhite.json.typeclasses.{
   RepeatableAnnotation,
   RepeatableAnnotations
 }
-import swopen.jsonToolbox.utils.SummonUtils
+import com.liewhite.json.utils.SummonUtils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
+// import swopen.jsonToolbox.annotations.FlattenAtom
 
 trait UnionEncoder
 object UnionEncoder:
@@ -46,11 +47,24 @@ trait CoproductEncoder extends UnionEncoder
 object CoproductEncoder:
   def coproduct[T](using
       inst: => K0.CoproductInstances[Encoder, T],
-      labelling: Labelling[T]
+      labelling: Labelling[T],
+      // flattenCase: RepeatableAnnotation[FlattenAtom, T]
   ): Encoder[T] =
     new Encoder[T]:
       def encode(t: T): JsonNode =
         inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
+        // inst.fold(t)([t] => (st: Encoder[t], t: t) => {
+        //   val encoded = st.encode(t)
+        //   if(flattenCase().nonEmpty) {
+        //     if(encoded.isObject && encoded.size == 1){
+        //       encoded.get(0)
+        //     }else{
+        //       encoded
+        //     }
+        //   }else{
+        //     encoded
+        //   }
+        // })
 
 trait Encoder[T] extends CoproductEncoder:
   def encode(t: T): JsonNode

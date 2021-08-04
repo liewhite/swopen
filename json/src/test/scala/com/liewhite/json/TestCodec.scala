@@ -1,9 +1,8 @@
-package swopen.jsonToolbox
+package com.liewhite.json
 
 import org.junit.*
-import swopen.jsonToolbox.JsonBehavior.{encode,decode}
-import swopen.jsonToolbox.modifier.Modifier
-import swopen.jsonToolbox.typeclasses.RepeatableAnnotation
+import com.liewhite.json.JsonBehavior.{encode,decode}
+import com.liewhite.json.typeclass.RepeatableAnnotation
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.FloatNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -13,8 +12,8 @@ import java.math.BigInteger
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DoubleNode
-import swopen.jsonToolbox.codec.Encoder
-import swopen.jsonToolbox.codec.Decoder
+import com.liewhite.json.codec.Encoder
+import com.liewhite.json.codec.Decoder
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 

@@ -1,4 +1,4 @@
-package swopen.jsonToolbox.utils
+package com.liewhite.json.utils
 
 import scala.compiletime.*
 import scala.reflect.ClassTag

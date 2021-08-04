@@ -1,4 +1,4 @@
-package swopen.jsonToolbox.schema
+package com.liewhite.json.typeclass
 
 import scala.compiletime.*
 import scala.quoted.*

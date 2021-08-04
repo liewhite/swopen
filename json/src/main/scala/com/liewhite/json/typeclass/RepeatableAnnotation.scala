@@ -1,8 +1,8 @@
-package swopen.jsonToolbox.typeclasses
+package com.liewhite.json.typeclass
 
 import scala.deriving.*
 import scala.quoted.*
-import swopen.jsonToolbox.utils.*
+import com.liewhite.json.utils.*
 
 /**
  * this file is fork from shapeless3

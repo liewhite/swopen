@@ -1,4 +1,4 @@
-package swopen.jsonToolbox.codec
+package com.liewhite.json.codec
 
 import scala.deriving.*
 import scala.jdk.CollectionConverters.*
@@ -8,7 +8,7 @@ import scala.compiletime.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
 import shapeless3.deriving.*
-import swopen.jsonToolbox.schema.DefaultValue
+import com.liewhite.json.typeclass.*
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
@@ -102,6 +102,7 @@ object CoproductDecoder:
               )
             case (tl, Some(t)) => Right(t)
         else
+         // 可能排在前面的case每个field都有默认值， 就匹配不到真正符合条件的case了
           val result = decodePhase(inst,labelling, data, false)
           result match {
             case Some(v) => Right(v)
@@ -184,7 +185,6 @@ object ProductDecoder{
             }
           )
           Right(result)
-        // 先不用默认值处理一边，如果没有结果，那么加上默认值再处理一遍
         try
           decodePhase[T](
             inst,

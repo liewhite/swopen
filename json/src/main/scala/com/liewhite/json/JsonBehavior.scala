@@ -1,11 +1,11 @@
-package swopen.jsonToolbox
+package com.liewhite.json
 
-import swopen.jsonToolbox.codec.Encoder
-import swopen.jsonToolbox.codec.{DecodeException,Decoder}
 import scala.util.NotGiven
 import scala.compiletime.summonInline
 import com.fasterxml.jackson.databind.JsonNode
-// import shapeless3.deriving.*
+
+import com.liewhite.json.codec.Encoder
+import com.liewhite.json.codec.{DecodeException,Decoder}
 
 
 /**

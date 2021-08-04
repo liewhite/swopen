@@ -1,4 +1,4 @@
-package swopen.jsonToolbox.utils
+package com.liewhite.json.utils
 
 import scala.annotation.tailrec
 import scala.deriving._
