@@ -2,10 +2,10 @@ package com.liewhite.json
 
 import scala.util.NotGiven
 import scala.compiletime.summonInline
-import com.fasterxml.jackson.databind.JsonNode
 
 import com.liewhite.json.codec.Encoder
 import com.liewhite.json.codec.{DecodeException,Decoder}
+import io.circe.Json
 
 
 /**
@@ -16,11 +16,9 @@ import com.liewhite.json.codec.{DecodeException,Decoder}
  */
 object JsonBehavior:
   extension [T](t:T)
-    def encode(using encoder:  Encoder[T]): JsonNode =
+    def encode(using encoder:  Encoder[T]): Json =
       encoder.encode(t)
 
-  extension (t:JsonNode)
+  extension (t:Json)
     def decode[T](using decoder:Decoder[T]):Either[DecodeException, T] = decoder.decode(t)
   
-  // inline def schema[T](using o: JsonSchema[T]):FullSchema =
-  //   o.schema

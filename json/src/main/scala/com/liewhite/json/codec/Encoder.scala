@@ -8,15 +8,12 @@ import scala.compiletime.*
 import scala.util.NotGiven
 
 import shapeless3.deriving.{K0, Continue, Labelling}
+
+import io.circe.Json
+
 import com.liewhite.json.JsonBehavior.*
-import com.liewhite.json.typeclasses.{
-  RepeatableAnnotation,
-  RepeatableAnnotations
-}
+import com.liewhite.json.typeclass.*
 import com.liewhite.json.utils.SummonUtils
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.*
-// import swopen.jsonToolbox.annotations.FlattenAtom
 
 trait UnionEncoder
 object UnionEncoder:
@@ -51,23 +48,11 @@ object CoproductEncoder:
       // flattenCase: RepeatableAnnotation[FlattenAtom, T]
   ): Encoder[T] =
     new Encoder[T]:
-      def encode(t: T): JsonNode =
+      def encode(t: T): Json =
         inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
-        // inst.fold(t)([t] => (st: Encoder[t], t: t) => {
-        //   val encoded = st.encode(t)
-        //   if(flattenCase().nonEmpty) {
-        //     if(encoded.isObject && encoded.size == 1){
-        //       encoded.get(0)
-        //     }else{
-        //       encoded
-        //     }
-        //   }else{
-        //     encoded
-        //   }
-        // })
 
 trait Encoder[T] extends CoproductEncoder:
-  def encode(t: T): JsonNode
+  def encode(t: T): Json
 end Encoder
 
 object Encoder:
@@ -79,44 +64,40 @@ object Encoder:
       labelling: Labelling[T]
   ): Encoder[T] =
     new Encoder[T]:
-      def encode(t: T): JsonNode =
+      def encode(t: T): Json =
         val fieldsName = labelling.elemLabels
 
-        if (fieldsName.isEmpty) then TextNode(labelling.label)
+        if (fieldsName.isEmpty) then Json.fromString(labelling.label)
         else
-          val elems: List[JsonNode] = inst.foldLeft(t)(List.empty[JsonNode])(
+          val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
             [t] =>
-              (acc: List[JsonNode], st: Encoder[t], t: t) =>
+              (acc: List[Json], st: Encoder[t], t: t) =>
                 Continue(st.encode(t) :: acc)
           )
           val rawMap = fieldsName.zip(elems.reverse).toMap
-          ObjectNode(JsonNodeFactory.instance, rawMap.asJava)
+          Json.fromFields(rawMap)
 
   /** map encoder
     */
   given [T](using encoder: Encoder[T]): Encoder[Map[String, T]] with
-    def encode(t: Map[String, T]): JsonNode =
-      ObjectNode(
-        JsonNodeFactory.instance,
-        t.map { case (k, v) => (k, encoder.encode(v)) }.asJava
+    def encode(t: Map[String, T]): Json =
+      Json.fromFields(
+        t.map { case (k, v) => (k, encoder.encode(v)) }
       )
 
   /** seq encoder
     */
   given [T](using encoder: Encoder[T]): Encoder[Vector[T]] with
     def encode(t: Vector[T]) =
-      ArrayNode(JsonNodeFactory.instance, t.map(encoder.encode(_)).asJava)
+      Json.fromValues(t.map(encoder.encode(_)))
 
   given [T](using encoder: Encoder[T]): Encoder[List[T]] with
     def encode(t: List[T]) =
-      ArrayNode(JsonNodeFactory.instance, t.map(encoder.encode(_)).asJava)
+      Json.fromValues(t.map(encoder.encode(_)))
 
   given [T](using encoder: Encoder[T]): Encoder[Array[T]] with
     def encode(t: Array[T]) =
-      ArrayNode(
-        JsonNodeFactory.instance,
-        Vector.from(t).map(encoder.encode(_)).asJava
-      )
+      Json.fromValues(t.map(encoder.encode(_)))
 
   /** option encoder
     */
@@ -125,38 +106,43 @@ object Encoder:
       t match
         case Some(v) =>
           e.encode(v)
-        case None => NullNode.instance
+        case None => Json.Null
 
+  given Encoder[EmptyTuple] with
+    def encode(t: EmptyTuple) = Json.fromValues(List.empty)
+
+  given [H: Encoder, T <:Tuple:Encoder](using headEncoder: Encoder[H], tailEncoder: Encoder[T]): Encoder[H *: T] with
+    def encode(t: H*: T) = Json.fromValues(headEncoder.encode(t.head).asArray.get.appended(tailEncoder.encode(t.tail)))
   /** number encoder
     */
   given Encoder[Float] with
-    def encode(t: Float) = FloatNode(t)
+    def encode(t: Float) = Json.fromFloat(t).get
 
   given Encoder[Double] with
-    def encode(t: Double) = DoubleNode(t)
+    def encode(t: Double) = Json.fromDouble(t).get
 
   given Encoder[Int] with
-    def encode(t: Int) = IntNode(t)
+    def encode(t: Int) = Json.fromInt(t)
 
   given Encoder[Long] with
-    def encode(t: Long) = LongNode(t)
+    def encode(t: Long) = Json.fromLong(t)
 
   given Encoder[BigInt] with
-    def encode(t: BigInt) = BigIntegerNode(t.bigInteger)
+    def encode(t: BigInt) = Json.fromBigInt(t.bigInteger)
 
   given Encoder[BigDecimal] with
-    def encode(t: BigDecimal) = DecimalNode(t.bigDecimal)
+    def encode(t: BigDecimal) = Json.fromBigDecimal(t.bigDecimal)
 
   given Encoder[String] with
-    def encode(t: String) = TextNode(t)
+    def encode(t: String) = Json.fromString(t)
 
   given Encoder[Boolean] with
-    def encode(t: Boolean) = BooleanNode.valueOf(t)
+    def encode(t: Boolean) = Json.fromBoolean(t)
 
   given Encoder[Null] with
-    def encode(t: Null) = NullNode.instance
+    def encode(t: Null) = Json.Null
 
-  given Encoder[JsonNode] with
-    def encode(t: JsonNode) = t
+  given Encoder[Json] with
+    def encode(t: Json) = t
 
 end Encoder

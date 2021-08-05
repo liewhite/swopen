@@ -3,19 +3,11 @@ package com.liewhite.json
 import org.junit.*
 import com.liewhite.json.JsonBehavior.{encode,decode}
 import com.liewhite.json.typeclass.RepeatableAnnotation
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.FloatNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.BigIntegerNode
 import java.math.BigInteger
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.DoubleNode
 import com.liewhite.json.codec.Encoder
 import com.liewhite.json.codec.Decoder
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import io.circe.Json
+import io.circe.parser._
 
 
 case class A(a:Int = 1)  derives Encoder,Decoder
@@ -44,35 +36,33 @@ enum Dft derives Encoder,Decoder:
   case D
 
 class TestEncode:
-  val mapper = ObjectMapper()
-
   @Test
   def simpleEncode = 
-    assert(2.encode == IntNode(2))
-    assert(1.1.encode == DoubleNode(1.1))
-    assert("1".encode == TextNode("1"))
-    assert(true.encode == BooleanNode.TRUE)
-    assert(false.encode ==BooleanNode.FALSE)
+    assert(2.encode == Json.fromInt(2))
+    assert(1.1.encode == Json.fromFloat(1.1))
+    assert("1".encode == Json.fromString("1"))
+    assert(true.encode == Json.True)
+    assert(false.encode ==Json.False)
 
   // big int, decimal
   @Test
   def bigNumberEncode = 
-    assert(BigInt("100000000000000000000").encode == BigIntegerNode.valueOf(BigInteger("100000000000000000000")))
-    assert(BigDecimal("100000000000000000000.1111").encode == DecimalNode(java.math.BigDecimal("100000000000000000000.1111")))
+    assert(BigInt("100000000000000000000").encode == Json.fromBigInt(BigInteger("100000000000000000000")))
+    assert(BigDecimal("100000000000000000000.1111").encode == Json.fromBigDecimal(java.math.BigDecimal("100000000000000000000.1111")))
 
   // sequence 
   @Test 
   def seqEncode = 
-    assert(List(1,2,3).encode == mapper.readTree("[1,2,3]"))
-    assert(Vector(1,2,3).encode == mapper.readTree("[1,2,3]"))
-    assert(Array(1,2,3).encode == mapper.readTree("[1,2,3]"))
+    assert(List(1,2,3).encode == parse("[1,2,3]").toOption.get)
+    assert(Vector(1,2,3).encode == parse("[1,2,3]").toOption.get)
+    assert(Array(1,2,3).encode == parse("[1,2,3]").toOption.get)
 
   // map
   @Test 
   def mapEncode = 
     case class A(key: Vector[BigInt]) derives Encoder,Decoder
     val a = Map("key" -> Vector(BigInt(1),BigInt(3),BigInt("33333333333333333333333333333333333")))
-    val b = mapper.readTree("""{"key":[1,3,33333333333333333333333333333333333]}""")
+    val b = parse("""{"key":[1,3,33333333333333333333333333333333333]}""").toOption.get
     val obj1 = a.encode.decode[A]
     val obj2 = b.decode[A]
     assert(obj1 == obj2)
@@ -99,29 +89,29 @@ class TestEncode:
     val a:E = E.A(3)
     val b:E = E.B
     val c:E = E.C
-    assert(a == mapper.readTree(a.encode.toString).decode[E].toOption.get)
-    assert(b == mapper.readTree(b.encode.toString).decode[E].toOption.get)
-    assert(c == mapper.readTree(c.encode.toString).decode[E].toOption.get)
+    assert(a == parse(a.encode.toString).toOption.get.decode[E].toOption.get)
+    assert(b == parse(b.encode.toString).toOption.get.decode[E].toOption.get)
+    assert(c == parse(c.encode.toString).toOption.get.decode[E].toOption.get)
     
   @Test 
   def testRecursiveAdt = 
     val a = RecursiveC(1,None)
     val b = RecursiveC(1,Some(RecursiveC(1,None)))
-    assert(a == mapper.readTree(a.encode.toString).decode[RecursiveC].toOption.get)
-    assert(b == mapper.readTree(b.encode.toString).decode[RecursiveC].toOption.get)
+    assert(a == parse(a.encode.toString).toOption.get.decode[RecursiveC].toOption.get)
+    assert(b == parse(b.encode.toString).toOption.get.decode[RecursiveC].toOption.get)
   @Test 
   def testEncodeDefaultValue = 
     // encode
     assert("""{"a":1}""" == A().encode.toString)
     // decode
-    val j = ObjectNode(JsonNodeFactory.instance)
+    val j = Json.fromFields(List.empty)
     val a = j.decode[A].toOption.get
     val shouldBe = A()
     assert(a == shouldBe)
 
   @Test 
   def testDecodeProductDefaultValue = 
-    val j = ObjectNode(JsonNodeFactory.instance)
+    val j = Json.fromFields(List.empty)
     val a = j.decode[A].toOption.get
     val shouldBe = A()
     assert(a == shouldBe)

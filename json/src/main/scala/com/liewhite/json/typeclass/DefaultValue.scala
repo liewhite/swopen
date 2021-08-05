@@ -2,32 +2,42 @@ package com.liewhite.json.typeclass
 
 import scala.compiletime.*
 import scala.quoted.*
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import io.circe.Json
+import io.circe.syntax.*
+import com.liewhite.json.codec.Encoder
+import com.liewhite.json.JsonBehavior.*
+
 /**
  * 
  * 默认值只影响 decode 和 json schema
  **/
 trait DefaultValue[T]:
-  def defaults: Map[String,JsonNode]
+  def defaults: Map[String,Json]
 
-object DefaultValue:
-  val mapper = ObjectMapper()
+object DefaultValue{
   inline given [T]: DefaultValue[T] = mkDefaultValue[T]
 
   inline def mkDefaultValue[T]: DefaultValue[T] =
     ${mkDefaultValueMacro[T]}
 
-  def mkGiven[T](defaultMap: Map[String, Any]): DefaultValue[T] = 
-    new DefaultValue:
-      def defaults = defaultMap.map{case (k,v) => (k, mapper.valueToTree(v))}
-
-  def mkDefaultValueMacro[T: Type](using Quotes): Expr[DefaultValue[T]] = 
+  def mkDefaultValueMacro[T: Type](using Quotes): Expr[DefaultValue[T]] = {
     import quotes.reflect.*
-    try
+
+    def toJson(expr: (Expr[Any], TypeRepr)):Expr[Json] = {
+      expr._2.asType match {
+        case '[t] => '{
+          summonInline[Encoder[t]].encode(${expr._1.asInstanceOf})
+        } 
+      }
+    }
+
+    try {
       val sym = TypeTree.of[T].symbol
       val comp = sym.companionClass
-      val allNames = sym.caseFields.map(_.name)
+      // val types = sym.caseFields.map(_.tree.asInstanceOf[ValDef].tpt.tpe)
+      val types = 
+        for p <- sym.caseFields if p.flags.is(Flags.HasDefault)
+        yield p.tree.asInstanceOf[ValDef].tpt.tpe
       val names = 
         for p <- sym.caseFields if p.flags.is(Flags.HasDefault)
         yield p.name
@@ -40,11 +50,21 @@ object DefaultValue:
 
       val namesExpr: Expr[List[String]] =
         Expr.ofList(names.map(Expr(_)))
-      val identsExpr: Expr[List[Any]] =
-        Expr.ofList(idents.map(_.asExpr))
+      val identsExpr = idents.map(_.asExpr)
+      val values = Expr.ofList(identsExpr.zip(types).map(item => toJson(item)))
 
-      '{ mkGiven($namesExpr.zip($identsExpr).toMap) }
-    catch
+      '{ mkGiven($namesExpr, $values) }
+    }
+    catch {
       case _ =>
-        // report.error(s"default values typeclass only support product type: ${TypeTree.of[T].symbol}");???
-        '{mkGiven(Map.empty)}
+        '{mkGiven(List.empty[String],List.empty[Json])}
+    }
+
+  }
+  def mkGiven[T](names: List[String], values: List[Json]): DefaultValue[T] = {
+    new DefaultValue:
+      def defaults = {
+        names.zip(values).toMap
+      }
+  }
+}
