@@ -88,7 +88,7 @@ object CoproductDecoder:
         }
 
         if data.isString then
-          val ordinal = labelling.elemLabels.indexOf(data.asString)
+          val ordinal = labelling.elemLabels.indexOf(data.asString.get)
           inst.project[Json](ordinal)(data)(
             [t] =>
               (s: Json, rt: Decoder[t]) => (s, rt.decode(data).toOption)
