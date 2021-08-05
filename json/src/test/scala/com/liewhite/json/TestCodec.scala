@@ -39,7 +39,7 @@ class TestEncode:
   @Test
   def simpleEncode = 
     assert(2.encode == Json.fromInt(2))
-    assert(1.1.encode == Json.fromFloat(1.1))
+    assert(1.1.encode == Json.fromFloat(1.1).get)
     assert("1".encode == Json.fromString("1"))
     assert(true.encode == Json.True)
     assert(false.encode ==Json.False)
@@ -72,8 +72,8 @@ class TestEncode:
     val ab1: A|B|C = A()
     val ab2: A|B|C = B(1)
     val ab3: A|B|C = C(1)
-    assert(ab1.encode.toString  == """{"a":1}""")
-    assert(ab2.encode.toString  == """{"b":1}""")
+    assert(ab1.encode.noSpaces  == """{"a":1}""")
+    assert(ab2.encode.noSpaces  == """{"b":1}""")
     assert(ab1.encode.decode[A|B|C].toOption.get  == ab1)
     assert(ab2.encode.decode[A|B|C].toOption.get  == ab2)
     assert(ab3.encode.decode[A|B|C].toOption.get  == ab3)
@@ -102,7 +102,7 @@ class TestEncode:
   @Test 
   def testEncodeDefaultValue = 
     // encode
-    assert("""{"a":1}""" == A().encode.toString)
+    assert("""{"a":1}""" == A().encode.noSpaces)
     // decode
     val j = Json.fromFields(List.empty)
     val a = j.decode[A].toOption.get
