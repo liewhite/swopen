@@ -13,6 +13,7 @@ import io.circe.Json
 
 import com.liewhite.json.JsonBehavior.*
 import com.liewhite.json.typeclass.*
+import com.liewhite.json.annotations.*
 import com.liewhite.json.utils.SummonUtils
 
 trait UnionEncoder
@@ -41,27 +42,30 @@ object UnionEncoder:
         report.error(s"not support type:,$other"); ???
 
 trait CoproductEncoder extends UnionEncoder
-object CoproductEncoder:
-  def coproduct[T](using
+object CoproductEncoder{
+  given coproduct[T](using
       inst: => K0.CoproductInstances[Encoder, T],
       labelling: Labelling[T],
-      // flattenCase: RepeatableAnnotation[FlattenAtom, T]
   ): Encoder[T] =
     new Encoder[T]:
       def encode(t: T): Json =
-        inst.fold(t)([t] => (st: Encoder[t], t: t) => st.encode(t))
+        inst.fold(t)([t] => (st: Encoder[t], t: t) => {
+          // 对于enum case object， 会先匹配到
+          st.encode(t)
+        })
+}
 
 trait Encoder[T] extends CoproductEncoder:
   def encode(t: T): Json
 end Encoder
 
 object Encoder:
-  inline given derived[A](using gen: K0.Generic[A]): Encoder[A] =
-    gen.derive(product, CoproductEncoder.coproduct)
-
-  def product[T](using
+  // inline given derived[A](using gen: K0.Generic[A]): Encoder[A] =
+  //   gen.derive(product, CoproductEncoder.coproduct)
+  inline given product[T](using
       inst: => K0.ProductInstances[Encoder, T],
-      labelling: Labelling[T]
+      labelling: Labelling[T],
+      flats: RepeatableAnnotations[Flat,T],
   ): Encoder[T] =
     new Encoder[T]:
       def encode(t: T): Json =

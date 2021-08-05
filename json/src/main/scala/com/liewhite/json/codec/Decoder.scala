@@ -62,7 +62,7 @@ trait CoproductDecoder extends MacroDecoder
 object CoproductDecoder:
   /** 先
     */
-  def coproduct[T](using
+  given coproduct[T](using
       inst: => K0.CoproductInstances[Decoder, T],
       labelling: Labelling[T]
   ): Decoder[T] =
@@ -118,7 +118,7 @@ object CoproductDecoder:
 
 trait ProductDecoder extends CoproductDecoder
 object ProductDecoder{
-  def product[T](using
+  given product[T](using
       inst: => K0.ProductInstances[Decoder, T],
       labelling: Labelling[T],
       defaults: DefaultValue[T]
@@ -147,9 +147,6 @@ object ProductDecoder{
               else throw new DecodeException("label not equals enum name")
             else if data.isObject then
               data
-              // Json.fromFields(
-              //   data.asObject.get.toMap
-              // )
             else
               throw new DecodeException(
                 s"expect product, got: ${data.toString}"
@@ -203,8 +200,8 @@ object Decoder:
   def decodeError(expect: String, got: Json) = Left(
     DecodeException(s"expect $expect, but ${got.toString} found")
   )
-  inline given derived[T](using gen: K0.Generic[T], labelling: Labelling[T]): Decoder[T] =
-    gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
+  // inline given derived[T](using gen: K0.Generic[T], labelling: Labelling[T]): Decoder[T] =
+  //   gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
 
   def decodeSeq[T](data: Json, withDefaults: Boolean = true)(using
       innerDecoder: Decoder[T]

@@ -10,26 +10,27 @@ import io.circe.Json
 import io.circe.parser._
 
 
-case class A(a:Int = 1)  derives Encoder,Decoder
-case class B(b:Int) derives Encoder,Decoder
-case class C(c:Int) derives Encoder,Decoder
-case class D(d:Int) derives Encoder,Decoder
+case class A(a:Int = 1)  
+case class B(b:Int) 
+case class C(c:Int) 
+case class D(d:Int) 
 
-case class UnionA(a:Int|String,b:String) derives Encoder,Decoder
-case class UnionB(a:Boolean,b:Double) derives Encoder,Decoder
-case class UnionC(c:Double,d:String|Boolean) derives Encoder,Decoder
+case class UnionA(a:Int|String,b:String) 
+case class UnionB(a:Boolean,b:Double) 
+case class UnionC(c:Double,d:String|Boolean) 
 
 
-case class RecursiveC(c:Int,d:Option[RecursiveC]) derives Encoder,Decoder
+case class RecursiveC(c:Int,d:Option[RecursiveC]) 
 
-case class SkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
-case class DontSkipNull(a: Option[Int], b: Int) derives Encoder,Decoder
+case class SkipNull(a: Option[Int], b: Int) 
+case class DontSkipNull(a: Option[Int], b: Int) 
 
 enum E:
   case A(a:Int)
   case B
   case C
-enum Dft derives Encoder,Decoder:
+  
+enum Dft :
   case A(a:Int = 1) 
   case B(b:Int)
   case C(b:Int)
@@ -60,7 +61,7 @@ class TestEncode:
   // map
   @Test 
   def mapEncode = 
-    case class A(key: Vector[BigInt]) derives Encoder,Decoder
+    case class A(key: Vector[BigInt]) 
     val a = Map("key" -> Vector(BigInt(1),BigInt(3),BigInt("33333333333333333333333333333333333")))
     val b = parse("""{"key":[1,3,33333333333333333333333333333333333]}""").toOption.get
     val obj1 = a.encode.decode[A]
