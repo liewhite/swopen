@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - run: mkdir -p ~/.sbt/1.0
+      name: sbt dir
     - shell: bash
       env:
         SUPER_SECRET: ${{ secrets.SONASECRET }}
