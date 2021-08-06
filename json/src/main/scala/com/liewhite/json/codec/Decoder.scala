@@ -9,6 +9,8 @@ import java.math.BigInteger
 import scala.reflect.ClassTag
 import shapeless3.deriving.*
 import com.liewhite.json.typeclass.*
+import com.liewhite.json.annotations.*
+
 
 import io.circe.Json
 
@@ -121,7 +123,8 @@ object ProductDecoder{
   given product[T](using
       inst: => K0.ProductInstances[Decoder, T],
       labelling: Labelling[T],
-      defaults: DefaultValue[T]
+      defaults: DefaultValue[T],
+      flats: RepeatableAnnotations[Flat,T],
   ): Decoder[T] =
     new Decoder[T]:
       def decode(

@@ -85,7 +85,10 @@ object Encoder:
           // name, value, flatFlag
           val columns = fieldsName.zip(elems.reverse).zip(flatFlags).map(item => (item._1._1,item._1._2,item._2))
           val flattenColoums = columns.flatMap(item => {
-            if(item._3.isEmpty){
+            if(item._2.isString) {
+              Vector((item._1,item._2))
+            }
+            else if(item._3.isEmpty){
               Vector((item._1,item._2))
             }else{
               if(!item._2.isObject){
