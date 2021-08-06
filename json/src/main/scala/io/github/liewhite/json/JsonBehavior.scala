@@ -1,10 +1,10 @@
-package com.liewhite.json
+package io.github.liewhite.json
 
 import scala.util.NotGiven
 import scala.compiletime.summonInline
 
-import com.liewhite.json.codec.Encoder
-import com.liewhite.json.codec.{DecodeException,Decoder}
+import io.github.liewhite.json.codec.Encoder
+import io.github.liewhite.json.codec.{DecodeException,Decoder}
 import io.circe.Json
 
 

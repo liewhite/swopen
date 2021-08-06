@@ -1,4 +1,4 @@
-package com.liewhite.json.annotations
+package io.github.liewhite.json.annotations
 import scala.quoted.*
 
 class Flat extends scala.annotation.StaticAnnotation

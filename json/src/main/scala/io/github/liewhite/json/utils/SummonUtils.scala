@@ -1,4 +1,4 @@
-package com.liewhite.json.utils
+package io.github.liewhite.json.utils
 
 import scala.compiletime.*
 import scala.reflect.ClassTag

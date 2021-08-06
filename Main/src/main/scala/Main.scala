@@ -1,9 +1,9 @@
 import scala.deriving.*
 
-import com.liewhite.json.codec.*
-import com.liewhite.json.JsonBehavior.*
-import com.liewhite.json.annotations.Flat
-import com.liewhite.json.typeclass.*
+import io.github.liewhite.json.codec.*
+import io.github.liewhite.json.JsonBehavior.*
+import io.github.liewhite.json.annotations.Flat
+import io.github.liewhite.json.typeclass.*
 
 case class C(
   c: Option[A]

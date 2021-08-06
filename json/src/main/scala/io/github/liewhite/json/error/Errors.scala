@@ -1,4 +1,4 @@
-package com.liewhite.json.error
+package io.github.liewhite.json.error
 
 enum JsonErrorType{
   case EncodeError

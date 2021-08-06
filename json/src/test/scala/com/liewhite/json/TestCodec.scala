@@ -1,11 +1,11 @@
-package com.liewhite.json
+package io.github.liewhite.json
 
 import org.junit.*
-import com.liewhite.json.JsonBehavior.{encode,decode}
-import com.liewhite.json.typeclass.RepeatableAnnotation
+import io.github.liewhite.json.JsonBehavior.{encode,decode}
+import io.github.liewhite.json.typeclass.RepeatableAnnotation
 import java.math.BigInteger
-import com.liewhite.json.codec.Encoder
-import com.liewhite.json.codec.Decoder
+import io.github.liewhite.json.codec.Encoder
+import io.github.liewhite.json.codec.Decoder
 import io.circe.Json
 import io.circe.parser._
 

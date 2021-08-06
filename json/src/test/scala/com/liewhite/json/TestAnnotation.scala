@@ -1,9 +1,9 @@
-package com.liewhite.json
+package io.github.liewhite.json
 
 import org.junit.*
-import com.liewhite.json.typeclass.RepeatableAnnotation
-import com.liewhite.json.typeclass.RepeatableAnnotations
-import com.liewhite.json.codec.*
+import io.github.liewhite.json.typeclass.RepeatableAnnotation
+import io.github.liewhite.json.typeclass.RepeatableAnnotations
+import io.github.liewhite.json.codec.*
 
 class Ann(val value:String) extends scala.annotation.Annotation
 class AnnExtend(value:String) extends Ann(value)

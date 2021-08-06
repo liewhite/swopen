@@ -1,4 +1,4 @@
-package com.liewhite.json.codec
+package io.github.liewhite.json.codec
 
 import scala.math.{BigDecimal, BigInt}
 import scala.jdk.CollectionConverters.*
@@ -11,12 +11,12 @@ import shapeless3.deriving.{K0, Continue, Labelling}
 
 import io.circe.Json
 
-import com.liewhite.json.JsonBehavior.*
-import com.liewhite.json.typeclass.*
-import com.liewhite.json.annotations.*
-import com.liewhite.json.utils.SummonUtils
-import com.liewhite.json.error.JsonError
-import com.liewhite.json.error.JsonErrorType
+import io.github.liewhite.json.JsonBehavior.*
+import io.github.liewhite.json.typeclass.*
+import io.github.liewhite.json.annotations.*
+import io.github.liewhite.json.utils.SummonUtils
+import io.github.liewhite.json.error.JsonError
+import io.github.liewhite.json.error.JsonErrorType
 
 trait UnionEncoder
 object UnionEncoder:

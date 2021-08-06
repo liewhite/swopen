@@ -1,34 +1,37 @@
-ThisBuild / organization := "com.liewhite"
-ThisBuild / version := "0.1.0"
+// ThisBuild / name := "swopen"
+ThisBuild / organization := "io.github.liewhite"
+ThisBuild / organizationName := "liewhite"
+ThisBuild / version := "0.2.2"
 ThisBuild / scalaVersion := "3.0.1"
-Global / scalacOptions ++= Seq("-Xmax-inlines", "256")
+ThisBuild / versionScheme := Some("early-semver")
+ThisBuild / scalacOptions ++= Seq("-Xmax-inlines", "256")
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild / publishTo := sonatypePublishToBundle.value
+sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild/sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "com.novocode" % "junit-interface" % "0.11" % "test",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.12.3",
     "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
     "io.circe" % "circe-core_3" % "0.14.1",
     "io.circe" %% "circe-parser" % "0.14.1",
-    // "org.typelevel"%%"shapeless3-typeable"%"3.0.1",
-    // "org.typelevel"%%"shapeless3-test"%"3.0.1",
-  )
-
-  // libraryDependencies ++= Seq(
-  // "org.postgresql" % "postgresql" % "42.2.8",
-  // "io.getquill" %% "quill-jdbc" % "3.7.1.Beta1.1"
-  // )
+  ),
 )
 
-lazy val JsonToolbox = (project in file("json"))
+lazy val json = (project in file("json"))
   .settings(
-    commonSettings
+    commonSettings,
   )
 
-lazy val main = (project in file("Main"))
+lazy val main = (project in file("main"))
   .settings(
-    commonSettings
+    commonSettings,
+    publish / skip := true,
   )
-  .dependsOn(JsonToolbox)
+  .dependsOn(json)
 
-lazy val root = (project in file(".")).aggregate(main, JsonToolbox)
+lazy val root = (project in file("."))
+  .aggregate(main, json).settings(
+  publish / skip := true,
+)

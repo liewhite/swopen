@@ -1,11 +1,11 @@
-package com.liewhite.json.typeclass
+package io.github.liewhite.json.typeclass
 
 import scala.compiletime.*
 import scala.quoted.*
 import io.circe.Json
 import io.circe.syntax.*
-import com.liewhite.json.codec.Encoder
-import com.liewhite.json.JsonBehavior.*
+import io.github.liewhite.json.codec.Encoder
+import io.github.liewhite.json.JsonBehavior.*
 
 /**
  * 

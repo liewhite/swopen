@@ -1,4 +1,4 @@
-package com.liewhite.json.codec
+package io.github.liewhite.json.codec
 
 import scala.deriving.*
 import scala.jdk.CollectionConverters.*
@@ -8,8 +8,8 @@ import scala.compiletime.*
 import java.math.BigInteger
 import scala.reflect.ClassTag
 import shapeless3.deriving.*
-import com.liewhite.json.typeclass.*
-import com.liewhite.json.annotations.*
+import io.github.liewhite.json.typeclass.*
+import io.github.liewhite.json.annotations.*
 
 
 import io.circe.Json
