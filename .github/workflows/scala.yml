@@ -26,7 +26,7 @@ jobs:
       env:
         GPG_KEY: ${{ secrets.GPG_KEY }}
       run: |
-        echo "$GPG_KEY" > ~/.gnupg/pubring.kbx
+        echo -n "$GPG_KEY" | base64 --decode | gpg --import
         
     - uses: actions/checkout@v2
     - name: Set up JDK 11
