@@ -62,8 +62,9 @@ trait Encoder[T] extends CoproductEncoder:
 end Encoder
 
 object Encoder:
-  // inline given derived[A](using gen: K0.Generic[A]): Encoder[A] =
-  //   gen.derive(product, CoproductEncoder.coproduct)
+  inline def derived[A](using gen: K0.Generic[A]): Encoder[A] =
+    gen.derive(product, CoproductEncoder.coproduct)
+
   inline given product[T](using
       inst: => K0.ProductInstances[Encoder, T],
       labelling: Labelling[T],

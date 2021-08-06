@@ -4,33 +4,32 @@ import org.junit.*
 import io.github.liewhite.json.JsonBehavior.{encode,decode}
 import io.github.liewhite.json.typeclass.RepeatableAnnotation
 import java.math.BigInteger
-import io.github.liewhite.json.codec.Encoder
-import io.github.liewhite.json.codec.Decoder
+import io.github.liewhite.json.codec.*
 import io.circe.Json
 import io.circe.parser._
 
 
-case class A(a:Int = 1)  
-case class B(b:Int) 
-case class C(c:Int) 
-case class D(d:Int) 
+case class A(a:Int = 1) derives Encoder,Decoder
+case class B(b:Int)  derives Encoder,Decoder
+case class C(c:Int)  derives Encoder,Decoder
+case class D(d:Int)  derives Encoder,Decoder
 
-case class UnionA(a:Int|String,b:String) 
-case class UnionB(a:Boolean,b:Double) 
-case class UnionC(c:Double,d:String|Boolean) 
+case class UnionA(a:Int|String,b:String)  derives Encoder,Decoder
+case class UnionB(a:Boolean,b:Double)  derives Encoder,Decoder
+case class UnionC(c:Double,d:String|Boolean)  derives Encoder,Decoder
 
 
-case class RecursiveC(c:Int,d:Option[RecursiveC]) 
+case class RecursiveC(c:Int,d:Option[RecursiveC])  derives Encoder,Decoder
 
-case class SkipNull(a: Option[Int], b: Int) 
-case class DontSkipNull(a: Option[Int], b: Int) 
+case class SkipNull(a: Option[Int], b: Int)  derives Encoder,Decoder
+case class DontSkipNull(a: Option[Int], b: Int)  derives Encoder,Decoder
 
-enum E:
+enum E derives Encoder,Decoder:
   case A(a:Int)
   case B
   case C
   
-enum Dft :
+enum Dft  derives Encoder,Decoder:
   case A(a:Int = 1) 
   case B(b:Int)
   case C(b:Int)

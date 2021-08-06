@@ -211,8 +211,8 @@ object Decoder:
   def decodeError(expect: String, got: Json) = Left(
     DecodeException(s"expect $expect, but ${got.toString} found")
   )
-  // inline given derived[T](using gen: K0.Generic[T], labelling: Labelling[T]): Decoder[T] =
-  //   gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
+  inline def derived[T](using gen: K0.Generic[T], labelling: Labelling[T]): Decoder[T] =
+    gen.derive(ProductDecoder.product, CoproductDecoder.coproduct)
 
   def decodeSeq[T](data: Json, withDefaults: Boolean = true)(using
       innerDecoder: Decoder[T]

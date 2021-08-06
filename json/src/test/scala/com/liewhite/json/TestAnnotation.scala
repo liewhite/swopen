@@ -10,7 +10,7 @@ class AnnExtend(value:String) extends Ann(value)
 
 @Ann("hello")
 @AnnExtend("world")
-case class Target(a:Int)
+case class Target(a:Int) derives Encoder,Decoder
 
 
 case class AnnsTarget(
@@ -23,7 +23,7 @@ case class AnnsTarget(
   @AnnExtend("world b")
   b:Boolean
 
-)
+) derives Encoder,Decoder
 
 class TestAnnotation:
   @Test
