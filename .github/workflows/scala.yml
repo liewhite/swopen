@@ -26,4 +26,4 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
     - name: Run tests
-      run: sbt test sonatypeBundleRelease
+      run: sbt test publishSigned sonatypeBundleRelease
