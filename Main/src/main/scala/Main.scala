@@ -11,7 +11,6 @@ case class C(
 
 case class B(
   b: Int,
-  c: C
 )
 
 enum D{
@@ -30,8 +29,10 @@ case class A(
 
 @main def test(): Unit =
   // 因为EB没有 repeatable annotation， 所以就被归类为coproduct， 导致encode函数无限递归
-  val a = A(1, B(1,C(None)), D.D1(Some(C(None))))
-  println(a.encode)
+  val a = A(1, B(1), D.D1(Some(C(None))))
+  val b = A(1, B(1), D.D2)
+  println(a.encode.decode[A])
+  println(b.encode.decode[A])
   // val m = summon[Mirror.ProductOf[E.EA]]
   // println(m)
 

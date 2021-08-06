@@ -136,9 +136,10 @@ object ProductDecoder{
             data: Json,
             labelling: Labelling[T],
             defaultValues: Map[String, Json]
-        ) =
+        ) = {
           val label = labelling.label
           val fieldsName = labelling.elemLabels
+          val flatsFlags = flats()
           val itemsData: Json =
             if data.isString then
               val stringValue = data.asString.get
@@ -159,8 +160,13 @@ object ProductDecoder{
           val result = inst.construct(
             [t] =>
               (itemDecoder: Decoder[t]) => {
+                val jsonData = if(flatsFlags(index).nonEmpty) {
+                  Some(itemsData)
+                }else {
+                  itemsData.asObject.get.apply(fieldsName(index))
+                }
                 // 处理默认值
-                val value = itemsData.asObject.get.apply(fieldsName(index)) match {
+                val value = jsonData match {
                   case None =>
                     if defaultValues.contains(fieldsName(index)) then
                       defaultValues(fieldsName(index))
@@ -180,7 +186,8 @@ object ProductDecoder{
             }
           )
           Right(result)
-        try
+        }
+        try{
           decodePhase[T](
             inst,
             data,
@@ -188,8 +195,9 @@ object ProductDecoder{
             if withDefaults then defaults.defaults
             else Map.empty[String, Json]
           )
-        catch
+        }catch{
           case e: DecodeException => Left(e)
+        }
 
 }
 trait Decoder[T] extends ProductDecoder:
