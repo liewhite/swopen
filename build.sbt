@@ -1,7 +1,7 @@
 // ThisBuild / name := "swopen"
 ThisBuild / organization := "io.github.liewhite"
 ThisBuild / organizationName := "liewhite"
-ThisBuild / version := "0.2.2"
+ThisBuild / version := "0.2.3"
 ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / scalacOptions ++= Seq("-Xmax-inlines", "256")
