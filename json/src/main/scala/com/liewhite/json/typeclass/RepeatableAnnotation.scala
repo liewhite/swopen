@@ -109,6 +109,7 @@ object AnnotationMacros {
       }
 
       val annoteeTpe = TypeRepr.of[T]
+      // enum case 必须按照product处理， 不然在codec会进入coproduct逻辑导致死循环
       if (annoteeTpe.isSingleton) {
         mkAnnotations(Vector.empty)
       } else {
@@ -138,7 +139,6 @@ object AnnotationMacros {
               s"No Annotations for non-class ${annoteeTpe.show}"
             )
         }
-
       }
     }
   }

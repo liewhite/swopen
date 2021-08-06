@@ -15,6 +15,8 @@ import com.liewhite.json.JsonBehavior.*
 import com.liewhite.json.typeclass.*
 import com.liewhite.json.annotations.*
 import com.liewhite.json.utils.SummonUtils
+import com.liewhite.json.error.JsonError
+import com.liewhite.json.error.JsonErrorType
 
 trait UnionEncoder
 object UnionEncoder:
@@ -71,6 +73,7 @@ object Encoder:
       def encode(t: T): Json =
         val fieldsName = labelling.elemLabels
 
+        // 没有成员的product， 按照singleton处理
         if (fieldsName.isEmpty) then Json.fromString(labelling.label)
         else
           val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
@@ -78,8 +81,20 @@ object Encoder:
               (acc: List[Json], st: Encoder[t], t: t) =>
                 Continue(st.encode(t) :: acc)
           )
-          val rawMap = fieldsName.zip(elems.reverse).toMap
-          Json.fromFields(rawMap)
+          val flatFlags = flats()
+          // name, value, flatFlag
+          val columns = fieldsName.zip(elems.reverse).zip(flatFlags).map(item => (item._1._1,item._1._2,item._2))
+          val flattenColoums = columns.flatMap(item => {
+            if(item._3.isEmpty){
+              Vector((item._1,item._2))
+            }else{
+              if(!item._2.isObject){
+                throw new JsonError(JsonErrorType.EncodeError, "flat need object,but got:" + item._2)
+              }
+              item._2.asObject.get.toMap.map(item => (item._1,item._2)).toVector
+            }
+          }).toMap
+          Json.fromFields(flattenColoums)
 
   /** map encoder
     */
