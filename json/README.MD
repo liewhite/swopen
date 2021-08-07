@@ -29,7 +29,7 @@ assert(C(true).encode.decode[C] == Right(C(true)))
 ## default value support
 ```scala
 case class B(b:Int = 9)  derives Encoder,Decoder
-assert(parse("{}").toOption.get.decode[B] == Right(B(3)))
+assert(parse("{}").toOption.get.decode[B] == Right(B(9)))
 ```
 
 ## union type and enum
