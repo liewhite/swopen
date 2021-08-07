@@ -2,9 +2,9 @@ package io.github.liewhite.json
 
 import org.junit.*
 import io.github.liewhite.json.JsonBehavior.{encode,decode}
+import io.github.liewhite.json.codec.*
 import io.github.liewhite.json.typeclass.RepeatableAnnotation
 import java.math.BigInteger
-import io.github.liewhite.json.codec.*
 import io.circe.Json
 import io.circe.parser._
 
