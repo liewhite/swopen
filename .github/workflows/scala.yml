@@ -3,7 +3,7 @@ name: Scala CI
 on:
   push:
     # branches: [ master ]
-    tags: [v*]
+    tags: [v*.*.*]
   # pull_request:
   #   branches: [ master ]
 
@@ -17,6 +17,8 @@ jobs:
       name: gpg dir
     - run: mkdir -p ~/.sbt/1.0
       name: sbt dir
+    - name: set version
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
       
     - shell: bash
       env:
