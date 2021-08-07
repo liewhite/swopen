@@ -5,6 +5,14 @@
 * support union type
 * flatten fields in product type
 
+# dependency
+## sbt
+```
+libraryDependencies += "io.github.liewhite" %% "json" % "0.4.0",
+```
+
+
+# examples
 
 ## basic codec
 ```scala
