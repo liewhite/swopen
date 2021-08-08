@@ -134,8 +134,14 @@ object Encoder:
   given Encoder[EmptyTuple] with
     def encode(t: EmptyTuple) = Json.fromValues(List.empty)
 
-  given [H: Encoder, T <:Tuple:Encoder](using headEncoder: Encoder[H], tailEncoder: Encoder[T]): Encoder[H *: T] with
-    def encode(t: H*: T) = Json.fromValues(headEncoder.encode(t.head).asArray.get.appended(tailEncoder.encode(t.tail)))
+  given [H, T <: Tuple](using headEncoder: Encoder[H], tailEncoder: Encoder[T]): Encoder[H *: T] with
+    def encode(t: H*: T) = {
+      val head = headEncoder.encode(t.head)
+      val tail = tailEncoder.encode(t.tail)
+      Json.fromValues(tail.asArray.get.prepended(head))
+      // Json.fromValues(.asArray.get.appended())
+    }
+
   /** number encoder
     */
   given Encoder[Float] with

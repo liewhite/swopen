@@ -126,3 +126,9 @@ class TestEncode:
     assert(b == b.encode.decode[Dft].toOption.get)
     assert(c == c.encode.decode[Dft].toOption.get)
     assert(d == d.encode.decode[Dft].toOption.get)
+
+  @Test 
+  def testTuple = 
+    val a = (1,"a",true, 1.1)
+    val s = a.encode
+    println(s)
