@@ -1,7 +1,7 @@
 // ThisBuild / name := "swopen"
 ThisBuild / organization := "io.github.liewhite"
 ThisBuild / organizationName := "liewhite"
-ThisBuild / version := sys.env.get("RELEASE_VERSION").getOrElse("local")
+ThisBuild / version := sys.env.get("RELEASE_VERSION").getOrElse("0.4.2")
 ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"

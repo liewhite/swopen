@@ -245,7 +245,7 @@ object Decoder:
   given Decoder[EmptyTuple] with
     def decode(data: Json, withDefaults: Boolean = true) = Right(EmptyTuple)
 
-  given [H: Decoder, T <:Tuple:Decoder](using headEncoder: Decoder[H], tailEncoder: Decoder[T]): Decoder[H *: T] with
+  given [H, T <:Tuple](using headEncoder: => Decoder[H], tailEncoder: => Decoder[T]): Decoder[H *: T] with
     def decode(data: Json, withDefaults: Boolean = true) = {
       data.asArray match {
         case Some(a) => {
