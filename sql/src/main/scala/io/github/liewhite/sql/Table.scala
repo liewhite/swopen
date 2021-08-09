@@ -12,7 +12,7 @@ trait Table[T]{
 }
 
 object Table{
-  inline def derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
+  inline given derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
     val items = summonAll[Field, gen.MirroredElemTypes]
     val elemsWithName = labelling.elemLabels.zip(items).map{
       case (label, item) => item
