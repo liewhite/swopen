@@ -20,12 +20,10 @@ lazy val commonSettings = Seq(
 )
 
 lazy val common = (project in file("common")).settings(
-      publish / skip := true,
 )
 
 lazy val sql = (project in file("sql"))
   .settings(
-      publish / skip := true,
     Seq(
       libraryDependencies ++= Seq(
         "com.novocode" % "junit-interface" % "0.11" % "test",
