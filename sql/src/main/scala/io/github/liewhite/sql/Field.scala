@@ -10,12 +10,11 @@ enum FieldSpec{
   case Text()
 
   case Bool
-
-
 }
+
 trait Field[T]{
-  var name: String = ???
-  var tableName: String = ???
+  var name: String = ""
+  var tableName: String = ""
 
   def withName(n:String): this.type = {
     this.name = n
@@ -34,5 +33,8 @@ trait Field[T]{
 object Field{
   given Field[Int] with {
     def fieldType = FieldSpec.IntegerField()
+  }
+  given Field[String] with {
+    def fieldType = FieldSpec.VarChar(255)
   }
 }

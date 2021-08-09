@@ -3,7 +3,7 @@ package io.github.liewhite.json.typeclass
 import scala.deriving.*
 import scala.quoted.*
 import scala.util.NotGiven
-import io.github.liewhite.json.utils.*
+import io.github.liewhite.common.*
 
 /** this file is fork from shapeless3
   */

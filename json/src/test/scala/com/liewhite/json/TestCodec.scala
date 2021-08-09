@@ -131,4 +131,4 @@ class TestEncode:
   def testTuple = 
     val a = (1,"a",true, 1.1)
     val s = a.encode
-    println(s)
+    assert(s.decode[(Int,String,Boolean,Double)] == Right(a))

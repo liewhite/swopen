@@ -8,13 +8,13 @@ import scala.compiletime.*
 import scala.util.NotGiven
 
 import shapeless3.deriving.{K0, Continue, Labelling}
-
 import io.circe.Json
+
+import io.github.liewhite.common.SummonUtils
 
 import io.github.liewhite.json.JsonBehavior.*
 import io.github.liewhite.json.typeclass.*
 import io.github.liewhite.json.annotations.*
-import io.github.liewhite.json.utils.SummonUtils
 import io.github.liewhite.json.error.JsonError
 import io.github.liewhite.json.error.JsonErrorType
 

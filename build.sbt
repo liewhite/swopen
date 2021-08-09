@@ -19,6 +19,10 @@ lazy val commonSettings = Seq(
   ),
 )
 
+lazy val common = (project in file("common")).settings(
+      publish / skip := true,
+)
+
 lazy val sql = (project in file("sql"))
   .settings(
       publish / skip := true,
@@ -26,15 +30,16 @@ lazy val sql = (project in file("sql"))
       libraryDependencies ++= Seq(
         "com.novocode" % "junit-interface" % "0.11" % "test",
         "com.softwaremill.sttp.client3" %% "core" % "3.3.13",
+        "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
       ),
 
     )
-  )
+  ).dependsOn(common)
 
 lazy val json = (project in file("json"))
   .settings(
     commonSettings,
-  )
+  ).dependsOn(common)
 
 lazy val main = (project in file("main"))
   .settings(

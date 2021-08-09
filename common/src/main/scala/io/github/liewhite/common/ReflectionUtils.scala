@@ -1,4 +1,4 @@
-package io.github.liewhite.json.utils
+package io.github.liewhite.common
 
 import scala.annotation.tailrec
 import scala.deriving._
