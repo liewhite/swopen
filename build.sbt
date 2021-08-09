@@ -47,6 +47,6 @@ lazy val main = (project in file("main"))
   .dependsOn(json)
 
 lazy val root = (project in file("."))
-  .aggregate(main, json,sql).settings(
+  .aggregate(main, json,sql,common).settings(
   publish / skip := true,
 )
