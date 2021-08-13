@@ -7,7 +7,7 @@ ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / publishTo := sonatypePublishToBundle.value
 sonatypeCredentialHost := "s01.oss.sonatype.org"
-ThisBuild/sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 lazy val commonSettings = Seq(
   scalacOptions ++= Seq("-Xmax-inlines", "256"),
@@ -16,7 +16,8 @@ lazy val commonSettings = Seq(
     "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
     "io.circe" % "circe-core_3" % "0.14.1",
     "io.circe" %% "circe-parser" % "0.14.1",
-  ),
+    "org.slf4j"% "slf4j-simple" % "1.7.25",
+  )
 )
 
 lazy val common = (project in file("common")).settings(
@@ -24,29 +25,33 @@ lazy val common = (project in file("common")).settings(
 
 lazy val sql = (project in file("sql"))
   .settings(
-    Seq(
-      libraryDependencies ++= Seq(
-        "com.novocode" % "junit-interface" % "0.11" % "test",
-        "com.softwaremill.sttp.client3" %% "core" % "3.3.13",
-        "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
-      ),
-
+    commonSettings,
+    libraryDependencies ++= (Seq(
+        // "com.novocode" % "junit-interface" % "0.11" % "test",
+        // "com.softwaremill.sttp.client3" %% "core" % "3.3.13",
+        // "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
+        "io.getquill" %% "quill-jdbc" % "3.7.2.Beta1.4",
+        "org.postgresql" % "postgresql" % "42.2.8"
+      )
     )
-  ).dependsOn(common)
+  )
+  .dependsOn(common)
 
 lazy val json = (project in file("json"))
   .settings(
-    commonSettings,
-  ).dependsOn(common)
+    commonSettings
+  )
+  .dependsOn(common)
 
 lazy val main = (project in file("main"))
   .settings(
     commonSettings,
-    publish / skip := true,
+    publish / skip := true
   )
   .dependsOn(json)
 
 lazy val root = (project in file("."))
-  .aggregate(main, json,sql,common).settings(
-  publish / skip := true,
-)
+  .aggregate(main, json, sql, common)
+  .settings(
+    publish / skip := true
+  )
