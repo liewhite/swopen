@@ -3,7 +3,7 @@ package io.github.liewhite.sql
 import scala.compiletime.*
 
 // 类型以及约束
-enum ColumnType{
+enum DBType{
   case Integer()
   case BigInt()
   case Serial
@@ -11,58 +11,67 @@ enum ColumnType{
   case Text()
   case Bool
 }
-
-trait DBValue{
-  type Underlying
-  def toExpr:String
-
-  inline def eql(that:DBValue): Boolean = {
-    if(typeCompatibie[Underlying, that.Underlying]){
-      true
-    }else{
-      error("type error")
-    }
+trait DBRepr[T]{
+  def tp: DBType
+}
+object DBRepr{
+  given DBRepr[Int] with{
+    def tp = DBType.Integer()
+  }
+  given DBRepr[Long] with{
+    def tp = DBType.Integer()
   }
 
-  inline def typeCompatibie[T1,T2]: Boolean = {
-    if(constValue[T1] == constValue[T2]){
-      true
-    }else{
-      error("type error")
-    }
+  given DBRepr[String] with{
+    def tp = DBType.VarChar(255)
   }
 }
 
-object DBValue{
-  given Conversion[Int, DBValue] with
-    def apply(s: Int): DBValue{type Underlying = "integer"} = new DBValue{
-      type Underlying = "integer"
-      def toExpr = s.toString
-    }
-  given Conversion[String, DBValue] with
-    def apply(s: String): DBValue{type Underlying = "string"} = new DBValue{
-      type Underlying = "string"
-      def toExpr = s
-    }
+class Column[T](val tableName:String, val name:String,val tp: DBType) {
+  inline def eql[THAT <: T](that: THAT)(using converter: LiterialConverter[THAT]): Expr = {
+    ConditionExpr("(? = ?)", Vector(this.toExpr, converter.convert(that).toExpr))
+  }
+  def toExpr: Expr = Expr(Vector(tableName,name).mkString("."),Vector.empty)
 }
 
-class Column(val tableName:String, val name:String,val tp: ColumnType) extends DBValue {
-  def toExpr = Vector(tableName, name).mkString(".")
+trait LiterialConverter[T]{
+  def convert(t:T):Column[T]
 }
 
-trait ColumnLike[T]{
-  type Underlying
-  def columnType: ColumnType 
-}
-
-object ColumnLike{
-  given ColumnLike[Int] with {
-    type Underlying = "integer"
-    def columnType = ColumnType.Integer()
+object LiterialConverter{
+  given [T]: LiterialConverter[Column[T]] with {
+    override def convert(t:Column[T]):Column[Column[T]] = t.asInstanceOf
   }
 
-  given ColumnLike[String] with {
-    type Underlying = "string"
-    def columnType = ColumnType.VarChar(255)
+  given LiterialConverter[Int] with {
+    def convert(t:Int):Column[Int] = {
+      new Column[Int]("","", DBType.Integer()){
+        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+      }
+    }
+  }
+
+  given LiterialConverter[Long] with {
+    def convert(t:Long):Column[Long] = {
+      new Column[Long]("","", DBType.Integer()){
+        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+      }
+    }
+  }
+
+  given LiterialConverter[String] with {
+    def convert(t:String):Column[String] = {
+      new Column[String]("","", DBType.VarChar(255)){
+        override def toExpr:Expr = Expr(t, Vector.empty)
+      }
+    }
+  }
+
+  given LiterialConverter[Boolean] with {
+    def convert(t:Boolean):Column[Boolean] = {
+      new Column[Boolean]("","", DBType.Bool){
+        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+      }
+    }
   }
 }

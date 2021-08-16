@@ -11,15 +11,15 @@ import io.github.liewhite.common.SummonUtils.summonAll
 trait Table[T]{
   def tableName: String
   // 这里的Column类型和selectable返回的类型要一致
-  def columns: Map[String,Column]
+  def columns: Map[String,Column[_]]
 }
 
 object Table{
   inline given derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
-    val columnTypes = summonAll[ColumnLike, gen.MirroredElemTypes]
+    val columnTypes = summonAll[DBRepr, gen.MirroredElemTypes]
     val tableName = labelling.label
     val cols = labelling.elemLabels.zip(columnTypes).map{
-      case (label, tp) => Column(tableName, label, tp.columnType)
+      case (label, tp) => Column(tableName, label, tp.tp)
     }
     // todo 获取各种annotations
     new Table{
@@ -47,9 +47,9 @@ private def fromImpl[T: Type](using Quotes): Expr[Any] =
           Type.of[mets] match {
             case '[head *: tail] => {
               val label = Type.valueOfConstant[mel].get.toString
-              Expr.summon[ColumnLike[head]] match {
-                case Some('{ $m: ColumnLike[head] {type Underlying = u}}) => {
-                  recur[melTail, tail](Refinement(baseType, label, TypeRepr.of[Column{type Underlying = u}]))
+              Expr.summon[DBRepr[head]] match {
+                case Some('{ $m: DBRepr[head]}) => {
+                  recur[melTail, tail](Refinement(baseType, label, TypeRepr.of[Column[head]]))
                 }
                 case None => {
                   report.error("Field implementation not found:")
