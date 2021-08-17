@@ -11,66 +11,62 @@ enum DBType{
   case Text()
   case Bool
 }
-trait DBRepr[T]{
-  def tp: DBType
-}
-object DBRepr{
-  given DBRepr[Int] with{
-    def tp = DBType.Integer()
-  }
-  given DBRepr[Long] with{
-    def tp = DBType.Integer()
+
+trait DBValue[T]{
+  inline def eql[THAT <: T](that: THAT)(using converter: DBValueConverter[THAT]): ConditionExpr = {
+    ConditionExpr("(? = ?)", this.toExpr, converter.convert(that).toExpr)
   }
 
-  given DBRepr[String] with{
-    def tp = DBType.VarChar(255)
-  }
+  def toExpr: Expr
 }
 
-class Column[T](val tableName:String, val name:String,val tp: DBType) {
-  inline def eql[THAT <: T](that: THAT)(using converter: LiterialConverter[THAT]): Expr = {
-    ConditionExpr("(? = ?)", Vector(this.toExpr, converter.convert(that).toExpr))
-  }
-  def toExpr: Expr = Expr(Vector(tableName,name).mkString("."),Vector.empty)
+class Column[T](val tableName:String, val name:String,val tp: DBType) extends DBValue[T] {
+  def toExpr: Expr = Expr(Vector(tableName,name).mkString("."))
 }
 
-trait LiterialConverter[T]{
-  def convert(t:T):Column[T]
+trait DBValueConverter[T]{
+  def dbRepr: DBType
+  def convert(t:T):DBValue[T]
 }
 
-object LiterialConverter{
-  given [T]: LiterialConverter[Column[T]] with {
-    override def convert(t:Column[T]):Column[Column[T]] = t.asInstanceOf
-  }
+object DBValueConverter{
+  // given [T]: DBValueConverter[DBValue[T]] with {
+  //   def dbRepr: DBRepr[Int] = new DBRepr[Int] {def tp = DBType.Integer()}
+  //   def convert(t:DBValue[T]):DBValue[DBValue[T]] = t.asInstanceOf
+  // }
 
-  given LiterialConverter[Int] with {
-    def convert(t:Int):Column[Int] = {
-      new Column[Int]("","", DBType.Integer()){
-        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+  given DBValueConverter[Int] with {
+    def dbRepr: DBType = DBType.Integer()
+    def convert(t:Int):DBValue[Int] = {
+      new DBValue[Int]{
+        def toExpr:Expr = Expr(t.toString)
       }
     }
   }
 
-  given LiterialConverter[Long] with {
-    def convert(t:Long):Column[Long] = {
-      new Column[Long]("","", DBType.Integer()){
-        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+  given DBValueConverter[Long] with {
+    def dbRepr: DBType = DBType.BigInt()
+    def convert(t:Long):DBValue[Long] = {
+      new DBValue[Long]{
+        def toExpr:Expr = Expr(t.toString)
       }
     }
   }
 
-  given LiterialConverter[String] with {
-    def convert(t:String):Column[String] = {
-      new Column[String]("","", DBType.VarChar(255)){
-        override def toExpr:Expr = Expr(t, Vector.empty)
+  given DBValueConverter[String] with {
+    def dbRepr: DBType = DBType.VarChar(255)
+    def convert(t:String):DBValue[String] = {
+      new DBValue[String]{
+        def toExpr:Expr = Expr(t)
       }
     }
   }
 
-  given LiterialConverter[Boolean] with {
-    def convert(t:Boolean):Column[Boolean] = {
-      new Column[Boolean]("","", DBType.Bool){
-        override def toExpr:Expr = Expr(t.toString, Vector.empty)
+  given DBValueConverter[Boolean] with {
+    def dbRepr: DBType = DBType.Bool
+    def convert(t:Boolean):DBValue[Boolean] = {
+      new DBValue[Boolean]{
+        def toExpr:Expr = Expr(t.toString)
       }
     }
   }

@@ -16,10 +16,10 @@ trait Table[T]{
 
 object Table{
   inline given derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
-    val columnTypes = summonAll[DBRepr, gen.MirroredElemTypes]
+    val columnTypes = summonAll[DBValueConverter, gen.MirroredElemTypes]
     val tableName = labelling.label
     val cols = labelling.elemLabels.zip(columnTypes).map{
-      case (label, tp) => Column(tableName, label, tp.tp)
+      case (label, tp) => Column(tableName, label, tp.dbRepr)
     }
     // todo 获取各种annotations
     new Table{
@@ -47,8 +47,8 @@ private def fromImpl[T: Type](using Quotes): Expr[Any] =
           Type.of[mets] match {
             case '[head *: tail] => {
               val label = Type.valueOfConstant[mel].get.toString
-              Expr.summon[DBRepr[head]] match {
-                case Some('{ $m: DBRepr[head]}) => {
+              Expr.summon[DBValueConverter[head]] match {
+                case Some('{ $m: DBValueConverter[head]}) => {
                   recur[melTail, tail](Refinement(baseType, label, TypeRepr.of[Column[head]]))
                 }
                 case None => {
