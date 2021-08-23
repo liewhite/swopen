@@ -7,19 +7,23 @@ import scala.deriving.Mirror
 import shapeless3.deriving.{K0, Continue, Labelling}
 import io.github.liewhite.common.SummonUtils.summonAll
 
-
-trait Table[T]{
+trait Table[T] extends Selectable{
   def tableName: String
   // 这里的Column类型和selectable返回的类型要一致
-  def columns: Map[String,Column[_]]
+  def columns: Map[String,DBField]
+
+  def selectDynamic(name: String): Any ={
+    columns(name)
+  }
+
 }
 
 object Table{
   inline given derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
-    val columnTypes = summonAll[DBValueConverter, gen.MirroredElemTypes]
+    val columnTypes = summonAll[DBFieldLike, gen.MirroredElemTypes]
     val tableName = labelling.label
     val cols = labelling.elemLabels.zip(columnTypes).map{
-      case (label, tp) => Column(tableName, label, tp.dbRepr)
+      case (label, tp) => tp.toField(label, tableName)
     }
     // todo 获取各种annotations
     new Table{
@@ -27,53 +31,59 @@ object Table{
       def columns = labelling.elemLabels.zip(cols).toMap
     }
 
-}
-
-class Props[T](using table:Table[T]) extends Selectable:
-  def selectDynamic(name: String): Any ={
-    table.columns(name)
+  transparent inline def apply[T] ={
+    ${ queryImpl[T] }
   }
 
-transparent inline def from[T] =
-  ${ fromImpl[T] }
+  private def queryImpl[T: Type](using Quotes): Expr[Any] = {
+    import quotes.reflect.*
 
-
-private def fromImpl[T: Type](using Quotes): Expr[Any] =
-  import quotes.reflect.*
-
-  def recur[mels : Type, mets:Type](baseType: TypeRepr): TypeRepr = {
-      Type.of[mels] match
-        case '[mel *: melTail] => {
-          Type.of[mets] match {
-            case '[head *: tail] => {
-              val label = Type.valueOfConstant[mel].get.toString
-              Expr.summon[DBValueConverter[head]] match {
-                case Some('{ $m: DBValueConverter[head]}) => {
-                  recur[melTail, tail](Refinement(baseType, label, TypeRepr.of[Column[head]]))
-                }
-                case None => {
-                  report.error("Field implementation not found:")
-                  ???
-                }
-                case _ => {
-                  report.error("Unknown error when summon Field[head]")
-                  ???
+    def recur[mels : Type, mets: Type](baseType: TypeRepr): TypeRepr = {
+        Type.of[mels] match
+          case '[mel *: melTail] => {
+            Type.of[mets] match {
+              case '[head *: tail] => {
+                val label = Type.valueOfConstant[mel].get.toString
+                Expr.summon[DBFieldLike[head]] match {
+                  case Some('{ $m: DBFieldLike[head]}) => {
+                    val withField = Refinement(baseType, label, TypeRepr.of[DBField{type Underlying = head}])
+                    // val withTableField = Refinement(withField, label, TypeRepr.of[DBField{type Underlying = head}])
+                    recur[melTail, tail](withField)
+                  }
+                  case None => {
+                    report.error("Field implementation not found:")
+                    ???
+                  }
+                  case _ => {
+                    report.error("Unknown error when summon Field[head]")
+                    ???
+                  }
                 }
               }
             }
           }
-        }
-        case '[EmptyTuple] => baseType
-  }
+          case '[EmptyTuple] => baseType
+    }
+    val tableName= TypeRepr.of[T].typeSymbol.name
+    val tableNameExpr = Expr(tableName)
 
-  Expr.summon[Mirror.ProductOf[T]].get match {
-    case '{ $m: Mirror.ProductOf[T] {type MirroredElemLabels = mels; type MirroredElemTypes = mets } } =>
-      recur[mels,mets](TypeRepr.of[Props]).asType match {
-            case '[tpe] =>
-              '{
-                val table = summonInline[Table[T]]
-                val p = Props[T](using table)
-                p.asInstanceOf[tpe]
-              }
-      }
+
+    Expr.summon[Mirror.ProductOf[T]].get match {
+      case '{ $m: Mirror.ProductOf[T] {type MirroredElemLabels = mels; type MirroredElemTypes = mets } } =>
+        val queryType = recur[mels,mets](TypeRepr.of[Query])
+        val joinedQueryType = Refinement(TypeRepr.of[JoinedQuery], tableName, queryType)
+
+        joinedQueryType.asType match {
+              case '[tpe] =>
+                '{
+                  val table = summonInline[Table[T]]
+                  val query = new Query(table)
+                  val joinedQuery = new JoinedQuery(Map(${tableNameExpr} -> query))
+                  joinedQuery.asInstanceOf[tpe]
+                }
+        }
+      case e => report.error(e.show);???
+    }
+
   }
+}

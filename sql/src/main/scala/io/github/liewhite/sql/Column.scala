@@ -13,60 +13,58 @@ enum DBType{
 }
 
 trait DBValue[T]{
-  inline def eql[THAT <: T](that: THAT)(using converter: DBValueConverter[THAT]): ConditionExpr = {
-    ConditionExpr("(? = ?)", this.toExpr, converter.convert(that).toExpr)
-  }
 
-  def toExpr: Expr
+  // inline def eql[THAT <: T](that: THAT)(using converter: DBValueConverter[THAT]): ConditionExpr = {
+  //   ConditionExpr("(? = ?)", this.toExpr, converter.toDBValue(that).toExpr)
+  // }
+
+  def toExpr: SqlExpr
 }
 
 class Column[T](val tableName:String, val name:String,val tp: DBType) extends DBValue[T] {
-  def toExpr: Expr = Expr(Vector(tableName,name).mkString("."))
+  def toExpr: SqlExpr = SqlExpr(Vector(tableName,name).mkString("."))
 }
 
 trait DBValueConverter[T]{
   def dbRepr: DBType
-  def convert(t:T):DBValue[T]
+  def toDBValue(t: T): DBValue[T]
+  // def fromDBValue(t: DBValue[T]): T
 }
 
 object DBValueConverter{
-  // given [T]: DBValueConverter[DBValue[T]] with {
-  //   def dbRepr: DBRepr[Int] = new DBRepr[Int] {def tp = DBType.Integer()}
-  //   def convert(t:DBValue[T]):DBValue[DBValue[T]] = t.asInstanceOf
-  // }
 
   given DBValueConverter[Int] with {
     def dbRepr: DBType = DBType.Integer()
-    def convert(t:Int):DBValue[Int] = {
+    def toDBValue(t:Int):DBValue[Int] = {
       new DBValue[Int]{
-        def toExpr:Expr = Expr(t.toString)
+        def toExpr:SqlExpr = SqlExpr(t.toString)
       }
     }
   }
 
   given DBValueConverter[Long] with {
     def dbRepr: DBType = DBType.BigInt()
-    def convert(t:Long):DBValue[Long] = {
+    def toDBValue(t:Long):DBValue[Long] = {
       new DBValue[Long]{
-        def toExpr:Expr = Expr(t.toString)
+        def toExpr:SqlExpr = SqlExpr(t.toString)
       }
     }
   }
 
   given DBValueConverter[String] with {
     def dbRepr: DBType = DBType.VarChar(255)
-    def convert(t:String):DBValue[String] = {
+    def toDBValue(t:String):DBValue[String] = {
       new DBValue[String]{
-        def toExpr:Expr = Expr(t)
+        def toExpr:SqlExpr = SqlExpr(t)
       }
     }
   }
 
   given DBValueConverter[Boolean] with {
     def dbRepr: DBType = DBType.Bool
-    def convert(t:Boolean):DBValue[Boolean] = {
+    def toDBValue(t:Boolean):DBValue[Boolean] = {
       new DBValue[Boolean]{
-        def toExpr:Expr = Expr(t.toString)
+        def toExpr:SqlExpr = SqlExpr(t.toString)
       }
     }
   }
