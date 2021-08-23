@@ -11,6 +11,6 @@ case class B(idb: Int,sb:String)
   val b = Table[A]
   val c = Table[CustomField]
   val d = Table[B]
-  val joined = b.join(c).join(d)
-  println(joined.B.idb)
+  val joined = b.join(c).join(d).where(r => r.A.id.eql(r.B.idb))
+  println(joined)
 }

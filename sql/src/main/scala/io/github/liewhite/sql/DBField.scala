@@ -9,7 +9,11 @@ enum DBFieldType{
   case Bool
 }
 
-case class DBField(val fieldName: String, val tableName:String, val fieldType: DBFieldType)
+case class DBField(val fieldName: String, val tableName:String, val fieldType: DBFieldType){
+  inline def eql(that: DBField): Condition = {
+    Condition()
+  }
+}
 
 trait DBFieldLike[T]{
   def toField(fieldName:String, tableName:String): DBField

@@ -67,7 +67,6 @@ object Table{
     val tableName= TypeRepr.of[T].typeSymbol.name
     val tableNameExpr = Expr(tableName)
 
-
     Expr.summon[Mirror.ProductOf[T]].get match {
       case '{ $m: Mirror.ProductOf[T] {type MirroredElemLabels = mels; type MirroredElemTypes = mets } } =>
         val tableType = recur[mels,mets](TypeRepr.of[Table[T]])
@@ -83,6 +82,5 @@ object Table{
         }
       case e => report.error(e.show);???
     }
-
   }
 }
