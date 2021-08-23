@@ -70,16 +70,15 @@ object Table{
 
     Expr.summon[Mirror.ProductOf[T]].get match {
       case '{ $m: Mirror.ProductOf[T] {type MirroredElemLabels = mels; type MirroredElemTypes = mets } } =>
-        val queryType = recur[mels,mets](TypeRepr.of[Query])
-        val joinedQueryType = Refinement(TypeRepr.of[JoinedQuery], tableName, queryType)
+        val tableType = recur[mels,mets](TypeRepr.of[Table[T]])
+        val tablesType = Refinement(TypeRepr.of[Tables], tableName, tableType)
 
-        joinedQueryType.asType match {
+        tablesType.asType match {
               case '[tpe] =>
                 '{
                   val table = summonInline[Table[T]]
-                  val query = new Query(table)
-                  val joinedQuery = new JoinedQuery(Map(${tableNameExpr} -> query))
-                  joinedQuery.asInstanceOf[tpe]
+                  val tables = new Tables(Map(${tableNameExpr} -> table))
+                  tables.asInstanceOf[tpe]
                 }
         }
       case e => report.error(e.show);???
