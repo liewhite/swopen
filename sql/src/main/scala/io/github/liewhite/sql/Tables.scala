@@ -7,7 +7,16 @@ class Tables(var tables: Map[String, Table[_]]) extends Selectable{
   transparent inline def join[T <: Tables](t:T) = {
     new Tables(this.tables ++ t.tables).asInstanceOf[this.type & T]
   }
+
   inline def where(cond: this.type => Condition): this.type = {
     this
+  }
+
+  transparent inline def groupBy[T <: Tuple](cols: this.type => T) = {
+    // macro
+  }
+
+  transparent inline def select[T <: Tuple](cols: this.type => T) = {
+    cols(this)
   }
 }

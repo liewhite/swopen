@@ -28,4 +28,7 @@ object DBFieldLike{
     def toField(fieldName:String, tableName:String): DBField = DBField(fieldName,tableName, DBFieldType.VarChar(255))
   }
 
+  given DBFieldLike[Boolean] with {
+    def toField(fieldName:String, tableName:String): DBField = DBField(fieldName,tableName, DBFieldType.Bool)
+  }
 }

@@ -1,6 +1,7 @@
 *.tasty
 *.class
 .bloop
+.bsp
 .metals
 .vscode
 out
