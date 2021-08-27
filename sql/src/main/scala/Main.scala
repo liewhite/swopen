@@ -3,8 +3,8 @@ import scala.compiletime.*
 
 case class CustomField(t: Int, t2: String)
 object CustomField{
-  given DBFieldLike[CustomField] with {
-    def toField(fieldName:String, tableName:String): DBField = DBField(fieldName,tableName, DBFieldType.Text())
+  given TableFieldLike[CustomField] with {
+    def toField(fieldName:String, tableName:String): TableField[CustomField] = TableField(fieldName,tableName, TableFieldType.Text())
   }
 }
 
@@ -15,6 +15,10 @@ case class B(idb: Int,sb: String, b: CustomField)
   val c = 1
   val b = Table[A]
   val d = Table[B]
-  val joined = Table[A].join(d).where(r => r.A.id.eql(r.B.idb)).select(r => r.A.id *: EmptyTuple)
+  val joined = Table[A]
+  .join(JoinType.Left, d, Some(r => r.A.id.eql(r.B.idb)))
+  .where(r => r.A.id.eql(r.B.idb))
+  .select(r => (r.A.id,r.B.idb))
+
   println(joined)
 }

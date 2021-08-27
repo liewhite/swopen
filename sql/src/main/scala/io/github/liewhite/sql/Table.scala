@@ -10,17 +10,16 @@ import io.github.liewhite.common.SummonUtils.summonAll
 trait Table[T] extends Selectable{
   def tableName: String
   // 这里的Column类型和selectable返回的类型要一致
-  def columns: Map[String,DBField]
+  def columns: Map[String,TableField[_]]
 
   def selectDynamic(name: String): Any ={
     columns(name)
   }
-
 }
 
 object Table{
   inline given derived[A](using gen: Mirror.ProductOf[A],labelling: Labelling[A]): Table[A] =
-    val columnTypes = summonAll[DBFieldLike, gen.MirroredElemTypes]
+    val columnTypes = summonAll[TableFieldLike, gen.MirroredElemTypes]
     val tableName = labelling.label
     val cols = labelling.elemLabels.zip(columnTypes).map{
       case (label, tp) => tp.toField(label, tableName)
@@ -44,10 +43,10 @@ object Table{
             Type.of[mets] match {
               case '[head *: tail] => {
                 val label = Type.valueOfConstant[mel].get.toString
-                Expr.summon[DBFieldLike[head]] match {
-                  case Some('{ $m: DBFieldLike[head]}) => {
-                    val withField = Refinement(baseType, label, TypeRepr.of[DBField{type Underlying = head}])
-                    // val withTableField = Refinement(withField, label, TypeRepr.of[DBField{type Underlying = head}])
+                Expr.summon[TableFieldLike[head]] match {
+                  case Some('{ $m: TableFieldLike[head]}) => {
+                    val withField = Refinement(baseType, label, TypeRepr.of[TableField[head]])
+                    // val withTableField = Refinement(withField, label, TypeRepr.of[TableField{type Underlying = head}])
                     recur[melTail, tail](withField)
                   }
                   case None => {
@@ -70,14 +69,14 @@ object Table{
     Expr.summon[Mirror.ProductOf[T]].get match {
       case '{ $m: Mirror.ProductOf[T] {type MirroredElemLabels = mels; type MirroredElemTypes = mets } } =>
         val tableType = recur[mels,mets](TypeRepr.of[Table[T]])
-        val tablesType = Refinement(TypeRepr.of[Tables], tableName, tableType)
+        val SelectQueryType = Refinement(TypeRepr.of[SelectQuery], tableName, tableType)
 
-        tablesType.asType match {
+        SelectQueryType.asType match {
               case '[tpe] =>
                 '{
                   val table = summonInline[Table[T]]
-                  val tables = new Tables(Map(${tableNameExpr} -> table))
-                  tables.asInstanceOf[tpe]
+                  val SelectQuery = new SelectQuery(table,Map(${tableNameExpr} -> table))
+                  SelectQuery.asInstanceOf[tpe]
                 }
         }
       case e => report.error(e.show);???
