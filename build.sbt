@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
     "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
     "io.circe" % "circe-core_3" % "0.14.1",
     "io.circe" %% "circe-parser" % "0.14.1",
-    "org.slf4j"% "slf4j-simple" % "1.7.25",
+    "org.slf4j" % "slf4j-simple" % "1.7.25"
   )
 )
 
@@ -26,7 +26,8 @@ lazy val common = (project in file("common")).settings(
 lazy val sql = (project in file("sql"))
   .settings(
     commonSettings,
-    libraryDependencies ++= (Seq(
+    libraryDependencies ++= (
+      Seq(
         // "com.novocode" % "junit-interface" % "0.11" % "test",
         // "com.softwaremill.sttp.client3" %% "core" % "3.3.13",
         // "org.typelevel" %% "shapeless3-deriving" % "3.0.2",
@@ -37,9 +38,31 @@ lazy val sql = (project in file("sql"))
   )
   .dependsOn(common)
 
+val AkkaVersion = "2.6.8"
+val AkkaHttpVersion = "10.2.6"
+
+lazy val http = (project in file("http"))
+  .settings(
+    commonSettings,
+    libraryDependencies ++= (
+      Seq(
+        "com.novocode" % "junit-interface" % "0.11" % "test",
+        "com.softwaremill.sttp.client3" %% "core" % "3.3.13",
+        ("com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion)
+          .cross(CrossVersion.for3Use2_13),
+        ("com.typesafe.akka" %% "akka-stream" % AkkaVersion)
+          .cross(CrossVersion.for3Use2_13),
+        ("com.typesafe.akka" %% "akka-http" % AkkaHttpVersion)
+          .cross(CrossVersion.for3Use2_13)
+      )
+    )
+  )
+  .dependsOn(common)
+
 lazy val json = (project in file("json"))
   .settings(
-    commonSettings
+    commonSettings,
+    libraryDependencies += "org.mongodb" % "mongodb-driver-sync" % "4.3.0",
   )
   .dependsOn(common)
 
@@ -51,7 +74,7 @@ lazy val main = (project in file("main"))
   .dependsOn(json)
 
 lazy val root = (project in file("."))
-  .aggregate(main, json, sql, common)
+  .aggregate(main, json, sql, common, http)
   .settings(
     publish / skip := true
   )

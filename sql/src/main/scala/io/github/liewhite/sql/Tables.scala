@@ -18,9 +18,13 @@ enum JoinType extends SqlExpr[JoinType]{
   }
 } 
 
-case class QueryStmt[R](sql: String)
+case class QueryStmt[R](sql: String) extends SqlExpr[R] {
+  def toSql:String = sql
+}
 
-case class SelectField[T](name:String)
+case class SelectAlias[T](alias: String, t: SqlExpr[T]) extends SqlExpr[T]{
+  def toSql:String = s"${t.toSql} as $alias"
+}
 
 
 case class Join(t: JoinType, table: Table[_], cond: Option[Condition])
@@ -29,11 +33,12 @@ case class SelectQuery(
     mainTable: Table[_],
     tables: Map[String, Table[_]],
     joins: Vector[Join] = Vector.empty,
-    where: Option[Condition] = None
-) extends Selectable, SqlExpr[_] {
-
-  def toSql: String = {
-    val select = s"SELECT * FROM ${mainTable.tableName}"
+    where: Option[Condition] = None,
+    selects: List[SqlExpr[_]]= List.empty
+) extends Selectable {
+  def build: String = {
+    val selectStr = selects.map(_.toSql).mkString(",")
+    val select = s"SELECT ${selectStr} FROM ${mainTable.tableName}"
     val joinStr = joins.foldLeft(select)((result,item) => {
       val joined = s" ${item.t.toSql} ${item.table.tableName}"
       joined + " " + (item.cond match {
@@ -51,14 +56,6 @@ case class SelectQuery(
   def selectDynamic(name: String): Any = {
     tables(name)
   }
-}
-
-trait SqlExpr[T]{
-  def toSql: String 
-}
-
-case class CountExpr[T](expr: SqlExpr[_]) extends SqlExpr[Long] {
-  def toSql: String = s"count(${expr.toSql})"
 }
 
 object SelectQuery{
@@ -83,8 +80,10 @@ object SelectQuery{
     }
 
 
-    inline def select[R](cond: T => R): QueryStmt[RESULT[R]] = {
-      QueryStmt(t.toSql).asInstanceOf[QueryStmt[RESULT[R]]]
+    inline def select[R <: Tuple](cond: T => R): QueryStmt[RESULT[R]] = {
+      val selects = cond(t)
+      val st = t.copy(selects = selects.toList.asInstanceOf[List[SqlExpr[_]]])
+      QueryStmt(st.build).asInstanceOf[QueryStmt[RESULT[R]]]
     }
   }
 

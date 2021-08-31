@@ -1,6 +1,13 @@
 package io.github.liewhite.sql
 
 
+trait SqlExpr[T]{
+  def toSql: String 
+}
+
+case class CountExpr[T](expr: SqlExpr[_]) extends SqlExpr[Long] {
+  def toSql: String = s"count(${expr.toSql})"
+}
 
 class Condition(template:String, parameters: SqlExpr[_]* ) extends SqlExpr[Boolean]{
   def toSql: String = {
