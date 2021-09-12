@@ -62,19 +62,26 @@ lazy val http = (project in file("http"))
 lazy val json = (project in file("json"))
   .settings(
     commonSettings,
-    libraryDependencies += "org.mongodb" % "mongodb-driver-sync" % "4.3.0",
   )
   .dependsOn(common)
+
+lazy val jsonContrib = (project in file("json_contrib"))
+  .settings(
+    commonSettings,
+    libraryDependencies += "org.mongodb" % "mongodb-driver-sync" % "4.3.0",
+  )
+  .dependsOn(common,json)
 
 lazy val main = (project in file("main"))
   .settings(
     commonSettings,
+    libraryDependencies += "org.mongodb" % "mongodb-driver-sync" % "4.3.0",
     publish / skip := true
   )
-  .dependsOn(json)
+  .dependsOn(json,jsonContrib)
 
 lazy val root = (project in file("."))
-  .aggregate(main, json, sql, common, http)
+  .aggregate(main, json, sql, common, http, jsonContrib)
   .settings(
     publish / skip := true
   )

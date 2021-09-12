@@ -1,22 +1,24 @@
-import io.github.liewhite.http.*
+// 外层要调用内层的process, 只能通过trait mixin实现
+// 内层要访问外层的变量, 能通过继承实现
+case class Request(value: String )
+case class Response(value: String )
 
-class M1 extends Middleware[Request]{
-  def apply(req: Request, next: Option[Request => Response]): Response = {
-    next match {
-      case Some(n) => n(req.withValue("xxx","xxx"))
-      case None => throw Exception("must have children")
-    }
-  }
+trait HttpParam[T]{
+  def fromRequest(req: Request):T
 }
 
-class M2 extends Middleware[Request{val xxx:String}]{
-  def apply(req: Request{val xxx:String}, next: Option[Request => Response]): Response = {
-    Response(200,Map.empty,req.xxx.getBytes)
-  }
+object HttpParam{
 }
+
+trait HttpParamItem[T]{
+}
+
+
+case class Param(
+  name: String = "xxxx",
+  age: Int = 123 ,
+  id: Long = 123,
+)
 
 @main def test(): Unit = {
-  val m = Middleware.compose(new M1(),new M2())
-  println(new String(m(Request(),None).body))
 }
-

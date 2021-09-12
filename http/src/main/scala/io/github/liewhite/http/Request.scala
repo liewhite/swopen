@@ -4,19 +4,6 @@ import scala.quoted.Quotes
 import scala.quoted.Type
 import scala.quoted.Expr
 
-/**
- *  req -> middleware1 -> middleware2 ---->
- *                                        |
- *                                        middleware3, called handler here
- *                                        |
- *                                        |
- *response <- middleware1 <- middleware2<--          
- * 内层的middleware 约束外层类型
- * 
- * */
-
-
-
 case class Response(statusCode: Int, headers: Map[String, String], body: Array[Byte])
 
 case class Request(values: Map[String,Any] = Map.empty) extends Selectable{
