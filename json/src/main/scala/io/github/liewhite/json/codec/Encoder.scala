@@ -17,6 +17,9 @@ import io.github.liewhite.json.typeclass.*
 import io.github.liewhite.json.annotations.*
 import io.github.liewhite.json.error.JsonError
 import io.github.liewhite.json.error.JsonErrorType
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
 trait UnionEncoder
 object UnionEncoder:
@@ -69,9 +72,9 @@ object Encoder:
       inst: => K0.ProductInstances[Encoder, T],
       labelling: Labelling[T],
       flats: RepeatableAnnotations[Flat,T],
-  ): Encoder[T] =
-    new Encoder[T]:
-      def encode(t: T): Json =
+  ): Encoder[T] = {
+    new Encoder[T]{
+      def encode(t: T): Json = {
         val fieldsName = labelling.elemLabels
 
         // 没有成员的product， 按照singleton处理
@@ -100,47 +103,65 @@ object Encoder:
           }).toMap
           Json.fromFields(flattenColoums)
 
+      }
+
+    }
+
+  }
+
   /** map encoder
     */
-  given [T](using encoder: Encoder[T]): Encoder[Map[String, T]] with
+  given [T](using encoder: Encoder[T]): Encoder[Map[String, T]] with {
     def encode(t: Map[String, T]): Json =
       Json.fromFields(
         t.map { case (k, v) => (k, encoder.encode(v)) }
       )
 
+  }
+
   /** seq encoder
     */
-  given [T](using encoder: Encoder[T]): Encoder[Vector[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[Vector[T]] with {
     def encode(t: Vector[T]) =
       Json.fromValues(t.map(encoder.encode(_)))
+  }
 
-  given [T](using encoder: Encoder[T]): Encoder[List[T]] with
+  given [T](using encoder: Encoder[T]): Encoder[List[T]] with {
     def encode(t: List[T]) =
       Json.fromValues(t.map(encoder.encode(_)))
 
-  given [T](using encoder: Encoder[T]): Encoder[Array[T]] with
+  }
+
+  given [T](using encoder: Encoder[T]): Encoder[Array[T]] with {
     def encode(t: Array[T]) =
       Json.fromValues(t.map(encoder.encode(_)))
 
+  }
+
   /** option encoder
     */
-  given [T](using e: Encoder[T]): Encoder[Option[T]] with
+  given [T](using e: Encoder[T]): Encoder[Option[T]] with {
     def encode(t: Option[T]) =
       t match
         case Some(v) =>
           e.encode(v)
         case None => Json.Null
+  }
 
-  given Encoder[EmptyTuple] with
+  given Encoder[EmptyTuple] with {
     def encode(t: EmptyTuple) = Json.fromValues(List.empty)
 
-  given [H, T <: Tuple](using headEncoder: => Encoder[H], tailEncoder: => Encoder[T]): Encoder[H *: T] with
+  }
+
+  given [H, T <: Tuple](using headEncoder: => Encoder[H], tailEncoder: => Encoder[T]): Encoder[H *: T] with {
     def encode(t: H*: T) = {
       val head = headEncoder.encode(t.head)
       val tail = tailEncoder.encode(t.tail)
       Json.fromValues(tail.asArray.get.prepended(head))
       // Json.fromValues(.asArray.get.appended())
     }
+
+  }
 
   /** number encoder
     */
@@ -159,19 +180,35 @@ object Encoder:
   given Encoder[BigInt] with
     def encode(t: BigInt) = Json.fromBigInt(t.bigInteger)
 
-  given Encoder[BigDecimal] with
+  given Encoder[BigDecimal] with {
     def encode(t: BigDecimal) = Json.fromBigDecimal(t.bigDecimal)
 
-  given Encoder[String] with
+  }
+
+  given Encoder[String] with {
     def encode(t: String) = Json.fromString(t)
 
-  given Encoder[Boolean] with
+  }
+
+  given Encoder[Boolean] with{
     def encode(t: Boolean) = Json.fromBoolean(t)
 
-  given Encoder[Null] with
-    def encode(t: Null) = Json.Null
+  }
 
-  given Encoder[Json] with
+  given Encoder[Null] with {
+    def encode(t: Null) = Json.Null
+  }
+
+  given Encoder[Json] with{
     def encode(t: Json) = t
+  }
+  
+  given Encoder[LocalDateTime] with{
+    def encode(t: LocalDateTime) = Json.fromFields(Vector("$date" -> Json.fromString(t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
+  }
+
+  given Encoder[ZonedDateTime] with{
+    def encode(t: ZonedDateTime) = Json.fromFields(Vector("$date" -> Json.fromString(t.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))))
+  }
 
 end Encoder

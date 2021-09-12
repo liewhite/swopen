@@ -13,6 +13,9 @@ import io.github.liewhite.json.annotations.*
 
 
 import io.circe.Json
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
 class DecodeException(val message: String) extends Exception(message)
 
@@ -377,3 +380,38 @@ object Decoder:
         case Some(n) => Right(n)
         case None => decodeError("JsonNumber.string", data)
       }
+
+  given Decoder[LocalDateTime] with {
+    def decode(
+        data: Json,
+        withDefaults: Boolean = true
+    ): Either[DecodeException, LocalDateTime] ={
+      (for {
+        obj <- data.asObject
+        value <- obj("$date")
+        str <- value.asString
+      } yield str).map(item => {
+        LocalDateTime.parse(item, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+      }) match {
+        case Some(n) => Right(n)
+        case None => decodeError("datetime ISO_LOCAL_DATE_TIME format",  data)
+      }
+    }
+  }
+  given Decoder[ZonedDateTime] with {
+    def decode(
+        data: Json,
+        withDefaults: Boolean = true
+    ): Either[DecodeException, ZonedDateTime] ={
+      (for {
+        obj <- data.asObject
+        value <- obj("$date")
+        str <- value.asString
+      } yield str).map(item => {
+        ZonedDateTime.parse(item, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+      }) match {
+        case Some(n) => Right(n)
+        case None => decodeError("datetime ISO_OFFSET_DATE_TIME format",  data)
+      }
+    }
+  }

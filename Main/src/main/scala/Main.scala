@@ -10,6 +10,11 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import org.bson.Document
 import org.bson.types.ObjectId
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import java.util.Date
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 case class Doc(
     _id: ObjectId,
@@ -19,11 +24,14 @@ case class Doc(
 )
 
 @main def test(): Unit = {
-  val client = MongoClients.create("mongodb://www.gaolongkeji.com:30010")
-  val db = client.getDatabase("stock2")
-  val coll = db.getCollection("adj_factor")
-  val r = coll
-    .find(Document("ts_code", "000001.SZ").append("trade_date", "20100202"))
-    .first()
-  println(r.encode.decode[Doc])
+  // val client = MongoClients.create("mongodb://www.gaolongkeji.com:30010")
+  // val db = client.getDatabase("test")
+  // val coll = db.getCollection("dt")
+  // val r = coll.insertOne(Document("ts_code", LocalDateTime.now()).append("trade_date",ZonedDateTime.now()))
+  val doc = Document("aaa", new Date())
+  val local = LocalDateTime.now()
+  val zoned = ZonedDateTime.now(ZoneOffset.UTC)
+  println(local.encode)
+  println(zoned.encode)
+  println(doc.toJson)
 }
