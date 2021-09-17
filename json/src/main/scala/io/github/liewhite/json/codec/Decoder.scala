@@ -386,13 +386,10 @@ object Decoder:
         data: Json,
         withDefaults: Boolean = true
     ): Either[DecodeException, LocalDateTime] ={
-      (for {
-        obj <- data.asObject
-        value <- obj("$date")
-        str <- value.asString
-      } yield str).map(item => {
-        LocalDateTime.parse(item, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-      }) match {
+      val dt = data.asString.map(str => {
+        LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+      })
+      dt match {
         case Some(n) => Right(n)
         case None => decodeError("datetime ISO_LOCAL_DATE_TIME format",  data)
       }
@@ -403,13 +400,10 @@ object Decoder:
         data: Json,
         withDefaults: Boolean = true
     ): Either[DecodeException, ZonedDateTime] ={
-      (for {
-        obj <- data.asObject
-        value <- obj("$date")
-        str <- value.asString
-      } yield str).map(item => {
-        ZonedDateTime.parse(item, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-      }) match {
+      val dt = data.asString.map(str => {
+        ZonedDateTime.parse(str, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+      })
+      dt match {
         case Some(n) => Right(n)
         case None => decodeError("datetime ISO_OFFSET_DATE_TIME format",  data)
       }

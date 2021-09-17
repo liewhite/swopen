@@ -204,11 +204,11 @@ object Encoder:
   }
   
   given Encoder[LocalDateTime] with{
-    def encode(t: LocalDateTime) = Json.fromFields(Vector("$date" -> Json.fromString(t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
+    def encode(t: LocalDateTime) = Json.fromString(t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
   }
 
   given Encoder[ZonedDateTime] with{
-    def encode(t: ZonedDateTime) = Json.fromFields(Vector("$date" -> Json.fromString(t.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))))
+    def encode(t: ZonedDateTime) = Json.fromString(t.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
   }
 
 end Encoder
