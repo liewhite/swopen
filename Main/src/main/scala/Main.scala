@@ -1,6 +1,5 @@
 import scala.deriving.*
 
-import io.github.liewhite.json.contrib.mongodb.MongoCodec.given
 import io.github.liewhite.json.codec.*
 import io.github.liewhite.json.*
 import io.github.liewhite.json.JsonBehavior.*
