@@ -16,7 +16,8 @@ import java.time.ZoneOffset
 import io.github.liewhite.json.annotations.*
 
 
-case class O(a:Int)
+@SnakeCase
+case class O(aNotOfI:Int)
 case class Doc(
     @Flatten
     adj_factor: O
@@ -27,4 +28,6 @@ case class UnionB(a: Boolean, b: Double) derives Encoder, Decoder
 case class UnionC(c: Double, d: String | Boolean) derives Encoder, Decoder
 
 @main def test(): Unit = {
+  val doc = Doc(adj_factor = O(1))
+  println(doc.encode)
 }

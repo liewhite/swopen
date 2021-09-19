@@ -167,11 +167,14 @@ object ProductDecoder{
                 i.beforeDecode(item._1, iResult)
               })
             })
+          val afterObjAnns = objAnn().foldLeft(afterFieldsAnns)((acc, item) => {
+            item.beforeDecode(acc)
+          })
           val result = inst.construct(
             [t] =>
               (itemDecoder: Decoder[t]) => {
                 // val jsonData = afterFieldsAnns.asObject.get.apply(fieldsName(index))
-                val jsonData = itemsData.asObject.get.apply(fieldsName(index))
+                val jsonData = afterObjAnns.asObject.get.apply(fieldsName(index))
                 // 处理默认值
                 val value = jsonData match {
                   case None =>

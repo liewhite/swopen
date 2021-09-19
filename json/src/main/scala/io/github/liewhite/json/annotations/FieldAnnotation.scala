@@ -10,6 +10,7 @@ trait FieldEncodeAnnotation{
 trait FieldDecodeAnnotation{
   def beforeDecode(key: String, data: Json): Json
 }
+
 class Flatten extends scala.annotation.StaticAnnotation with FieldEncodeAnnotation with FieldDecodeAnnotation {
   def afterEncode(key: String, data: Json): Json = {
     (for {
@@ -31,4 +32,6 @@ class Flatten extends scala.annotation.StaticAnnotation with FieldEncodeAnnotati
     }
   }
 }
+
+
 
