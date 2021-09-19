@@ -127,7 +127,8 @@ object ProductDecoder{
       inst: => K0.ProductInstances[Decoder, T],
       labelling: Labelling[T],
       defaults: DefaultValue[T],
-      flats: RepeatableAnnotations[Flat,T],
+      objAnn: RepeatableAnnotation[ObjDecodeAnnotation, T],
+      fieldAnns: RepeatableAnnotations[FieldDecodeAnnotation, T]
   ): Decoder[T] =
     new Decoder[T]:
       def decode(
@@ -142,7 +143,6 @@ object ProductDecoder{
         ) = {
           val label = labelling.label
           val fieldsName = labelling.elemLabels
-          val flatsFlags = flats()
           val itemsData: Json =
             if data.isString then
               val stringValue = data.asString.get
@@ -160,14 +160,18 @@ object ProductDecoder{
               )
 
           var index = 0
+          val afterFieldsAnns = fieldsName
+            .zip(fieldAnns())
+            .foldLeft(itemsData)((acc, item) => {
+              item._2.foldLeft(acc)((iResult, i) => {
+                i.beforeDecode(item._1, iResult)
+              })
+            })
           val result = inst.construct(
             [t] =>
               (itemDecoder: Decoder[t]) => {
-                val jsonData = if(flatsFlags(index).nonEmpty) {
-                  Some(itemsData)
-                }else {
-                  itemsData.asObject.get.apply(fieldsName(index))
-                }
+                // val jsonData = afterFieldsAnns.asObject.get.apply(fieldsName(index))
+                val jsonData = itemsData.asObject.get.apply(fieldsName(index))
                 // 处理默认值
                 val value = jsonData match {
                   case None =>
@@ -175,10 +179,9 @@ object ProductDecoder{
                       defaultValues(fieldsName(index))
                     else
                       throw DecodeException(
-                        s"key not exist: ${fieldsName(index)}"
+                        s"${label} key not exist: ${fieldsName(index)}"
                       )
                   case Some(v) => v
-
                 }
                 val item = itemDecoder.decode(value) match {
                   case Right(o) => o

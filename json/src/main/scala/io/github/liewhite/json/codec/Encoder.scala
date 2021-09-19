@@ -47,17 +47,20 @@ object UnionEncoder:
         report.error(s"not support type:,$other"); ???
 
 trait CoproductEncoder extends UnionEncoder
-object CoproductEncoder{
+object CoproductEncoder {
   given coproduct[T](using
       inst: => K0.CoproductInstances[Encoder, T],
-      labelling: Labelling[T],
+      labelling: Labelling[T]
   ): Encoder[T] =
     new Encoder[T]:
       def encode(t: T): Json =
-        inst.fold(t)([t] => (st: Encoder[t], t: t) => {
-          // 对于enum case object， 会先匹配到
-          st.encode(t)
-        })
+        inst.fold(t)(
+          [t] =>
+            (st: Encoder[t], t: t) => {
+              // 对于enum case object， 会先匹配到
+              st.encode(t)
+          }
+        )
 }
 
 trait Encoder[T] extends CoproductEncoder:
@@ -71,38 +74,29 @@ object Encoder:
   inline given product[T](using
       inst: => K0.ProductInstances[Encoder, T],
       labelling: Labelling[T],
-      flats: RepeatableAnnotations[Flat,T],
+      objAnn: RepeatableAnnotation[ObjEncodeAnnotation, T],
+      fieldAnns: RepeatableAnnotations[FieldEncodeAnnotation, T]
   ): Encoder[T] = {
-    new Encoder[T]{
+    new Encoder[T] {
       def encode(t: T): Json = {
         val fieldsName = labelling.elemLabels
-
         // 没有成员的product， 按照singleton处理
         if (fieldsName.isEmpty) then Json.fromString(labelling.label)
-        else
+        else {
           val elems: List[Json] = inst.foldLeft(t)(List.empty[Json])(
             [t] =>
               (acc: List[Json], st: Encoder[t], t: t) =>
                 Continue(st.encode(t) :: acc)
-          )
-          val flatFlags = flats()
-          // name, value, flatFlag
-          val columns = fieldsName.zip(elems.reverse).zip(flatFlags).map(item => (item._1._1,item._1._2,item._2))
-          val flattenColoums = columns.flatMap(item => {
-            if(item._2.isString) {
-              Vector((item._1,item._2))
-            }
-            else if(item._3.isEmpty){
-              Vector((item._1,item._2))
-            }else{
-              if(!item._2.isObject){
-                throw new JsonError(JsonErrorType.EncodeError, "flat need object,but got:" + item._2)
-              }
-              item._2.asObject.get.toMap.map(item => (item._1,item._2)).toVector
-            }
-          }).toMap
-          Json.fromFields(flattenColoums)
-
+          ).reverse
+          val rawJson = Json.fromFields(fieldsName.zip(elems).toMap)
+          fieldsName
+            .zip(fieldAnns())
+            .foldLeft(rawJson)((acc, item) => {
+              item._2.foldLeft(acc)((iResult, i) => {
+                i.afterEncode(item._1, iResult)
+              })
+            })
+        }
       }
 
     }
@@ -153,8 +147,11 @@ object Encoder:
 
   }
 
-  given [H, T <: Tuple](using headEncoder: => Encoder[H], tailEncoder: => Encoder[T]): Encoder[H *: T] with {
-    def encode(t: H*: T) = {
+  given [H, T <: Tuple](using
+      headEncoder: => Encoder[H],
+      tailEncoder: => Encoder[T]
+  ): Encoder[H *: T] with {
+    def encode(t: H *: T) = {
       val head = headEncoder.encode(t.head)
       val tail = tailEncoder.encode(t.tail)
       Json.fromValues(tail.asArray.get.prepended(head))
@@ -190,7 +187,7 @@ object Encoder:
 
   }
 
-  given Encoder[Boolean] with{
+  given Encoder[Boolean] with {
     def encode(t: Boolean) = Json.fromBoolean(t)
 
   }
@@ -199,16 +196,18 @@ object Encoder:
     def encode(t: Null) = Json.Null
   }
 
-  given Encoder[Json] with{
+  given Encoder[Json] with {
     def encode(t: Json) = t
   }
-  
-  given Encoder[LocalDateTime] with{
-    def encode(t: LocalDateTime) = Json.fromString(t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+
+  given Encoder[LocalDateTime] with {
+    def encode(t: LocalDateTime) =
+      Json.fromString(t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
   }
 
-  given Encoder[ZonedDateTime] with{
-    def encode(t: ZonedDateTime) = Json.fromString(t.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+  given Encoder[ZonedDateTime] with {
+    def encode(t: ZonedDateTime) =
+      Json.fromString(t.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
   }
 
 end Encoder
