@@ -1,4 +1,6 @@
-# Scala Web framework with OpenApi 3.0
+# Scala microservice framework
+
+## 
 
 ## TODOs
 - [x] encoder decoder support

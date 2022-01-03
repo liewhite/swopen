@@ -1,6 +1,19 @@
-// 每个operator有自己的IN，OUTs
-// 一个endpoint包含一串operator， 然后每次添加operator时都会返回一个新的endpoint，并且对IN做intersectiontype，对OUT做union type
+import io.github.liewhite.config.Configable
+import io.github.liewhite.json.JsonBehavior._
 
-@main def mai2n(): Unit = {
-  println("asd")
+case class B(
+  b: Boolean,
+) derives Configable
+
+case class A(
+  port: Int,
+  b: B,
+  url: String = "xxxxx",
+) derives Configable
+
+@main def main = {
+  val configs = Configable.defaultConfigsWithEnv()
+  println(configs)
+  println(Configable.configure[A](configs))
+
 }
