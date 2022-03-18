@@ -21,6 +21,14 @@ lazy val commonSettings = Seq(
 )
 
 lazy val common = (project in file("common")).settings(
+  scalacOptions ++= Seq("-Xmax-inlines", "256"),
+  libraryDependencies ++= Seq(
+    "com.novocode" % "junit-interface" % "0.11" % "test",
+    "org.typelevel" %% "shapeless3-deriving" % "3.0.3",
+    "io.circe" % "circe-core_3" % "0.14.1",
+    "io.circe" %% "circe-parser" % "0.14.1",
+    "org.slf4j" % "slf4j-simple" % "1.7.25"
+  )
 )
 
 lazy val json = (project in file("json"))
