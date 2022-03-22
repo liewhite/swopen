@@ -23,7 +23,7 @@ import java.io.InputStreamReader
 import io.github.liewhite.json.codec.Decoder
 
 trait Configable[T] {
-  def fromConfig(prefix: String, configs: Vector[Map[String, Json]]): T
+  def fromConfig(prefix: String, configs: Vector[Map[String, Any]]): T
 }
 
 object Configable {
@@ -34,7 +34,7 @@ object Configable {
   ): Configable[T] =
     product
 
-  def getKey(prefix: String, configs: Vector[Map[String, Json]]): Json = {
+  def getKey(prefix: String, configs: Vector[Map[String, Any]]): Any = {
     if (configs.isEmpty) {
       throw ConfigError(prefix)
     } else {
@@ -47,9 +47,9 @@ object Configable {
   given Configable[Int] with {
     def fromConfig(
         prefix: String,
-        configs: Vector[Map[String, Json]]
+        configs: Vector[Map[String, Any]]
     ): Int = {
-      getKey(prefix, configs).asNumber match {
+      getKey(prefix, configs).asNuber match {
         case Some(v) => v.toInt.get
         case None => {
           getKey(prefix, configs).asString.get.toInt
@@ -85,7 +85,7 @@ object Configable {
       labelling: Labelling[T],
       defaults: DefaultValue[T]
   ): Configable[T] with {
-    def fromConfig(prefix: String, configs: Vector[Map[String, Json]]): T = {
+    def fromConfig(prefix: String, configs: Vector[Map[String, Any]]): T = {
       val dft = defaults.defaults
       val labels = labelling.elemLabels
       var i = 0

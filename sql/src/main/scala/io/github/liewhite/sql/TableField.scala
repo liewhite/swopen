@@ -3,10 +3,19 @@ package io.github.liewhite.sql
 import java.sql.ResultSet
 import java.sql.PreparedStatement
 import java.sql.SQLException
+import org.jooq.DataType
+import org.jooq.impl.BuiltInDataType
+import org.jooq.impl.SQLDataType
 
-enum DBEngine {
-  case Mysql
-  case Postgres
+abstract class DBDsl {
+  val nameQuote: String
+}
+
+object DBDslMySQL extends DBDsl {
+  val nameQuote: String = "`"
+}
+object DBDslPostgres extends DBDsl {
+  val nameQuote: String = "\""
 }
 
 trait QueryResult[T] {
@@ -17,7 +26,9 @@ object QueryResult {}
 
 case class Field(
     modelName: String,
+    // scala case class field name
     fieldName: String,
+    // database table name
     colName: String,
     unique: Boolean,
     default: Option[Any],
@@ -26,14 +37,17 @@ case class Field(
   override def toString: String = {
     s"""${colName} unique: ${unique}, default:${default} nullable: ${t.nullable}"""
   }
-  def queryName: String = s"${modelName}.${colName}"
+  def queryName(engine: DBDsl): String ={
+    val quote = engine.nameQuote
+     s"${quote}${modelName}${quote}.${quote}${colName}${quote}"
+  }
 }
 
 trait TField[T] {
   // option type with true
   def nullable: Boolean = false
-  // "varchar(255) null"
-  def dataType(engine: DBEngine): String
+  // jooq datatype
+  def dataType: DataType[_]
   def scan(obj: Any): Either[Exception, T]
   def value(value: T): Either[Exception, Any]
 }
@@ -41,7 +55,7 @@ trait TField[T] {
 object TField {
   given[T](using t: TField[T]): TField[Option[T]] with {
     override def nullable: Boolean = true
-    def dataType(engine: DBEngine): String = t.dataType(engine)
+    def dataType: DataType[_] = t.dataType
 
     def scan(obj: Any): Either[Exception, Option[T]] = {
       if(obj == null) {
@@ -62,7 +76,7 @@ object TField {
   }
 
   given TField[Int] with {
-    def dataType(engine: DBEngine): String = "int"
+    def dataType: DataType[_] = SQLDataType.INTEGER
 
     // obj comes from jdbc resultSet.getObject
     def scan(obj: Any): Either[Exception, Int] = {

@@ -39,6 +39,10 @@ lazy val json = (project in file("json"))
 lazy val sql = (project in file("sql"))
   .settings(
     commonSettings,
+    libraryDependencies += "org.jooq" % "jooq" % "3.16.5",
+    libraryDependencies += "org.jooq" % "jooq-meta" % "3.16.5",
+    libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.28",
+    libraryDependencies += "org.jetbrains" % "annotations" % "23.0.0",
   )
   .dependsOn(common)
 
@@ -63,10 +67,14 @@ lazy val main = (project in file("main"))
     libraryDependencies += "io.d11" % "zhttp_3" % "1.0.0.0-RC17",
     libraryDependencies += "com.lihaoyi" %% "upickle" % "1.4.3",
     libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.28",
+    libraryDependencies += "org.jetbrains" % "annotations" % "23.0.0",
+    libraryDependencies += "org.jooq" % "jooq" % "3.16.5",
+    libraryDependencies += "org.jooq" % "jooq-meta" % "3.16.5",
+    libraryDependencies += "org.jooq" % "jooq-codegen" % "3.16.5",
     
     publish / skip := true
   )
-  .dependsOn(json,jsonContrib,config,sql)
+  .dependsOn(json,jsonContrib,sql)
 
 lazy val root = (project in file("."))
   .aggregate(main, json,  common,  jsonContrib)

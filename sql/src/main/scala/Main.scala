@@ -1,3 +1,4 @@
+package main
 import io.github.liewhite.sql.*
 import scala.compiletime.*
 import io.github.liewhite.sql.Table
@@ -21,8 +22,9 @@ case class B(
 case class XX(a: Int = 1, b: String)
 
 @main def m(): Unit = {
+  // Class.forName("com.mysql.jdbc.Driver")
   val d = Table[B]
-  println(s"select ${d.Aa.queryName} from ${d.tableName}")
+  println(s"select ${d.Aa.queryName(DBDslMySQL)} from ${d.tableName}")
   val xx = XX(a = 1, b = "xxx")
   println(xx)
 }

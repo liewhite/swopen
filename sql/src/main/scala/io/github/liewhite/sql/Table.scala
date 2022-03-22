@@ -55,16 +55,16 @@ object Table {
     val uniques = unique().map(item => if (item.isEmpty) false else true)
 
     val idxes = index()
-      .zip(names)
-      .map((i, n) => i.map(_.copy(colName = n)))
-      .filter(!_.isEmpty)
+      .zipWithIndex
+      .filter(!_._1.isEmpty)
+      .map(item => {item._1.map(i => (i.copy(priority = if(i.priority != 0) i.priority else item._2) , names(item._2)))})
       .flatten
 
     val groupedIdx = idxes
-      .groupBy(item => item.name)
+      .groupBy(item => item._2)
       .map {
         case (name, items) => {
-          Index(name, items.map(_.colName).toVector, items(0).unique)
+          Index(name, items.map(_._2).toVector, items(0)._1.unique)
         }
       }
       .toVector
