@@ -5,6 +5,8 @@ import io.github.liewhite.sql.Table
 import io.github.liewhite.sql.annotation.{Unique, Index, ColumnName}
 
 case class B(
+    id :Int,
+
     @Unique()
     idb: Int,
     //
@@ -13,18 +15,18 @@ case class B(
     @ColumnName("bb")
     Bb: Option[Int],
     //
-    @ColumnName("aa")
     @Index("i_aa_bb") 
     @Index("i_aa", unique = true)
+    @ColumnName("aa")
     Aa: Int = 1123 // index 要求顺序， 但是默认值
-) derives Table
+)
 
-case class XX(a: Int = 1, b: String)
-
-@main def m(): Unit = {
-  // Class.forName("com.mysql.jdbc.Driver")
-  val d = Table[B]
-  println(s"select ${d.Aa.queryName(DBDslMySQL)} from ${d.tableName}")
-  val xx = XX(a = 1, b = "xxx")
-  println(xx)
+@main def main:Unit = {
+  // val conn = Connection("jdbc:postgresql://localhost:5432/lee","lee","")
+  val conn = Connection("jdbc:mysql://localhost:3306/test","sa","123")
+  conn.registerMigration[B]
+  conn.migration
+  println("xxx")
 }
+// @main def x: Unit = {
+// }

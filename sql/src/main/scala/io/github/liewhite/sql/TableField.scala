@@ -7,23 +7,6 @@ import org.jooq.DataType
 import org.jooq.impl.BuiltInDataType
 import org.jooq.impl.SQLDataType
 
-abstract class DBDsl {
-  val nameQuote: String
-}
-
-object DBDslMySQL extends DBDsl {
-  val nameQuote: String = "`"
-}
-object DBDslPostgres extends DBDsl {
-  val nameQuote: String = "\""
-}
-
-trait QueryResult[T] {
-  def fromResultSet(set: ResultSet): Either[Exception, T]
-}
-
-object QueryResult {}
-
 case class Field(
     modelName: String,
     // scala case class field name
@@ -36,10 +19,6 @@ case class Field(
 ) {
   override def toString: String = {
     s"""${colName} unique: ${unique}, default:${default} nullable: ${t.nullable}"""
-  }
-  def queryName(engine: DBDsl): String ={
-    val quote = engine.nameQuote
-     s"${quote}${modelName}${quote}.${quote}${colName}${quote}"
   }
 }
 
@@ -67,6 +46,7 @@ object TField {
         }
       }
     }
+
     def value(v: Option[T]): Either[Exception, Any] = {
       v match {
         case Some(s) => t.value(s)

@@ -42,6 +42,7 @@ lazy val sql = (project in file("sql"))
     libraryDependencies += "org.jooq" % "jooq" % "3.16.5",
     libraryDependencies += "org.jooq" % "jooq-meta" % "3.16.5",
     libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.28",
+    libraryDependencies += "org.postgresql" % "postgresql" % "42.3.3",
     libraryDependencies += "org.jetbrains" % "annotations" % "23.0.0",
   )
   .dependsOn(common)

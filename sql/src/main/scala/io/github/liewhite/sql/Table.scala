@@ -9,12 +9,26 @@ import io.github.liewhite.common.SummonUtils.summonAll
 import io.github.liewhite.common.{RepeatableAnnotation, RepeatableAnnotations}
 import io.github.liewhite.sql.annotation
 import io.github.liewhite.json.typeclass.DefaultValue
+import org.jooq
 
 case class Index(name: String, cols: Vector[String], unique: Boolean)
 
+trait JooqTable extends Selectable {
+  def table: jooq.Table[_]
+  // mapping field name to table column name
+  def nameMapping: Map[String, String]
+  def selectDynamic(name: String): Any = {
+    val field = table.field(name)
+  }
+}
+
+// migrate时， 先拿到meta，
+// 然后将diff apply 到db
+// 再从database meta 恢复出table,用作后续jooq的操作
 trait Table[T] extends Selectable {
   def tableName: String
   def indexes: Vector[Index]
+  // def colsMap: Map[String, ]
   def columns: Vector[Field]
   def columnsMap: Map[String, Field] =
     columns.map(item => (item.fieldName, item)).toMap
@@ -39,7 +53,13 @@ object Table {
   ): Table[A] = {
     val defaults = defaultValue.defaults
     val columnTypes = summonAll[TField, gen.MirroredElemTypes]
-    val tableName = labelling.label
+    // snack case
+    val tName = "[A-Z\\d]".r.replaceAllIn(
+      labelling.label,
+      { m =>
+        "_" + m.group(0).toLowerCase()
+      }
+    )
     val fieldNames = labelling.elemLabels.toVector
     val renames =
       columnName().map(item => if (item.isEmpty) None else Some(item(0).name))
@@ -54,20 +74,29 @@ object Table {
     val primaries = primaryKey().map(item => if (item.isEmpty) false else true)
     val uniques = unique().map(item => if (item.isEmpty) false else true)
 
-    val idxes = index()
-      .zipWithIndex
+    println(index())
+    val idxes = index().zipWithIndex
       .filter(!_._1.isEmpty)
-      .map(item => {item._1.map(i => (i.copy(priority = if(i.priority != 0) i.priority else item._2) , names(item._2)))})
+      .map(item => {
+        item._1.map(i =>
+          (
+            i.copy(priority = if (i.priority != 0) i.priority else item._2),
+            names(item._2)
+          )
+        )
+      })
       .flatten
 
+    println(idxes)
     val groupedIdx = idxes
-      .groupBy(item => item._2)
+      .groupBy(item => item._1.name)
       .map {
         case (name, items) => {
           Index(name, items.map(_._2).toVector, items(0)._1.unique)
         }
       }
       .toVector
+    println(groupedIdx)
 
     val cols = fieldNames.zipWithIndex.map {
       case (name, index) => {
@@ -75,13 +104,12 @@ object Table {
         val unique = uniques(index)
         val default = defaults.get(fieldNames(index))
 
-        Field(tableName, name, names(index), unique, default, tp)
+        Field(tName, name, names(index), unique, default, tp)
       }
     }
 
-    // todo 获取各种annotations
     new Table {
-      def tableName = labelling.label
+      def tableName = tName
       def indexes = groupedIdx
       def columns = cols.toVector
     }
@@ -102,6 +130,7 @@ object Table {
               val label = Type.valueOfConstant[mel].get.toString
               val withField =
                 Refinement(baseType, label, TypeRepr.of[Field])
+              println("recur...xx.........................")
               recur[melTail, tail](withField)
             }
           }
@@ -129,4 +158,10 @@ object Table {
       case e => report.error(e.show); ???
     }
   }
+  // given (using conn: Connection) : Conversion[Table[_], jooq.Table[_]] with {
+  //   def apply(t: Table[_]): jooq.Table[_] = {
+  //     conn
+  //   }
+
+  // }
 }
