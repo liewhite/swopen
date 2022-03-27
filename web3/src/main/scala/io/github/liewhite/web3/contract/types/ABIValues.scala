@@ -22,15 +22,11 @@ case class ABIValueUint(value: BigInt, size: Int)
 case class ABIValueAddress(value: Address)
 case class ABIValueBytes(value: Array[Byte])
 case class ABIValueNbytes(value: Array[Byte], size: Int)
+
 case class ABIValueString(value: String)
 object ABIValueString{
   given ConvertFromScala[String, ABIValueString] with {
     def fromScala(s: String): ABIValueString = ABIValueString(s)
   }
 }
-// static array
-case class ABIValueStaticArray[T](value: Vector[T], size: Int)
 
-// dynamic array
-case class ABIValueDynamicArray[T](value: Vector[T])
-case class ABIValueMap[K, V](value: Map[K, V])
