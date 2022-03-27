@@ -77,6 +77,14 @@ lazy val main = (project in file("main"))
   )
   .dependsOn(json,jsonContrib,sql)
 
+lazy val web3 = (project in file("web3"))
+  .settings(
+    libraryDependencies += "commons-codec" % "commons-codec" % "1.15", 
+    libraryDependencies += "org.web3j" % "core" % "4.9.0",
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.11",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % "test",
+  )
+  .dependsOn(json,common)
 lazy val root = (project in file("."))
   .aggregate(main, json,  common,  jsonContrib)
   .settings(

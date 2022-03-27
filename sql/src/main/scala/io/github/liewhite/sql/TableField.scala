@@ -7,7 +7,7 @@ import org.jooq.DataType
 import org.jooq.impl.BuiltInDataType
 import org.jooq.impl.SQLDataType
 
-case class Field(
+case class Field[T](
     modelName: String,
     // scala case class field name
     fieldName: String,
@@ -15,10 +15,10 @@ case class Field(
     colName: String,
     unique: Boolean,
     default: Option[Any],
-    t: TField[Any]
+    t: TField[T]
 ) {
-  override def toString: String = {
-    s"""${colName} unique: ${unique}, default:${default} nullable: ${t.nullable}"""
+  def toColumn(using conn: Connection): org.jooq.Field[T] = {
+      conn.metaCache.getTables(modelName).get(0).field(colName).asInstanceOf[org.jooq.Field[T]]
   }
 }
 

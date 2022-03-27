@@ -21,6 +21,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.ZonedDateTime
 
+trait Encoder[T] extends CoproductEncoder{
+  def encode(t: T): Json
+}
+
 trait UnionEncoder
 object UnionEncoder:
   inline given union[T]: Encoder[T] = ${ impl[T] }
@@ -63,9 +67,6 @@ object CoproductEncoder {
         )
 }
 
-trait Encoder[T] extends CoproductEncoder:
-  def encode(t: T): Json
-end Encoder
 
 object Encoder:
   inline def derived[A](using gen: K0.Generic[A]): Encoder[A] =

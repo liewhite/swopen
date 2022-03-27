@@ -13,15 +13,6 @@ import org.jooq
 
 case class Index(name: String, cols: Vector[String], unique: Boolean)
 
-trait JooqTable extends Selectable {
-  def table: jooq.Table[_]
-  // mapping field name to table column name
-  def nameMapping: Map[String, String]
-  def selectDynamic(name: String): Any = {
-    val field = table.field(name)
-  }
-}
-
 // migrate时， 先拿到meta，
 // 然后将diff apply 到db
 // 再从database meta 恢复出table,用作后续jooq的操作
@@ -29,19 +20,26 @@ trait Table[T] extends Selectable {
   def tableName: String
   def indexes: Vector[Index]
   // def colsMap: Map[String, ]
-  def columns: Vector[Field]
-  def columnsMap: Map[String, Field] =
+  def columns: Vector[Field[_]]
+  def columnsMap: Map[String, Field[_]] =
     columns.map(item => (item.fieldName, item)).toMap
+
+  def table(using conn: Connection): jooq.Table[_] = {
+      conn.metaCache.getTables(tableName).get(0)
+  }
+  
   def selectDynamic(name: String): Any = {
     columnsMap(name)
   }
-  override def toString: String = s"""${tableName}:
-columns: ${columns.mkString("\n")}
-indexes: ${indexes.mkString("\n")}
-"""
 }
 
 object Table {
+  given (using conn: Connection) : Conversion[Table[_], jooq.Table[_]] with {
+    def apply(t: Table[_]): jooq.Table[_] = {
+      conn.metaCache.getTables(t.tableName).get(0)
+    }
+
+  }
   inline given derived[A](using
       gen: Mirror.ProductOf[A],
       labelling: Labelling[A],
@@ -74,7 +72,6 @@ object Table {
     val primaries = primaryKey().map(item => if (item.isEmpty) false else true)
     val uniques = unique().map(item => if (item.isEmpty) false else true)
 
-    println(index())
     val idxes = index().zipWithIndex
       .filter(!_._1.isEmpty)
       .map(item => {
@@ -87,7 +84,6 @@ object Table {
       })
       .flatten
 
-    println(idxes)
     val groupedIdx = idxes
       .groupBy(item => item._1.name)
       .map {
@@ -96,7 +92,6 @@ object Table {
         }
       }
       .toVector
-    println(groupedIdx)
 
     val cols = fieldNames.zipWithIndex.map {
       case (name, index) => {
@@ -129,8 +124,7 @@ object Table {
             case '[head *: tail] => {
               val label = Type.valueOfConstant[mel].get.toString
               val withField =
-                Refinement(baseType, label, TypeRepr.of[Field])
-              println("recur...xx.........................")
+                Refinement(baseType, label, TypeRepr.of[Field[head]])
               recur[melTail, tail](withField)
             }
           }
@@ -158,10 +152,4 @@ object Table {
       case e => report.error(e.show); ???
     }
   }
-  // given (using conn: Connection) : Conversion[Table[_], jooq.Table[_]] with {
-  //   def apply(t: Table[_]): jooq.Table[_] = {
-  //     conn
-  //   }
-
-  // }
 }

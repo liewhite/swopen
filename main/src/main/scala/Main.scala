@@ -1,21 +1,19 @@
 package main
-import java.sql.*
-import org.jooq.*;
-import org.jooq.impl.*;
-import scala.jdk.CollectionConverters.*
+
+trait T2[A, B] {
+  def convert(a:A):B
+}
+
+case class Cls1(a: Int)
+case class Cls2(a: Int)
+
+object Cls1{
+  given T2[Cls1, Cls2] with {
+    def convert(a:Cls1):Cls2 = Cls2(a.a)
+  }
+}
 
 @main def main = {
-  // connect to the database named "mysql" on the localhost
-  val url = "jdbc:mysql://localhost/test"
-  val username = "sa"
-  val password = "123"
-
-  // // make the connection
-  val connection = DriverManager.getConnection(url, username, password)
-  val create = DSL.using(connection, SQLDialect.MYSQL)
-  create.meta.getTables("un1").asScala.foreach(table => {
-    table.fields.foreach(field => {
-      println((field.getName,field.getDataType.getCastTypeName))
-    })
-  })
+  val c1 = Cls1(1)
+  println(summon[T2[Cls1,Cls2]].convert(c1))
 }

@@ -17,7 +17,14 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.ZonedDateTime
 
-class DecodeException(val message: String) extends Exception(message)
+
+trait Decoder[T] extends ProductDecoder{
+  def decode(
+      data: Json,
+      withDefaults: Boolean = true
+  ): Either[DecodeException, T]
+}
+
 
 trait MacroDecoder
 object MacroDecoder:
@@ -209,12 +216,6 @@ object ProductDecoder{
         }
 
 }
-trait Decoder[T] extends ProductDecoder:
-  def decode(
-      data: Json,
-      withDefaults: Boolean = true
-  ): Either[DecodeException, T]
-end Decoder
 
 object Decoder:
   def decodeError(expect: String, got: Json) = Left(
@@ -415,3 +416,5 @@ object Decoder:
       }
     }
   }
+
+class DecodeException(val message: String) extends Exception(message)
