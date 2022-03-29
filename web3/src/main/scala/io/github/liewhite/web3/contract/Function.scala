@@ -9,7 +9,8 @@ import io.github.liewhite.common.SummonUtils
 // IN is Tuple of ABITypes, OUT is ABITypes
 // there is a nested typeclass, IN context bound to a ABIDecoder, OUT context bound to a ABIDecoder
 // then, encoder/decoder has encode/decode method, it takes paramter()
-class ABIFunction[IN <: Tuple , OUT](val name:String){
+// named with case class and unamed with Tuple
+class ABIFunction[IN , OUT](val name:String){
     def apply[T](input: T)(using converter: ConvertFromScala[T,IN]): OUT = {
         println(input)
         println(converter.fromScala(input))

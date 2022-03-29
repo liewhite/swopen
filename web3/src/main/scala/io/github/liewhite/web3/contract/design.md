@@ -20,4 +20,3 @@ val result:Int = f(List(List(true)))
 涉及到的转换有
 * 从scala类型到ABIValue的自动转换
 * 从bytes到ABIValue的转换
-
