@@ -27,6 +27,7 @@ object ABIInt {
         size
       }
 
+      def dynamic: Boolean = false
       def pack(i: ABIInt[SIZE]): Array[Byte] =
         ABIPack.alignTo32(i.value.toByteArray, "left")
 
@@ -59,6 +60,7 @@ object ABIUint {
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
         size
       }
+      def dynamic: Boolean = false
 
       def pack(i: ABIUint[SIZE]): Array[Byte] =
         ABIPack.alignTo32(i.value.toByteArray, "left")

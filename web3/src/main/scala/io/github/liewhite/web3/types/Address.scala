@@ -3,7 +3,11 @@ package io.github.liewhite.web3.types
 import scala.math.BigInt
 import org.apache.commons.codec.binary.Hex
 
-case class Address(bytes: Array[Byte])
+case class Address(bytes: Array[Byte]) {
+  override def toString: String = {
+    "0x" + Hex.encodeHex(bytes).mkString
+  }
+}
 
 
 object Address {
