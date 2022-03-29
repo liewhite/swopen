@@ -3,9 +3,20 @@ import scala.compiletime.constValue
 
 
 trait ABIPack[T] {
-  // 因为要从类型上确定abi，所以必须是编译时确定静态大小
-  // 包括array
-  inline def staticSize: Option[Int]
+
+  // 创建时确保正确， 此处不返回错误
+  def pack(t:T): Array[Byte]
+
+  def unpack(bytes: Array[Byte]): Either[Exception,T]
+
 }
 
-object ABIPack {}
+object ABIPack {
+  def alignTo32(bytes: Array[Byte], direction: "left" | "right", length: Int = 32): Array[Byte] = {
+    if(direction == "left"){
+      bytes.reverse.padTo(length,0.toByte).reverse
+    }else{
+      bytes.padTo(length,0.toByte)
+    }
+  }
+}

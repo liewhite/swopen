@@ -17,14 +17,3 @@ object ABIBool {
     def apply(value: Boolean): ABIBool = ABIBool(value)
   }
 }
-
-
-case class ABIValueAddress(value: Address)
-
-case class ABIValueString(value: String)
-object ABIValueString{
-  given ConvertFromScala[String, ABIValueString] with {
-    def fromScala(s: String): Either[Exception,ABIValueString] = Right(ABIValueString(s))
-  }
-}
-

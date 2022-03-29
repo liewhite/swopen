@@ -22,7 +22,7 @@ object SizeValidator {
   )(using quote: Quotes): Expr[Unit] = {
     import quote.reflect._
 
-    report.info(s"size2: ${sizeExpr.value},min: ${minExpr.value}, max: ${maxExpr.value}, mod: ${modExpr.value}")
+    // report.info(s"size2: ${sizeExpr.value},min: ${minExpr.value}, max: ${maxExpr.value}, mod: ${modExpr.value}")
 
     val size = sizeExpr.value.get
     val min = minExpr.value
