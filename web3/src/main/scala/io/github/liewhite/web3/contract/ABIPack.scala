@@ -1,6 +1,7 @@
 package io.github.liewhite.web3.contract
 import scala.compiletime.constValue
 import io.github.liewhite.common.SummonUtils
+import io.github.liewhite.web3.common.unliftEither
 import scala.math
 
 trait ABIPack[T] {
@@ -118,13 +119,10 @@ object ABIPack {
           )
         }
       })
-      if (result._1.forall(_.isRight)) {
-        Right(
-          Tuple.fromArray(result._1.map(_.toOption.get).toArray).asInstanceOf[T]
-        )
-      } else {
-        result._1.find(_.isLeft).get.asInstanceOf[Either[Exception, T]]
-      }
+      val unlifted = unliftEither(result._1)
+      unlifted.map(item => {
+          Tuple.fromArray(item.toArray).asInstanceOf[T]
+      })
     }
   }
 

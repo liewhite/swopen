@@ -2,6 +2,7 @@ package io.github.liewhite.web3.contract
 
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.json.codec.Encoder
+import scala.annotation.tailrec
 
 // 必须要在调用处存在 两者类型的 typeclass才允许调用
 trait ConvertFromScala[-S, +A] {
@@ -44,4 +45,25 @@ object ConvertFromScala {
     }
   }
 
+  def convertSeq[A, B](
+      s: Seq[A]
+  )(using converter: ConvertFromScala[A, B]): Either[Exception, Vector[B]] = {
+    convertSeqIter(s, Right(Vector.empty[B]))
+  }
+
+  @tailrec
+  private def convertSeqIter[A, B](
+      s: Seq[A],
+      acc: Either[Exception, Vector[B]]
+  )(using converter: ConvertFromScala[A, B]): Either[Exception, Vector[B]] = {
+    if (s.isEmpty) {
+      acc
+    } else {
+      val v2 = converter.fromScala(s.head)
+      v2 match {
+        case Right(o) => convertSeqIter(s.tail, acc.map(_.appended(o)))
+        case Left(e)  => Left(e)
+      }
+    }
+  }
 }

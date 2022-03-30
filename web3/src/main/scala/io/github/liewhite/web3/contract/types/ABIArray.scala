@@ -4,6 +4,7 @@ import io.github.liewhite.web3.contract.ConvertFromScala
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
 import io.github.liewhite.web3.contract.SizeValidator
+import io.github.liewhite.web3.common.unliftEither
 import scala.annotation.tailrec
 
 case class ABIStaticArray[T, SIZE <: Int](value: Vector[T], length: Int)
@@ -21,7 +22,7 @@ object ABIStaticArray {
       }
 
       def fromScala(s: Seq[V1]): Either[Exception, ABIStaticArray[V2, SIZE]] = {
-        val result = convertSeq[V1,V2](s)
+        val result = ConvertFromScala.convertSeq[V1,V2](s)
         result.map(ABIStaticArray(_, length))
       }
     }
@@ -29,36 +30,54 @@ object ABIStaticArray {
   
   inline given [V, SIZE <: Int](using vpack: ABIPack[V]): ABIPack[ABIStaticArray[V,SIZE]] =
     new ABIPack[ABIStaticArray[V,SIZE]] {
-      def length: Int = {
+      def count: Int = {
         inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, None, None, None)
         size
       }
 
-      // depends on if elem is static
+      def length: Int = count * vpack.length
+
+
+      // depends on whether elem is dynamic
       def dynamic: Boolean = vpack.dynamic
 
-      // if elems is static, just pack in place, otherwise 
-      // pack elements and concat
       def pack(i: ABIStaticArray[V,SIZE]): Array[Byte] = {
         val elems = i.value.map(vpack.pack(_))
-        // ABIPack.alignTo32(i.value,"right")
-        ???
+        if(!dynamic) {
+          elems.reduce(_ ++ _)
+        }else{
+          val staticSize = length * 32
+          val dynamicStartOffset = staticSize
+          // static acc, dynamic acc
+          val result = elems.foldLeft((Array.emptyByteArray, Array.emptyByteArray, staticSize))((acc,item) => {
+            (
+              acc._1 ++ ABIPack.alignTo32(BigInt(acc._3).toByteArray,"left"),
+              acc._2 ++ item,
+              acc._3 + item.length
+            )
+          })
+          result._1 ++ result._2
+        }
       }
 
       def unpack(
           bytes: Array[Byte]
       ): Either[Exception, ABIStaticArray[V,SIZE]] = {
-        // if (bytes.length < length) {
-        //   Left(
-        //     Exception(
-        //       s"bytes length not enough, expect ${length}, got ${bytes.length}"
-        //     )
-        //   )
-        // } else {
-        //   Right(ABIStaticBytes[SIZE](bytes.slice(0,length), length))
-        // }
-        ???
+        val result = if(!dynamic) {
+          Range(0,count).foldLeft(Vector.empty[Either[Exception, V]])((acc,item) => {
+            val elemBytes = bytes.slice(vpack.length * item, vpack.length * (item +1))
+            acc.appended(vpack.unpack(elemBytes))
+          })
+        }else{
+          Range(0,count).foldLeft(Vector.empty[Either[Exception, V]])((acc,item) => {
+            val elemOffset = BigInt(bytes.slice(vpack.length * item, vpack.length * (item +1))).toInt
+            val elemBytes = bytes.slice(elemOffset, bytes.length)
+            val elem = vpack.unpack(elemBytes)
+            acc.appended(elem)
+          })
+        }
+        unliftEither(result).map( item => ABIStaticArray[V,SIZE](item.toVector,count))
       }
     }
 }
@@ -72,7 +91,7 @@ object ABIDynamicArray {
     new ConvertFromScala[Seq[V1], ABIDynamicArray[V2]] {
 
       def fromScala(s: Seq[V1]): Either[Exception, ABIDynamicArray[V2]] = {
-        val result = convertSeq[V1,V2](s)
+        val result = ConvertFromScala.convertSeq[V1,V2](s)
         result.map(ABIDynamicArray(_))
       }
     }
