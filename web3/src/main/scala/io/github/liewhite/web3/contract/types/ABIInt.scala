@@ -16,6 +16,15 @@ object ABIInt {
         ABIInt(s)
       )
     }
+
+  inline given ConvertFromScala[BigInt, ABIInt] =
+    new ConvertFromScala[BigInt, ABIInt] {
+      def length: Int = 256
+      def fromScala(s: BigInt): Either[Exception, ABIInt] = Right(
+        ABIInt(s)
+      )
+    }
+
   inline given ABIPack[ABIInt] =
     new ABIPack[ABIInt] {
       def staticSize: Int = 32
@@ -38,6 +47,13 @@ object ABIUint {
     new ConvertFromScala[Int, ABIUint] {
       def staticSize: Int = 32
       def fromScala(s: Int): Either[Exception, ABIUint] = Right(
+        ABIUint(s)
+      )
+    }
+  inline given ConvertFromScala[BigInt, ABIUint] =
+    new ConvertFromScala[BigInt, ABIUint] {
+      def length: Int = 256
+      def fromScala(s: BigInt): Either[Exception, ABIUint] = Right(
         ABIUint(s)
       )
     }

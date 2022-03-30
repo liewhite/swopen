@@ -5,7 +5,6 @@ import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.contract.ABIPack
 
-
 case class ABIIntN[SIZE <: Int](value: BigInt, size: Int)
 
 object ABIIntN {
@@ -13,17 +12,29 @@ object ABIIntN {
     new ConvertFromScala[Int, ABIIntN[SIZE]] {
       def length: Int = {
         inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
+        SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
         size
       }
       def fromScala(s: Int): Either[Exception, ABIIntN[SIZE]] = Right(
         ABIIntN(s, length)
       )
     }
+  inline given [SIZE <: Int]: ConvertFromScala[BigInt, ABIIntN[SIZE]] = {
+    new ConvertFromScala[BigInt, ABIIntN[SIZE]] {
+      def length: Int = {
+        inline val size: Int = constValue[SIZE]
+        SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
+        size
+      }
+      def fromScala(s: BigInt): Either[Exception, ABIIntN[SIZE]] = Right(
+        ABIIntN(s, length)
+      )
+    }
+  }
   inline given [SIZE <: Int]: ABIPack[ABIIntN[SIZE]] =
     new ABIPack[ABIIntN[SIZE]] {
       def staticSize: Int = 32
-      def typeName: String = s"int${if(length ==0) "" else length}"
+      def typeName: String = s"int${if (length == 0) "" else length}"
       def length: Int = {
         inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
@@ -66,7 +77,7 @@ object ABIUintN {
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
         size
       }
-      def typeName: String = s"uint${if(length ==0) "" else length}"
+      def typeName: String = s"uint${if (length == 0) "" else length}"
       def dynamic: Boolean = false
 
       def pack(i: ABIUintN[SIZE]): Array[Byte] =

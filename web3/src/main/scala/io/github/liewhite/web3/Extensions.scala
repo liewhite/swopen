@@ -1,4 +1,4 @@
-package io.github.liewhite.web3.contract
+package io.github.liewhite.web3
 
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.types.BytesType

@@ -11,13 +11,24 @@ import io.github.liewhite.web3.contract.types.ABIString
 import io.github.liewhite.web3.contract.types.ABIAddress
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.types.Address
-import io.github.liewhite.web3.contract.types.ABIBool
-import io.github.liewhite.web3.contract.types.ABIStaticBytes
-import io.github.liewhite.web3.contract.types.ABIDynamicBytes
-import io.github.liewhite.web3.contract.types.ABIDynamicArray
+import io.github.liewhite.web3.contract.types.*
 
 
 class ABIPackTest extends AnyFunSuite {
+  test("int uint convert") {
+    assert{
+      summon[ConvertFromScala[Int, ABIIntN[8]]]
+      summon[ConvertFromScala[Int, ABIUintN[8]]]
+      summon[ConvertFromScala[Int, ABIInt]]
+      summon[ConvertFromScala[Int, ABIUint]]
+
+      summon[ConvertFromScala[BigInt, ABIIntN[8]]]
+      summon[ConvertFromScala[BigInt, ABIUintN[8]]]
+      summon[ConvertFromScala[BigInt, ABIInt]]
+      summon[ConvertFromScala[BigInt, ABIUint]]
+      true
+    }
+  }
   test("pack int") {
     assert {
       val i =  ABIIntN[8](BigInt(111),8)
