@@ -85,8 +85,9 @@ lazy val web3 = (project in file("web3"))
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % "test",
   )
   .dependsOn(json,common)
+
 lazy val root = (project in file("."))
-  .aggregate(main, json,  common,  jsonContrib)
+  .aggregate(main, json,  common,  jsonContrib, web3)
   .settings(
     publish / skip := true
   )
