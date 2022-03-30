@@ -12,7 +12,7 @@ object ABIStaticBytes {
       : ConvertFromScala[Array[Byte], ABIStaticBytes[SIZE]] =
     new ConvertFromScala[Array[Byte], ABIStaticBytes[SIZE]] {
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(32))
         size
       }
@@ -28,7 +28,7 @@ object ABIStaticBytes {
       def staticSize: Int = 32
 
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, None, None, None)
         size
       }

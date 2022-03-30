@@ -16,7 +16,7 @@ object ABIStaticArray {
     new ConvertFromScala[Seq[V1], ABIStaticArray[V2, SIZE]] {
       // def length: Int = 2
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), None, None)
         size
       }
@@ -33,7 +33,7 @@ object ABIStaticArray {
   ): ABIPack[ABIStaticArray[V, SIZE]] =
     new ABIPack[ABIStaticArray[V, SIZE]] {
       def count: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, None, None, None)
         size
       }

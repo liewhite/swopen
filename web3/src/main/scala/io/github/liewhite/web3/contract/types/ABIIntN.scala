@@ -11,7 +11,7 @@ object ABIIntN {
   inline given IntNConverter[SIZE <: Int]: ConvertFromScala[Int, ABIIntN[SIZE]] =
     new ConvertFromScala[Int, ABIIntN[SIZE]] {
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
         size
       }
@@ -22,7 +22,7 @@ object ABIIntN {
   inline given [SIZE <: Int]: ConvertFromScala[BigInt, ABIIntN[SIZE]] = {
     new ConvertFromScala[BigInt, ABIIntN[SIZE]] {
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
         size
       }
@@ -36,7 +36,7 @@ object ABIIntN {
       def staticSize: Int = 32
       def typeName: String = s"int${if (length == 0) "" else length}"
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
         size
       }
@@ -59,7 +59,7 @@ object ABIUintN {
     new ConvertFromScala[Int, ABIUintN[SIZE]] {
       def staticSize: Int = 32
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
         size
       }
@@ -71,7 +71,7 @@ object ABIUintN {
     new ConvertFromScala[BigInt, ABIUintN[SIZE]] {
       def staticSize: Int = 32
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
         size
       }
@@ -85,7 +85,7 @@ object ABIUintN {
       def staticSize: Int = 32
 
       def length: Int = {
-        val size: Int = constValue[SIZE]
+        inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
         size
       }
