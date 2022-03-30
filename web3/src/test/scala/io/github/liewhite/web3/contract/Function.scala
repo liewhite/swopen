@@ -24,14 +24,6 @@ class FunctionTest extends AnyFunSuite {
       val a: Int = 123
       val b: String = "asd"
       val c = Vector(true,false)
-      summon[ConvertFromScala[Int, ABIIntN[32]]]
-      summon[ConvertFromScala[String, ABIString]]
-      summon[ConvertFromScala[Seq[Boolean], ABIStaticArray[ABIBool,2]]]
-      summon[ConvertFromScala[Boolean, ABIBool]]
-      summon[ConvertFromScala[Seq[Boolean], ABIStaticArray[ABIBool,2]]]
-      summon[ABIPack[(ABIInt, ABIStaticArray[ABIBool,2])]]
-      val p = summon[ConvertFromScala[(Int, Vector[Int]),(ABIInt, ABIDynamicArray[ABIInt])]]
-      summon[ConvertFromScala[(Int,Boolean), (ABIInt,ABIBool)]]
       val params = (a,b,c)
       println(f.packInput(params).toHex)
       true

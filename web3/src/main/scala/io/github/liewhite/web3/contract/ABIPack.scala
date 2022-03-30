@@ -26,9 +26,9 @@ object ABIPack {
       length: Int,
       align: Int = 32
   ): Int = {
-    if(length % align == 0 ) {
+    if (length % align == 0) {
       length
-    } else{
+    } else {
       math.ceil(length.toDouble / align).toInt * align
     }
   }
@@ -61,7 +61,7 @@ object ABIPack {
 
   inline given [T <: Tuple]: ABIPack[T] = new ABIPack[T] {
     val packs = SummonUtils.summonAll[ABIPack, T]
-    def typeName:String = "(" + packs.map(_.typeName).mkString(",") + ")"
+    def typeName: String = "(" + packs.map(_.typeName).mkString(",") + ")"
 
     def dynamic: Boolean = !packs.forall(!_.dynamic)
 
@@ -82,11 +82,12 @@ object ABIPack {
         .foldLeft((staticPart, dynamicPart, dynamicOffset))((acc, item) => {
           if (!item._1.dynamic) {
             // 静态类型直接拼接到static部分
-            (acc._1 ++ item._2, acc._2, 0)
+            (acc._1 ++ item._2, acc._2, dynamicOffset)
           } else {
             // 动态类型在静态部分保留offset
             val offsetBytes =
               ABIPack.alignTo32(BigInt(acc._3).toByteArray, "left")
+            println("offset:" + acc._3)
             (
               acc._1 ++ offsetBytes,
               acc._2 ++ item._2,
@@ -124,7 +125,7 @@ object ABIPack {
       })
       val unlifted = unliftEither(result._1)
       unlifted.map(item => {
-          Tuple.fromArray(item.toArray).asInstanceOf[T]
+        Tuple.fromArray(item.toArray).asInstanceOf[T]
       })
     }
   }
