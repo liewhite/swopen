@@ -30,16 +30,17 @@ class ABIFunction[IN, OUT](
     org.web3j.crypto.Hash.sha3(fsignature.getBytes).slice(0, 4)
   }
 
-  def packInput(args: IN): Array[Byte] = {
-    inPack.pack(args)
+  def packInput[T](args: T)(using converter: ConvertFromScala[T, IN]): Array[Byte] = {
+    inPack.pack(converter.fromScala(args).toOption.get)
   }
   def unpackInput(args: Array[Byte]): Either[Exception,IN]  = {
     inPack.unpack(args)
   }
 
-  def packOutput(args: OUT): Array[Byte] = {
-    outPack.pack(args)
+  def packOutput[T](args: T)(using converter: ConvertFromScala[T, OUT]): Array[Byte] = {
+    outPack.pack(converter.fromScala(args).toOption.get)
   }
+
   def unpackOutput(args: Array[Byte]): Either[Exception,OUT]  = {
     outPack.unpack(args)
   }
