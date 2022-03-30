@@ -6,6 +6,8 @@ import io.github.liewhite.common.SummonUtils
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.contract.types.ABIAddress
 
+import io.github.liewhite.web3.common.ConvertFromScala
+
 // a contract function with static type
 // IN is Tuple of ABITypes, OUT is ABITypes
 // there is a nested typeclass, IN context bound to a ABIDecoder, OUT context bound to a ABIDecoder

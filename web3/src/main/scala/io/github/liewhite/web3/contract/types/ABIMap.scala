@@ -1,6 +1,6 @@
 package io.github.liewhite.web3.contract.types
 
-import io.github.liewhite.web3.contract.ConvertFromScala
+import io.github.liewhite.web3.common.ConvertFromScala
 import scala.annotation.tailrec
 
 case class ABIMap[K, V](value: Map[K, V])

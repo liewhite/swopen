@@ -1,6 +1,6 @@
 package io.github.liewhite.web3.contract.types
 
-import io.github.liewhite.web3.contract.ConvertFromScala
+import io.github.liewhite.web3.common.ConvertFromScala
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
 import io.github.liewhite.web3.contract.SizeValidator

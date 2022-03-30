@@ -12,6 +12,7 @@ import io.github.liewhite.web3.contract.types.ABIAddress
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.contract.types.*
+import io.github.liewhite.web3.common.ConvertFromScala
 
 
 class ABIPackTest extends AnyFunSuite {

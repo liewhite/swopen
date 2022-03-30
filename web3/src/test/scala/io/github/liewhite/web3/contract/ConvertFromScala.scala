@@ -5,6 +5,7 @@ import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.types.ABIIntN
 import io.github.liewhite.web3.contract.types.ABIStaticArray
 import io.github.liewhite.web3.contract.types.ABIBool
+import io.github.liewhite.web3.common.ConvertFromScala
 
 class ConvertFromScalaTest extends AnyFunSuite {
   test("temp") {

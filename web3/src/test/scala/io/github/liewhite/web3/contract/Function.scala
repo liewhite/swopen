@@ -6,6 +6,7 @@ import io.github.liewhite.web3.contract.types.ABIBool
 import org.apache.commons.codec.binary.Hex
 import io.github.liewhite.web3.contract.types.*
 import io.github.liewhite.web3.Extensions.*
+import io.github.liewhite.web3.common.ConvertFromScala
 
 class FunctionTest extends AnyFunSuite {
   test("new function") {
