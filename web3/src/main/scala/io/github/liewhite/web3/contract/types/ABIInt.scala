@@ -5,75 +5,55 @@ import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIInt[SIZE <: Int](value: BigInt, size: Int)
+
+case class ABIInt(value: BigInt)
 
 object ABIInt {
-  inline given [SIZE <: Int]: ConvertFromScala[Int, ABIInt[SIZE]] =
-    new ConvertFromScala[Int, ABIInt[SIZE]] {
-      def length: Int = {
-        inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
-        size
-      }
-      def fromScala(s: Int): Either[Exception, ABIInt[SIZE]] = Right(
-        ABIInt(s, length)
+  inline given ConvertFromScala[Int, ABIInt] =
+    new ConvertFromScala[Int, ABIInt] {
+      def length: Int = 256
+      def fromScala(s: Int): Either[Exception, ABIInt] = Right(
+        ABIInt(s)
       )
     }
-  inline given [SIZE <: Int]: ABIPack[ABIInt[SIZE]] =
-    new ABIPack[ABIInt[SIZE]] {
+  inline given ABIPack[ABIInt] =
+    new ABIPack[ABIInt] {
       def staticSize: Int = 32
-      def typeName:String = s"int${length}"
-      def length: Int = {
-        inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
-        size
-      }
-
+      def typeName: String = s"int"
       def dynamic: Boolean = false
-      def pack(i: ABIInt[SIZE]): Array[Byte] =
+      def pack(i: ABIInt): Array[Byte] =
         ABIPack.alignTo32(i.value.toByteArray, "left")
 
-      def unpack(bytes: Array[Byte]): Either[Exception, ABIInt[SIZE]] = {
+      def unpack(bytes: Array[Byte]): Either[Exception, ABIInt] = {
         val i = BigInt(bytes)
-        Right(ABIInt[SIZE](i, length))
+        Right(ABIInt(i))
       }
     }
 }
 
-case class ABIUint[SIZE <: Int](value: BigInt, size: Int)
+case class ABIUint(value: BigInt)
 
 object ABIUint {
-  inline given [SIZE <: Int]: ConvertFromScala[Int, ABIUint[SIZE]] =
-    new ConvertFromScala[Int, ABIUint[SIZE]] {
+  inline given ConvertFromScala[Int, ABIUint] =
+    new ConvertFromScala[Int, ABIUint] {
       def staticSize: Int = 32
-      def length: Int = {
-        inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
-        size
-      }
-      def fromScala(s: Int): Either[Exception, ABIUint[SIZE]] = Right(
-        ABIUint(s, length)
+      def fromScala(s: Int): Either[Exception, ABIUint] = Right(
+        ABIUint(s)
       )
     }
 
-  inline given [SIZE <: Int]: ABIPack[ABIUint[SIZE]] =
-    new ABIPack[ABIUint[SIZE]] {
+  inline given ABIPack[ABIUint] =
+    new ABIPack[ABIUint] {
       def staticSize: Int = 32
-
-      def length: Int = {
-        inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
-        size
-      }
-      def typeName: String = s"uint${length}"
+      def typeName: String = s"uint"
       def dynamic: Boolean = false
 
-      def pack(i: ABIUint[SIZE]): Array[Byte] =
+      def pack(i: ABIUint): Array[Byte] =
         ABIPack.alignTo32(i.value.toByteArray, "left")
 
-      def unpack(bytes: Array[Byte]): Either[Exception, ABIUint[SIZE]] = {
+      def unpack(bytes: Array[Byte]): Either[Exception, ABIUint] = {
         val i = BigInt(bytes)
-        Right(ABIUint[SIZE](i, length))
+        Right(ABIUint(i))
       }
     }
 }

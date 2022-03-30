@@ -1,6 +1,5 @@
 package io.github.liewhite.web3.common
 
-import io.github.liewhite.web3.contract.ConvertFromScala
 import scala.annotation.tailrec
 
 

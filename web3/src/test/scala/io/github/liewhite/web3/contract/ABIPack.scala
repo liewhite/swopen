@@ -6,7 +6,7 @@ import scala.compiletime.constValue
 
 import io.github.liewhite.web3.contract.types.ABIStaticArray
 import org.apache.commons.codec.binary.Hex
-import io.github.liewhite.web3.contract.types.ABIInt
+import io.github.liewhite.web3.contract.types.ABIIntN
 import io.github.liewhite.web3.contract.types.ABIString
 import io.github.liewhite.web3.contract.types.ABIAddress
 import io.github.liewhite.web3.types.BytesType
@@ -20,8 +20,8 @@ import io.github.liewhite.web3.contract.types.ABIDynamicArray
 class ABIPackTest extends AnyFunSuite {
   test("pack int") {
     assert {
-      val i =  ABIInt[8](BigInt(111),8)
-      val result = summon[ABIPack[ABIInt[8]]].pack(i)
+      val i =  ABIIntN[8](BigInt(111),8)
+      val result = summon[ABIPack[ABIIntN[8]]].pack(i)
       Hex.encodeHex(result).mkString == "000000000000000000000000000000000000000000000000000000000000006f"
     }
   }
@@ -30,7 +30,7 @@ class ABIPackTest extends AnyFunSuite {
     assert {
       val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
       val bytes = Hex.decodeHex(hexStr)
-      val result = summon[ABIPack[ABIInt[8]]].unpack(bytes)
+      val result = summon[ABIPack[ABIIntN[8]]].unpack(bytes)
       result.toOption.get.value == BigInt(2)
     }
   }
@@ -155,8 +155,8 @@ class ABIPackTest extends AnyFunSuite {
 
   test("pack static tuple") {
     assert {
-      val data = ABIInt[32](123,32) *: ABIBool(true) *: EmptyTuple
-      val bytes = summon[ABIPack[(ABIInt[32], ABIBool)]].pack(data)
+      val data = ABIIntN[32](123,32) *: ABIBool(true) *: EmptyTuple
+      val bytes = summon[ABIPack[(ABIIntN[32], ABIBool)]].pack(data)
       Hex.encodeHex(bytes).mkString == "000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000001"
     }
   }
@@ -164,7 +164,7 @@ class ABIPackTest extends AnyFunSuite {
     assert {
       val data = "000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000001"
       val bytes = Hex.decodeHex(data)
-      val o = summon[ABIPack[(ABIInt[32], ABIBool)]].unpack(bytes)
+      val o = summon[ABIPack[(ABIIntN[32], ABIBool)]].unpack(bytes)
       val v1 = o.toOption.get._1
       val v2 = o.toOption.get._2
       v1.value == 123&& v2.value == true
@@ -188,8 +188,8 @@ class ABIPackTest extends AnyFunSuite {
 
   test("pack static array") {
     assert {
-      val data = ABIStaticArray[ABIInt[8],3](Vector(ABIInt(3,8),ABIInt(4,8),ABIInt(5,8)), 3)
-      val bytes = summon[ABIPack[ABIStaticArray[ABIInt[8],3]]].pack(data)
+      val data = ABIStaticArray[ABIIntN[8],3](Vector(ABIIntN(3,8),ABIIntN(4,8),ABIIntN(5,8)), 3)
+      val bytes = summon[ABIPack[ABIStaticArray[ABIIntN[8],3]]].pack(data)
       Hex.encodeHex(bytes).mkString == "000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000005"
     }
   }
@@ -197,7 +197,7 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack static array") {
     assert {
       val data = Hex.decodeHex("000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000005")
-      val decoded = summon[ABIPack[ABIStaticArray[ABIInt[8],3]]].unpack(data)
+      val decoded = summon[ABIPack[ABIStaticArray[ABIIntN[8],3]]].unpack(data)
       decoded.toOption.get.value.map(_.value.toInt) == Vector(3,4,5)
     }
   }
@@ -220,8 +220,8 @@ class ABIPackTest extends AnyFunSuite {
 
   test("pack dynamic array") {
     assert {
-      val data = ABIDynamicArray[ABIInt[8]](Vector(ABIInt(1,8),ABIInt(2,8),ABIInt(3,8)))
-      val bytes = summon[ABIPack[ABIDynamicArray[ABIInt[8]]]].pack(data)
+      val data = ABIDynamicArray[ABIIntN[8]](Vector(ABIIntN(1,8),ABIIntN(2,8),ABIIntN(3,8)))
+      val bytes = summon[ABIPack[ABIDynamicArray[ABIIntN[8]]]].pack(data)
       Hex.encodeHex(bytes).mkString == "0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"
     }
   }
@@ -229,7 +229,7 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack dynamic array") {
     assert {
       val data = Hex.decodeHex("0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004")
-      val decoded = summon[ABIPack[ABIDynamicArray[ABIInt[8]]]].unpack(data)
+      val decoded = summon[ABIPack[ABIDynamicArray[ABIIntN[8]]]].unpack(data)
       decoded.toOption.get.value.map(_.value.toInt) == Vector(1,2,4)
     }
   }

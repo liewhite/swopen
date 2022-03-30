@@ -2,7 +2,7 @@ package io.github.liewhite.web3.contract
 
 import org.scalatest.funsuite.AnyFunSuite
 import scala.compiletime.constValue
-import io.github.liewhite.web3.contract.types.ABIInt
+import io.github.liewhite.web3.contract.types.ABIIntN
 import io.github.liewhite.web3.contract.types.ABIStaticArray
 import io.github.liewhite.web3.contract.types.ABIBool
 
