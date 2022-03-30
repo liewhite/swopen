@@ -9,7 +9,7 @@ import io.github.liewhite.web3.contract.ABIPack
 case class ABIInt(value: BigInt)
 
 object ABIInt {
-  inline given ConvertFromScala[Int, ABIInt] =
+  inline given IntConverter: ConvertFromScala[Int, ABIInt] =
     new ConvertFromScala[Int, ABIInt] {
       def length: Int = 256
       def fromScala(s: Int): Either[Exception, ABIInt] = Right(
@@ -43,7 +43,7 @@ object ABIInt {
 case class ABIUint(value: BigInt)
 
 object ABIUint {
-  inline given ConvertFromScala[Int, ABIUint] =
+  inline given  UintConverter:ConvertFromScala[Int, ABIUint] =
     new ConvertFromScala[Int, ABIUint] {
       def staticSize: Int = 32
       def fromScala(s: Int): Either[Exception, ABIUint] = Right(

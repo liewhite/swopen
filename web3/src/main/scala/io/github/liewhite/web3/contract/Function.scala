@@ -2,7 +2,6 @@ package io.github.liewhite.web3.contract
 
 import org.web3j.abi.datatypes.generated.Uint8
 import org.web3j.abi.datatypes.Bool
-import io.github.liewhite.web3.contract.codec.ABIEncoder
 import io.github.liewhite.common.SummonUtils
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.contract.types.ABIAddress

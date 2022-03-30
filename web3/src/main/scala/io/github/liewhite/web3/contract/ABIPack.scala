@@ -128,41 +128,4 @@ object ABIPack {
       })
     }
   }
-
-  // given ABIPack[EmptyTuple] with {
-  //   def length = 0
-
-  //   def dynamic: Boolean = false
-
-  //   def pack(t: EmptyTuple): Array[Byte] = Array.emptyByteArray
-
-  //   def unpack(bytes: Array[Byte]): Either[Exception, EmptyTuple] = Right(
-  //     EmptyTuple
-  //   )
-  // }
-  // given [H, T <: Tuple](using
-  //     headPack: => ABIPack[H],
-  //     tailPack: => ABIPack[T]
-  // ): ABIPack[H *: T] with {
-
-  //   def length = {
-  //     headPack.length + tailPack.length
-  //   }
-
-  //   def dynamic: Boolean = tailPack.dynamic || tailPack.dynamic
-
-  //   // 自身静态放最前面, 动态部分放tail的静态部分后面
-  //   // 如果tail是静态， 直接拼接， 如果是动态， 则
-  //   // 从tail中取静态部分拼接在后，
-  //   def pack(t: EmptyTuple): Array[Byte] = {
-  //     var bytesBuffer = Array.emptyByteArray
-  //     if(!headPack.dynamic) {
-
-  //     }
-  //   }
-
-  //   def unpack(bytes: Array[Byte]): Either[Exception, H *: T] = {
-  //     ???
-  //   }
-  // }
 }

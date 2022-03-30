@@ -8,10 +8,10 @@ import io.github.liewhite.web3.contract.ABIPack
 case class ABIIntN[SIZE <: Int](value: BigInt, size: Int)
 
 object ABIIntN {
-  inline given [SIZE <: Int]: ConvertFromScala[Int, ABIIntN[SIZE]] =
+  inline given IntNConverter[SIZE <: Int]: ConvertFromScala[Int, ABIIntN[SIZE]] =
     new ConvertFromScala[Int, ABIIntN[SIZE]] {
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
         size
       }
@@ -22,7 +22,7 @@ object ABIIntN {
   inline given [SIZE <: Int]: ConvertFromScala[BigInt, ABIIntN[SIZE]] = {
     new ConvertFromScala[BigInt, ABIIntN[SIZE]] {
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(8), Some(256), Some(8))
         size
       }
@@ -36,7 +36,7 @@ object ABIIntN {
       def staticSize: Int = 32
       def typeName: String = s"int${if (length == 0) "" else length}"
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
         size
       }
@@ -55,15 +55,27 @@ object ABIIntN {
 case class ABIUintN[SIZE <: Int](value: BigInt, size: Int)
 
 object ABIUintN {
-  inline given [SIZE <: Int]: ConvertFromScala[Int, ABIUintN[SIZE]] =
+  inline given UintNConverter[SIZE <: Int]: ConvertFromScala[Int, ABIUintN[SIZE]] =
     new ConvertFromScala[Int, ABIUintN[SIZE]] {
       def staticSize: Int = 32
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
         size
       }
       def fromScala(s: Int): Either[Exception, ABIUintN[SIZE]] = Right(
+        ABIUintN(s, length)
+      )
+    }
+  inline given [SIZE <: Int]: ConvertFromScala[BigInt, ABIUintN[SIZE]] =
+    new ConvertFromScala[BigInt, ABIUintN[SIZE]] {
+      def staticSize: Int = 32
+      def length: Int = {
+        val size: Int = constValue[SIZE]
+        SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
+        size
+      }
+      def fromScala(s: BigInt): Either[Exception, ABIUintN[SIZE]] = Right(
         ABIUintN(s, length)
       )
     }
@@ -73,7 +85,7 @@ object ABIUintN {
       def staticSize: Int = 32
 
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(0), Some(256), Some(8))
         size
       }

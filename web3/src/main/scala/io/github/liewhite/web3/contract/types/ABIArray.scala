@@ -7,17 +7,17 @@ import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.common.unliftEither
 import scala.annotation.tailrec
 
-case class ABIStaticArray[T, SIZE <: Int](value: Vector[T], length: Int)
+case class ABIStaticArray[T, SIZE <: Int](value: Vector[T], length: Int) {}
 
 object ABIStaticArray {
-  inline given [V1, V2, SIZE <: Int](using
+  inline given StaticArrayConverter[V1, V2, SIZE <: Int](using
       valueConvert: ConvertFromScala[V1, V2]
-  ): ConvertFromScala[Seq[V1], ABIStaticArray[V2, SIZE]] =
+  ): ConvertFromScala[Seq[V1], ABIStaticArray[V2, SIZE]] = {
     new ConvertFromScala[Seq[V1], ABIStaticArray[V2, SIZE]] {
-
+      // def length: Int = 2
       def length: Int = {
-        inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), None, None)
+        val size: Int = constValue[SIZE]
+        SizeValidator.validateSize(size, Some(0), None, None)
         size
       }
 
@@ -26,13 +26,14 @@ object ABIStaticArray {
         result.map(ABIStaticArray(_, length))
       }
     }
+  }
 
   inline given [V, SIZE <: Int](using
       vpack: ABIPack[V]
   ): ABIPack[ABIStaticArray[V, SIZE]] =
     new ABIPack[ABIStaticArray[V, SIZE]] {
       def count: Int = {
-        inline val size: Int = constValue[SIZE]
+        val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, None, None, None)
         size
       }
@@ -98,7 +99,7 @@ object ABIStaticArray {
 case class ABIDynamicArray[T](value: Vector[T]) {}
 
 object ABIDynamicArray {
-  given [V1, V2](using
+  given DynamicArrayConverter[V1, V2](using
       valueConvert: ConvertFromScala[V1, V2]
   ): ConvertFromScala[Seq[V1], ABIDynamicArray[V2]] =
     new ConvertFromScala[Seq[V1], ABIDynamicArray[V2]] {
