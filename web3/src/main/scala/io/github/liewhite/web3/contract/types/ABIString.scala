@@ -29,7 +29,8 @@ object ABIString {
   given ABIPack[ABIString] with {
     def dynamic: Boolean = true
 
-    def length: Int = 32
+    def staticSize: Int = 32
+    def typeName:String = s"string"
     def pack(a: ABIString): Array[Byte] = {
       val bytes = a.value.getBytes
       val length = bytes.length

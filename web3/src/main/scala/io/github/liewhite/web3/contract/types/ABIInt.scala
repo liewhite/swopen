@@ -21,6 +21,8 @@ object ABIInt {
     }
   inline given [SIZE <: Int]: ABIPack[ABIInt[SIZE]] =
     new ABIPack[ABIInt[SIZE]] {
+      def staticSize: Int = 32
+      def typeName:String = s"int${length}"
       def length: Int = {
         inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
@@ -43,6 +45,7 @@ case class ABIUint[SIZE <: Int](value: BigInt, size: Int)
 object ABIUint {
   inline given [SIZE <: Int]: ConvertFromScala[Int, ABIUint[SIZE]] =
     new ConvertFromScala[Int, ABIUint[SIZE]] {
+      def staticSize: Int = 32
       def length: Int = {
         inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
@@ -55,11 +58,14 @@ object ABIUint {
 
   inline given [SIZE <: Int]: ABIPack[ABIUint[SIZE]] =
     new ABIPack[ABIUint[SIZE]] {
+      def staticSize: Int = 32
+
       def length: Int = {
         inline val size: Int = constValue[SIZE]
         SizeValidator.validateSize(size, Some(1), Some(256), Some(8))
         size
       }
+      def typeName: String = s"uint${length}"
       def dynamic: Boolean = false
 
       def pack(i: ABIUint[SIZE]): Array[Byte] =

@@ -9,7 +9,9 @@ trait ABIPack[T] {
   def dynamic: Boolean
 
   // 静态部分字节数, 出了静态数组和tuple， 绝大部分都是32
-  def length: Int
+  def staticSize: Int
+
+  def typeName: String
 
   // 创建时确保正确， 此处不返回错误
   def pack(t: T): Array[Byte]
@@ -59,17 +61,18 @@ object ABIPack {
 
   inline given [T <: Tuple]: ABIPack[T] = new ABIPack[T] {
     val packs = SummonUtils.summonAll[ABIPack, T]
+    def typeName:String = "(" + packs.map(_.typeName).mkString(",") + ")"
 
     def dynamic: Boolean = !packs.forall(!_.dynamic)
 
     // 静态部分字节数
-    def length: Int = if (dynamic) 32 else packs.map(_.length).sum
+    def staticSize: Int = if (dynamic) 32 else packs.map(_.staticSize).sum
 
     def pack(t: T): Array[Byte] = {
       val staticPart = Array.emptyByteArray
       val dynamicPart = Array.emptyByteArray
       // 动态部分开始位置
-      val dynamicOffset = packs.map(_.length).sum
+      val dynamicOffset = packs.map(_.staticSize).sum
 
       val elems = packs.zip(t.toArray.toVector).map { case (p, i) =>
         p.pack(i)
@@ -103,11 +106,11 @@ object ABIPack {
       )((acc, item) => {
         if (!item.dynamic) {
           val data =
-            item.unpack(bytes.slice(acc._2, acc._2 + item.length))
+            item.unpack(bytes.slice(acc._2, acc._2 + item.staticSize))
           (
             acc._1.appended(data),
             // 对齐到32字节
-            acc._2 + alignLength(item.length)
+            acc._2 + alignLength(item.staticSize)
           )
         } else {
           val dynamicOffset = BigInt(bytes.slice(acc._2, acc._2 + 32)).toInt

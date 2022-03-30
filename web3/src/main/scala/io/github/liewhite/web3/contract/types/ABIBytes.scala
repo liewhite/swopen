@@ -23,11 +23,17 @@ object ABIStaticBytes {
 
   inline given [SIZE <: Int]: ABIPack[ABIStaticBytes[SIZE]] =
     new ABIPack[ABIStaticBytes[SIZE]] {
+
+      // 0<=size<=32
+      def staticSize: Int = 32
+
       def length: Int = {
         inline val size: Int = constValue[SIZE]
-        SizeValidator.validateSize(size, Some(1), None, None)
+        SizeValidator.validateSize(size, None, None, None)
         size
       }
+
+      def typeName: String = s"byte[${length}]"
 
       def dynamic: Boolean = false
 
@@ -64,11 +70,13 @@ object ABIDynamicBytes {
 
   inline given ABIPack[ABIDynamicBytes] = {
     new ABIPack[ABIDynamicBytes] {
+      def staticSize: Int = 32
+      def typeName: String = s"bytes"
       def dynamic: Boolean = true
-      def length: Int = 32
+
       def pack(i: ABIDynamicBytes): Array[Byte] = {
         val lengthBytes = ABIPack.alignTo32(BigInt(i.value.length).toByteArray, "left")
-        ABIPack.alignBytes(lengthBytes ++ i.value)
+        ABIPack.alignBytes(lengthBytes ++ ABIPack.alignBytes(i.value))
       }
 
       def unpack(

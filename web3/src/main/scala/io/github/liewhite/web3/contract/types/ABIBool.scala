@@ -16,7 +16,8 @@ object ABIBool {
   }
 
   given ABIPack[ABIBool] with {
-    def length: Int = 32
+    def staticSize: Int = 32
+    def typeName: String = s"bool"
     def dynamic: Boolean = false
     def pack(a: ABIBool): Array[Byte] = {
       if(a.value) {
