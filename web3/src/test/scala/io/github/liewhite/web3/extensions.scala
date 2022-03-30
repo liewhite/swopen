@@ -6,9 +6,9 @@ import io.github.liewhite.web3.Extensions.*
 class ABIPackTest extends AnyFunSuite {
   test("convert bytes to hex") {
     assert{
-        val hex = "ffff"
+        val hex = "0xffff"
         val bytes = hex.toBytes.toOption.get
-        bytes.toHex.toOption.get == hex
+        bytes.toHex().toOption.get == hex
         
     }
 }}
