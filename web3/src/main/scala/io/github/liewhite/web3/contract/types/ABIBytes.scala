@@ -16,8 +16,9 @@ object ABIStaticBytes {
         SizeValidator.validateSize(size, Some(0), Some(32))
         size
       }
-      def fromScala(s: Array[Byte]): Either[Exception, ABIStaticBytes[SIZE]] =
+      def fromScala(s: Array[Byte]): Either[Exception, ABIStaticBytes[SIZE]] = {
         Right(ABIStaticBytes(s, length))
+      }
     }
 
   inline given [SIZE <: Int]: ABIPack[ABIStaticBytes[SIZE]] =
@@ -53,16 +54,18 @@ object ABIStaticBytes {
 case class ABIDynamicBytes(value: Array[Byte])
 
 object ABIDynamicBytes {
-  inline given ConvertFromScala[Array[Byte], ABIDynamicBytes] =
+  inline given ConvertFromScala[Array[Byte], ABIDynamicBytes] = {
     new ConvertFromScala[Array[Byte], ABIDynamicBytes] {
       def fromScala(s: Array[Byte]): Either[Exception, ABIDynamicBytes] = Right(
         ABIDynamicBytes(s)
       )
     }
+  }
 
-  inline given ABIPack[ABIDynamicBytes] =
+  inline given ABIPack[ABIDynamicBytes] = {
     new ABIPack[ABIDynamicBytes] {
       def dynamic: Boolean = true
+      def length: Int = 32
       def pack(i: ABIDynamicBytes): Array[Byte] = {
         val lengthBytes = ABIPack.alignTo32(BigInt(i.value.length).toByteArray, "left")
         ABIPack.alignBytes(lengthBytes ++ i.value)
@@ -93,4 +96,6 @@ object ABIDynamicBytes {
         }
       }
     }
+
+  }
 }

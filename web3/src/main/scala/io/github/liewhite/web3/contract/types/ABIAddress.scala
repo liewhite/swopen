@@ -19,6 +19,7 @@ object ABIAddress {
     }
   }
   given ABIPack[ABIAddress] with {
+    def length: Int = 32
     def dynamic: Boolean = false
     def pack(a: ABIAddress): Array[Byte] = {
       a.value.bytes

@@ -25,6 +25,42 @@ object ABIStaticArray {
         result.map(ABIStaticArray(_, length))
       }
     }
+
+  
+  inline given [V, SIZE <: Int](using vpack: ABIPack[V]): ABIPack[ABIStaticArray[V,SIZE]] =
+    new ABIPack[ABIStaticArray[V,SIZE]] {
+      def length: Int = {
+        inline val size: Int = constValue[SIZE]
+        SizeValidator.validateSize(size, None, None, None)
+        size
+      }
+
+      // depends on if elem is static
+      def dynamic: Boolean = vpack.dynamic
+
+      // if elems is static, just pack in place, otherwise 
+      // pack elements and concat
+      def pack(i: ABIStaticArray[V,SIZE]): Array[Byte] = {
+        val elems = i.value.map(vpack.pack(_))
+        // ABIPack.alignTo32(i.value,"right")
+        ???
+      }
+
+      def unpack(
+          bytes: Array[Byte]
+      ): Either[Exception, ABIStaticArray[V,SIZE]] = {
+        // if (bytes.length < length) {
+        //   Left(
+        //     Exception(
+        //       s"bytes length not enough, expect ${length}, got ${bytes.length}"
+        //     )
+        //   )
+        // } else {
+        //   Right(ABIStaticBytes[SIZE](bytes.slice(0,length), length))
+        // }
+        ???
+      }
+    }
 }
 
 case class ABIDynamicArray[T](value: Vector[T]) {}

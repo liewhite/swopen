@@ -151,4 +151,41 @@ class ABIPackTest extends AnyFunSuite {
       result.toOption.get.value.sameElements(target)
     }
   }
+
+  test("pack static tuple") {
+    assert {
+      val data = ABIInt[32](123,32) *: ABIBool(true) *: EmptyTuple
+      val bytes = summon[ABIPack[(ABIInt[32], ABIBool)]].pack(data)
+      println(Hex.encodeHex(bytes).mkString)
+      Hex.encodeHex(bytes).mkString == "000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000001"
+    }
+  }
+  test("unpack static tuple") {
+    assert {
+      val data = "000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000001"
+      val bytes = Hex.decodeHex(data)
+      val o = summon[ABIPack[(ABIInt[32], ABIBool)]].unpack(bytes)
+      val v1 = o.toOption.get._1
+      val v2 = o.toOption.get._2
+      println(v1)
+      println(v2)
+      v1.value == 123&& v2.value == true
+    }
+  }
+  test("pack dynamic tuple") {
+    assert {
+      val data = ABIString("asd") *: ABIBool(true) *: EmptyTuple
+      val bytes = summon[ABIPack[(ABIString, ABIBool)]].pack(data)
+      println(Hex.encodeHex(bytes).mkString)
+      Hex.encodeHex(bytes).mkString == "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000036173640000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+
+  test("unpack dynamic tuple") {
+    assert {
+      val data = Hex.decodeHex("0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000036173640000000000000000000000000000000000000000000000000000000000")
+      val decoded = summon[ABIPack[(ABIString, ABIBool)]].unpack(data)
+      decoded.toOption.get._1.value == "asd" && decoded.toOption.get._2.value == true
+    }
+  }
 }

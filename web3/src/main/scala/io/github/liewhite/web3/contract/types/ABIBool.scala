@@ -16,6 +16,7 @@ object ABIBool {
   }
 
   given ABIPack[ABIBool] with {
+    def length: Int = 32
     def dynamic: Boolean = false
     def pack(a: ABIBool): Array[Byte] = {
       if(a.value) {
@@ -27,7 +28,7 @@ object ABIBool {
 
     def unpack(bytes: Array[Byte]): Either[Exception, ABIBool] = {
       val v = BigInt(bytes) 
-      if(v == 1) {
+      if(v.toInt == 1) {
         Right(ABIBool(true))
       }else{
         Right(ABIBool(false))
