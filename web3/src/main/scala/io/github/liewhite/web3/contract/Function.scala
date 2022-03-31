@@ -30,6 +30,7 @@ class ABIFunction[IN, OUT](
     val fsignature = name + inPack.typeName
     org.web3j.crypto.Hash.sha3(fsignature.getBytes).slice(0, 4)
   }
+  override def toString: String = functionSignature
 
   def packInput[T](args: T)(using converter: ConvertFromScala[T, IN]): Array[Byte] = {
     inPack.pack(converter.fromScala(args).toOption.get)
