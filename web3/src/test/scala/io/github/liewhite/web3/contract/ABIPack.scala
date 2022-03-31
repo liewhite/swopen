@@ -13,6 +13,7 @@ import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.contract.types.*
 import io.github.liewhite.web3.common.ConvertFromScala
+import io.github.liewhite.web3.Extensions.*
 
 
 class ABIPackTest extends AnyFunSuite {
@@ -79,8 +80,16 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack address") {
     assert {
       val addrHex = "0x000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
-      val bytes = Hex.decodeHex(addrHex.substring(2))
-      val result = summon[ABIPack[ABIAddress]].unpack(bytes)
+      val bytes = addrHex.toBytes.toOption.get
+      val result = summon[ABIPack[ABIAddress]].unpack(ABIPack.alignTo32(bytes,"left"))
+      result.toOption.get.value.toString == addrHex
+    }
+  }
+  test("unpack address with zero prefix") {
+    assert {
+      val addrHex = "0x000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
+      val bytes = addrHex.toBytes.toOption.get
+      val result = summon[ABIPack[ABIAddress]].unpack(ABIPack.alignTo32(bytes,"left"))
       result.toOption.get.value.toString == addrHex
     }
   }

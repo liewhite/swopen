@@ -27,7 +27,14 @@ object ABIAddress {
       a.value.bytes
     }
     def unpack(bytes: Array[Byte]): Either[Exception, ABIAddress] = {
-      BytesType.fromBytes[Address](bytes).map(ABIAddress(_))
+      if(bytes.length != 32) {
+        return Left(Exception("address in abi encoding must be 32 bytes, got" + bytes.length))
+      }
+      if(BigInt(bytes.slice(0,12)) != 0) {
+        return Left(Exception("address in abi encoding must start with 12 zero bytes"))
+      }
+
+      BytesType.fromBytes[Address](bytes.slice(12,32)).map(ABIAddress(_))
     }
   }
 }

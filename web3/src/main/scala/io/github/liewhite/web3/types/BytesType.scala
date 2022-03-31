@@ -19,6 +19,8 @@ object BytesType {
       bytes: Array[Byte]
   )(using factory: BytesType[T]): Either[Exception, T] = {
     if (factory.length.isDefined && bytes.length != factory.length.get) {
+      println(factory.length.get)
+      println(bytes.length)
       Left(Exception(s"bytes length must be ${factory.length.get}, got: ${bytes.length}"))
     } else {
       Right(factory.create(bytes))
