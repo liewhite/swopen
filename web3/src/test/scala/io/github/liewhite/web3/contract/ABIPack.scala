@@ -69,11 +69,11 @@ class ABIPackTest extends AnyFunSuite {
 
   test("pack address") {
    assert {
-      val addrHex = "0x000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
+      val addrHex = "000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
       val addr = ABIAddress(BytesType.fromString[Address](addrHex).toOption.get)
       val result = summon[ABIPack[ABIAddress]].pack(addr)
       val resultHex = Hex.encodeHex(result).mkString
-      resultHex == addrHex.substring(2)
+      resultHex.slice(24,64) == addrHex
     }
   }
 
