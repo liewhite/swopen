@@ -24,7 +24,7 @@ object ABIAddress {
     def typeName: String = s"address"
     def dynamic: Boolean = false
     def pack(a: ABIAddress): Array[Byte] = {
-      a.value.bytes
+      ABIPack.alignTo32(a.value.bytes,"left")
     }
     def unpack(bytes: Array[Byte]): Either[Exception, ABIAddress] = {
       if(bytes.length != 32) {
