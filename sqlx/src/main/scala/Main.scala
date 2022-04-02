@@ -1,16 +1,12 @@
 package main
 import scala.compiletime.*
 import io.github.liewhite.sqlx.*
-import io.github.liewhite.sqlx.annotation.{Unique, Index, ColumnName}
+import io.github.liewhite.sqlx.annotation.{Unique, Index}
 import scala.jdk.CollectionConverters.*
 import javax.sql.DataSource
 import io.getquill.*
 import com.zaxxer.hikari.HikariDataSource
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
-import java.util.Date
-import java.time.ZoneId
-import java.math.BigInteger
 import io.github.liewhite.sqlx.annotation.Length
 
 case class B(
@@ -20,35 +16,18 @@ case class B(
     //
     @Index("i_aa_bb")
     @Index("i_bb")
-    @ColumnName("bb")
     Bb: Option[Int],
     //
     @Index("i_aa_bb")
     @Index("i_aa", unique = true)
-    @ColumnName("aa")
     Aa: Int = 1123, // index 要求顺序， 但是默认值
     d: Int = 1123 // index 要求顺序， 但是默认值
 )
 
-case class C(
-    // @Unique()
-    // @Index("aa", unique=true)
-    a: Int = 1,
-    // @Unique()
-    @Index("bde")
-    // @Index("bdeu", unique=true)
-    @Length(33)
-    b: String,
-    // @Index("bde")
-    @Index("bdeu", unique=true)
-    d: BigInt = BigInt(123),
-    @Index("bde")
-    @Index("bdeu", unique=true)
-    e: Option[Boolean],
-    // @Index("f_unique", unique=true)
-    // @Unique()
-    // @Index("f_normal")
-    f: Option[String]
+case class F(
+  Dt : Option[ZonedDateTime],
+  Value: Option[BigInt],
+  Address: Array[Byte],
 )
 
 @main def main: Unit = {
@@ -68,11 +47,14 @@ case class C(
   //   )
   // )
   import ctx._
-  ctx.migrate[C]
+  ctx.migrate[F]
 
-  // inline def newc(i: Int) =
-  //   query[C].insertValue(lift(C(i, "asd", i, true, Some(i))))
+  inline def newc = query[F].insertValue(lift(F(Some(ZonedDateTime.now), Some(BigInt(123)), "1111".getBytes)))
   // Range(0, 1000).foreach(i => {
-  //   run(newc(i))
+  run(newc)
+  val rows = run(query[F].filter(item => true))
+  rows.foreach(item => {
+    println(item)
+  })
   // })
 }

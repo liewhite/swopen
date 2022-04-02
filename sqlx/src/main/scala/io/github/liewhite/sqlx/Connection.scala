@@ -30,6 +30,7 @@ case class DBConfig(
 class QuillMysqlContext(dataSource: HikariDataSource)
     extends MysqlJdbcContext(SnakeCase, dataSource)
     with RawCodecs[MySQLDialect, SnakeCase.type]
+    // migrator可以针对不同driver提供， 现在先用同一份
     with Migrator[MySQLDialect, SnakeCase.type] {}
 
 class QuillPostgresContext(dataSource: HikariDataSource)

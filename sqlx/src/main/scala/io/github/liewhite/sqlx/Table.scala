@@ -49,17 +49,18 @@ object Table {
     val columnTypes = summonAll[TField, gen.MirroredElemTypes]
     // snack case
     val tName = toSnakeCase(labelling.label)
-    val fieldNames = labelling.elemLabels.toVector
-    val renames =
-      columnName().map(item => if (item.isEmpty) None else Some(item(0).name))
-    val names = renames.zipWithIndex.map {
-      case (rename, index) => {
-        rename match {
-          case Some(v) => v
-          case None    => fieldNames(index)
-        }
-      }
-    }
+    val fieldNames = labelling.elemLabels.toVector.map(toSnakeCase(_))
+    val names = fieldNames
+    // val renames =
+    //   columnName().map(item => if (item.isEmpty) None else Some(item(0).name))
+    // val names = renames.zipWithIndex.map {
+    //   case (rename, index) => {
+    //     rename match {
+    //       case Some(v) => v
+    //       case None    => fieldNames(index)
+    //     }
+    //   }
+    // }
     val primaries = primaryKey().map(item => if (item.isEmpty) false else true)
     val uniques = unique().map(item => if (item.isEmpty) false else true)
 

@@ -58,6 +58,13 @@ object TField {
   given TField[Long] with {
     def dataType: DataType[_] = SQLDataType.BIGINT
   }
+  given TField[Float] with {
+    def dataType: DataType[_] = SQLDataType.FLOAT
+  }
+
+  given TField[Double] with {
+    def dataType: DataType[_] = SQLDataType.DOUBLE
+  }
 
   given TField[String] with {
     def dataType: DataType[_] = SQLDataType.VARCHAR(255)
@@ -66,13 +73,18 @@ object TField {
   given TField[Boolean] with {
     def dataType: DataType[_] = SQLDataType.BOOLEAN
   }
+
   given TField[BigInt] with {
-    def dataType: DataType[_] = SQLDataType.NUMERIC
+    def dataType: DataType[_] = SQLDataType.DECIMAL_INTEGER(65)
   }
+
   given TField[ZonedDateTime] with {
-    def dataType: DataType[_] = SQLDataType.TIMESTAMPWITHTIMEZONE
+    def dataType: DataType[_] = SQLDataType.BIGINT
   }
   given TField[Date] with {
-    def dataType: DataType[_] = SQLDataType.TIMESTAMP
+    def dataType: DataType[_] = SQLDataType.BIGINT
+  }
+  given TField[Array[Byte]] with {
+    def dataType: DataType[_] = SQLDataType.BLOB
   }
 }
