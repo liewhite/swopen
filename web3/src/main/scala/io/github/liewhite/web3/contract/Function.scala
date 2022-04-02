@@ -35,6 +35,7 @@ class ABIFunction[IN, OUT](
   def packInput[T](args: T)(using converter: ConvertFromScala[T, IN]): Array[Byte] = {
     inPack.pack(converter.fromScala(args).toOption.get)
   }
+
   def unpackInput(args: Array[Byte]): Either[Exception,IN]  = {
     inPack.unpack(args)
   }

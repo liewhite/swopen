@@ -1,4 +1,4 @@
-package io.github.liewhite.sql.annotation
+package io.github.liewhite.sqlx.annotation
 
 // name in db
 case class ColumnName(name:String) extends scala.annotation.StaticAnnotation
@@ -11,3 +11,4 @@ case class Index(name:String, unique:Boolean = false, priority:Int=0) extends sc
 
 // unique constraint
 case class Unique() extends scala.annotation.StaticAnnotation
+case class Length(l: Int) extends scala.annotation.StaticAnnotation

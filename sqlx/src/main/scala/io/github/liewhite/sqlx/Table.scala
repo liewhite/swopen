@@ -1,4 +1,4 @@
-package io.github.liewhite.sql
+package io.github.liewhite.sqlx
 
 import scala.compiletime.*
 import scala.quoted.*
@@ -7,11 +7,16 @@ import scala.deriving.Mirror
 import shapeless3.deriving.{K0, Continue, Labelling}
 import io.github.liewhite.common.SummonUtils.summonAll
 import io.github.liewhite.common.{RepeatableAnnotation, RepeatableAnnotations}
-import io.github.liewhite.sql.annotation
-import io.github.liewhite.json.typeclass.DefaultValue
+import io.github.liewhite.sqlx.annotation
+import io.github.liewhite.common.DefaultValue
 import org.jooq
 
-case class Index(name: String, cols: Vector[String], unique: Boolean)
+case class Index(name: String, cols: Vector[String], unique: Boolean) {
+  def indexName: String = {
+    val prefix = if(unique)"ui:" else "i:"
+    prefix + cols.mkString("-")
+  }
+}
 
 // migrate时， 先拿到meta，
 // 然后将diff apply 到db
@@ -23,10 +28,6 @@ trait Table[T] extends Selectable {
   def columns: Vector[Field[_]]
   def columnsMap: Map[String, Field[_]] =
     columns.map(item => (item.fieldName, item)).toMap
-
-  def table(using conn: Connection): jooq.Table[_] = {
-      conn.metaCache.getTables(tableName).get(0)
-  }
   
   def selectDynamic(name: String): Any = {
     columnsMap(name)
@@ -34,12 +35,6 @@ trait Table[T] extends Selectable {
 }
 
 object Table {
-  given (using conn: Connection) : Conversion[Table[_], jooq.Table[_]] with {
-    def apply(t: Table[_]): jooq.Table[_] = {
-      conn.metaCache.getTables(t.tableName).get(0)
-    }
-
-  }
   inline given derived[A](using
       gen: Mirror.ProductOf[A],
       labelling: Labelling[A],
@@ -47,17 +42,13 @@ object Table {
       columnName: RepeatableAnnotations[annotation.ColumnName, A],
       index: RepeatableAnnotations[annotation.Index, A],
       unique: RepeatableAnnotations[annotation.Unique, A],
+      length: RepeatableAnnotations[annotation.Length, A],
       defaultValue: DefaultValue[A]
   ): Table[A] = {
     val defaults = defaultValue.defaults
     val columnTypes = summonAll[TField, gen.MirroredElemTypes]
     // snack case
-    val tName = "[A-Z\\d]".r.replaceAllIn(
-      labelling.label,
-      { m =>
-        "_" + m.group(0).toLowerCase()
-      }
-    )
+    val tName = toSnakeCase(labelling.label)
     val fieldNames = labelling.elemLabels.toVector
     val renames =
       columnName().map(item => if (item.isEmpty) None else Some(item(0).name))
@@ -71,6 +62,8 @@ object Table {
     }
     val primaries = primaryKey().map(item => if (item.isEmpty) false else true)
     val uniques = unique().map(item => if (item.isEmpty) false else true)
+
+    val len = length().map(item => if (item.isEmpty) None else Some(item(0).l))
 
     val idxes = index().zipWithIndex
       .filter(!_._1.isEmpty)
@@ -98,8 +91,9 @@ object Table {
         val tp = columnTypes(index)
         val unique = uniques(index)
         val default = defaults.get(fieldNames(index))
+        val typeLen = len(index)
 
-        Field(tName, name, names(index), unique, default, tp)
+        Field(tName, name, names(index), unique, default,typeLen, tp)
       }
     }
 
@@ -152,4 +146,16 @@ object Table {
       case e => report.error(e.show); ???
     }
   }
+  def toSnakeCase(s: String) =
+    (s.toList match {
+      case c :: tail => c.toLower +: snakeCase(tail)
+      case Nil       => Nil
+    }).mkString
+
+  def snakeCase(s: List[Char]): List[Char] =
+    s match {
+      case c :: tail if c.isUpper => List('_', c.toLower) ++ snakeCase(tail)
+      case c :: tail              => c +: snakeCase(tail)
+      case Nil                    => Nil
+    }
 }

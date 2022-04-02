@@ -1,4 +1,4 @@
-package io.github.liewhite.json.typeclass
+package io.github.liewhite.common
 
 import scala.compiletime.*
 import scala.quoted.*
