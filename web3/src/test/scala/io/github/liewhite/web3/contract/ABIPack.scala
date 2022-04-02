@@ -36,6 +36,23 @@ class ABIPackTest extends AnyFunSuite {
       val result = summon[ABIPack[ABIIntN[8]]].pack(i)
       result.toHex().toOption.get == "0x000000000000000000000000000000000000000000000000000000000000006f"
     }
+    assert{
+      val i =  ABIInt(BigInt(111))
+      val result = summon[ABIPack[ABIInt]].pack(i)
+      result.toHex().toOption.get == "0x000000000000000000000000000000000000000000000000000000000000006f"
+    }
+  }
+  test("pack neg int") {
+    assert {
+      val i =  ABIIntN[32](BigInt(-1),32)
+      val result = summon[ABIPack[ABIIntN[32]]].pack(i)
+      result.toHex().toOption.get == "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    }
+    assert {
+      val i =  ABIInt(BigInt(-1))
+      val result = summon[ABIPack[ABIInt]].pack(i)
+      result.toHex().toOption.get == "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    }
   }
 
   test("unpack int") {
@@ -44,6 +61,81 @@ class ABIPackTest extends AnyFunSuite {
       val bytes = hexStr.toBytes.toOption.get
       val result = summon[ABIPack[ABIIntN[8]]].unpack(bytes)
       result.toOption.get.value == BigInt(2)
+    }
+    assert {
+      val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIInt]].unpack(bytes)
+      result.toOption.get.value == BigInt(2)
+    }
+  }
+  test("unpack neg int") {
+    assert {
+      val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIIntN[8]]].unpack(bytes)
+      result.toOption.get.value == BigInt(-1)
+    }
+    assert {
+      val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIInt]].unpack(bytes)
+      result.toOption.get.value == BigInt(-1)
+    }
+  }
+
+  test("pack uint") {
+    assert {
+      val i =  ABIUintN[8](BigInt(111),8)
+      val result = summon[ABIPack[ABIUintN[8]]].pack(i)
+      result.toHex().toOption.get == "0x000000000000000000000000000000000000000000000000000000000000006f"
+    }
+    assert{
+      val i =  ABIUint(BigInt(111))
+      val result = summon[ABIPack[ABIUint]].pack(i)
+      result.toHex().toOption.get == "0x000000000000000000000000000000000000000000000000000000000000006f"
+    }
+  }
+  test("pack neg uint") {
+    assertThrows[Exception] {
+      val i =  ABIUintN[32](BigInt(-1),32)
+      val result = summon[ABIPack[ABIUintN[32]]].pack(i)
+      val hex = result.toHex().toOption.get
+      hex == "0x00000000000000000000000000000000000000000000000000000000000000ff"
+    }
+    assertThrows[Exception] {
+      val i =  ABIUint(BigInt(-1))
+      val result = summon[ABIPack[ABIUint]].pack(i)
+      result.toHex().toOption.get == "0x00000000000000000000000000000000000000000000000000000000000000ff"
+    }
+  }
+
+  test("unpack uint") {
+    assert {
+      val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIUintN[8]]].unpack(bytes)
+      result.toOption.get.value == BigInt(2)
+    }
+    assert {
+      val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIUint]].unpack(bytes)
+      result.toOption.get.value == BigInt(2)
+    }
+  }
+  test("unpack neg uint") {
+    assert {
+      val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIUintN[32]]].unpack(bytes)
+      result.isLeft
+    }
+    assert {
+      val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      val bytes = hexStr.toBytes.toOption.get
+      val result = summon[ABIPack[ABIUint]].unpack(bytes)
+      result.isLeft
     }
   }
 

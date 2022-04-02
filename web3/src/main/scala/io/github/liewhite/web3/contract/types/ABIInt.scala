@@ -65,11 +65,18 @@ object ABIUint {
       def dynamic: Boolean = false
 
       def pack(i: ABIUint): Array[Byte] =
+        if(i.value < 0 ) {
+          throw Exception("negative uint: " + i.value)
+        }
         padUint(i.value)
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIUint] = {
         val i = BigInt(bytes)
-        Right(ABIUint(i))
+        if (i < 0) {
+          Left(Exception("negative uint: " + i))
+        } else {
+          Right(ABIUint(i))
+        }
       }
     }
 }

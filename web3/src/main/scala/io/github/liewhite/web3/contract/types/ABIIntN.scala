@@ -8,7 +8,8 @@ import io.github.liewhite.web3.contract.ABIPack
 case class ABIIntN[SIZE <: Int](value: BigInt, size: Int)
 
 object ABIIntN {
-  inline given IntNConverter[SIZE <: Int]: ConvertFromScala[Int, ABIIntN[SIZE]] =
+  inline given IntNConverter[SIZE <: Int]
+      : ConvertFromScala[Int, ABIIntN[SIZE]] =
     new ConvertFromScala[Int, ABIIntN[SIZE]] {
       def length: Int = {
         inline val size: Int = constValue[SIZE]
@@ -55,7 +56,8 @@ object ABIIntN {
 case class ABIUintN[SIZE <: Int](value: BigInt, size: Int)
 
 object ABIUintN {
-  inline given UintNConverter[SIZE <: Int]: ConvertFromScala[Int, ABIUintN[SIZE]] =
+  inline given UintNConverter[SIZE <: Int]
+      : ConvertFromScala[Int, ABIUintN[SIZE]] =
     new ConvertFromScala[Int, ABIUintN[SIZE]] {
       def staticSize: Int = 32
       def length: Int = {
@@ -93,11 +95,18 @@ object ABIUintN {
       def dynamic: Boolean = false
 
       def pack(i: ABIUintN[SIZE]): Array[Byte] =
+        if (i.value < 0) {
+          throw Exception("negative uint: " + i.value)
+        }
         padUint(i.value)
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIUintN[SIZE]] = {
         val i = BigInt(bytes)
-        Right(ABIUintN[SIZE](i, length))
+        if (i < 0) {
+          Left(Exception("negative uint: " + i))
+        } else {
+          Right(ABIUintN[SIZE](i, length))
+        }
       }
     }
 }

@@ -15,7 +15,7 @@ def alignLength(length: Int, align: Int = 32): Int = {
 // pading 0 at left to 32 bytes
 def padUint(i: BigInt): Array[Byte] = {
   val bytes = i.toByteArray
-  new Array[Byte](32 - bytes.length) ++ bytes
+  Array.fill(32 - bytes.length)(0.toByte) ++ bytes
 }
 
 def padLeftZero(bytes: Array[Byte]):Array[Byte] = {
