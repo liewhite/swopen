@@ -1,6 +1,6 @@
 package io.github.liewhite.web3.contract.types
 
-import io.github.liewhite.web3.common.ConvertFromScala
+import io.github.liewhite.web3.common.*
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
 import io.github.liewhite.web3.contract.SizeValidator
@@ -51,13 +51,12 @@ object ABIStaticArray {
           elems.reduce(_ ++ _)
         } else {
           val staticSize = count * 32
-          val dynamicStartOffset = staticSize
           // static acc, dynamic acc
           val result = elems.foldLeft(
             (Array.emptyByteArray, Array.emptyByteArray, staticSize)
           )((acc, item) => {
             (
-              acc._1 ++ ABIPack.alignTo32(BigInt(acc._3).toByteArray, "left"),
+              acc._1 ++ padUint(BigInt(acc._3)),
               acc._2 ++ item,
               acc._3 + item.length
             )
@@ -121,7 +120,7 @@ object ABIDynamicArray {
       def pack(i: ABIDynamicArray[V]): Array[Byte] = {
         val count = i.value.length
 
-        val countBytes = ABIPack.alignTo32(BigInt(count).toByteArray, "left")
+        val countBytes = padUint(BigInt(count))
         val elemDynamic = vpack.dynamic
 
         val elems = i.value.map(vpack.pack(_))
@@ -136,7 +135,7 @@ object ABIDynamicArray {
             (Array.emptyByteArray, Array.emptyByteArray, bodySize)
           )((acc, item) => {
             (
-              acc._1 ++ ABIPack.alignTo32(BigInt(acc._3).toByteArray, "left"),
+              acc._1 ++ padUint(BigInt(acc._3)),
               acc._2 ++ item,
               acc._3 + item.length
             )

@@ -1,26 +1,13 @@
 package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.types.Address
-import io.github.liewhite.web3.common.ConvertFromScala
+import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
 
 case class ABIString(value: String)
 
 object ABIString {
-  def encodeToABIFormat(bytes: Array[Byte]): Array[Byte] = {
-    def iter(acc: Array[Byte], rest: Array[Byte]): Array[Byte] = {
-      val len = rest.length
-      if (len == 0) {
-        acc
-      } else if (len < 32) {
-        acc ++ ABIPack.alignTo32(rest, "right")
-      } else {
-        iter(acc ++ rest.slice(0, 32), rest.slice(32, len))
-      }
-    }
-    iter(Array.emptyByteArray, bytes)
-  }
 
   given ConvertFromScala[String, ABIString] with {
     def fromScala(s: String): Either[Exception, ABIString] = Right(ABIString(s))
@@ -34,8 +21,8 @@ object ABIString {
     def pack(a: ABIString): Array[Byte] = {
       val bytes = a.value.getBytes
       val length = bytes.length
-      val lengthBytes = ABIPack.alignTo32(BigInt(length).toByteArray, "left")
-      val body = encodeToABIFormat(a.value.getBytes)
+      val lengthBytes = padUint(BigInt(length))
+      val body = padString(a.value)
       lengthBytes ++ body
     }
 

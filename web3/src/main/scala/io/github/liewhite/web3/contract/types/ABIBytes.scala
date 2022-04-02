@@ -1,6 +1,6 @@
 package io.github.liewhite.web3.contract.types
 
-import io.github.liewhite.web3.common.ConvertFromScala
+import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.contract.SizeValidator
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
@@ -38,7 +38,7 @@ object ABIStaticBytes {
       def dynamic: Boolean = false
 
       def pack(i: ABIStaticBytes[SIZE]): Array[Byte] = {
-        ABIPack.alignTo32(i.value,"right")
+        padBytes(i.value)
       }
 
       def unpack(
@@ -75,8 +75,8 @@ object ABIDynamicBytes {
       def dynamic: Boolean = true
 
       def pack(i: ABIDynamicBytes): Array[Byte] = {
-        val lengthBytes = ABIPack.alignTo32(BigInt(i.value.length).toByteArray, "left")
-        ABIPack.alignBytes(lengthBytes ++ ABIPack.alignBytes(i.value))
+        val lengthBytes = padUint(BigInt(i.value.length))
+        lengthBytes ++ padBytes(i.value)
       }
 
       def unpack(

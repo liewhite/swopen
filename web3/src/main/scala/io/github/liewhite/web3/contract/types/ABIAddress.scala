@@ -1,7 +1,7 @@
 package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.types.Address
-import io.github.liewhite.web3.common.ConvertFromScala
+import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
 
@@ -24,7 +24,7 @@ object ABIAddress {
     def typeName: String = s"address"
     def dynamic: Boolean = false
     def pack(a: ABIAddress): Array[Byte] = {
-      ABIPack.alignTo32(a.value.bytes,"left")
+      padAddress(a)
     }
     def unpack(bytes: Array[Byte]): Either[Exception, ABIAddress] = {
       if(bytes.length != 32) {

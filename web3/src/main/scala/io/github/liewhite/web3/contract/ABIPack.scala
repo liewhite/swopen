@@ -1,7 +1,7 @@
 package io.github.liewhite.web3.contract
 import scala.compiletime.constValue
 import io.github.liewhite.common.SummonUtils
-import io.github.liewhite.web3.common.unliftEither
+import io.github.liewhite.web3.common
 import scala.math
 
 trait ABIPack[T] {
@@ -21,44 +21,6 @@ trait ABIPack[T] {
 }
 
 object ABIPack {
-
-  def alignLength(
-      length: Int,
-      align: Int = 32
-  ): Int = {
-    if (length % align == 0) {
-      length
-    } else {
-      math.ceil(length.toDouble / align).toInt * align
-    }
-  }
-
-  def alignTo32(
-      bytes: Array[Byte],
-      direction: "left" | "right",
-      length: Int = 32
-  ): Array[Byte] = {
-    if (direction == "left") {
-      bytes.reverse.padTo(length, 0.toByte).reverse
-    } else {
-      bytes.padTo(length, 0.toByte)
-    }
-  }
-
-  def alignBytes(bytes: Array[Byte]): Array[Byte] = {
-    def iter(acc: Array[Byte], rest: Array[Byte]): Array[Byte] = {
-      val len = rest.length
-      if (len == 0) {
-        acc
-      } else if (len < 32) {
-        acc ++ ABIPack.alignTo32(rest, "right")
-      } else {
-        iter(acc ++ rest.slice(0, 32), rest.slice(32, len))
-      }
-    }
-    iter(Array.emptyByteArray, bytes)
-  }
-
   inline given [T <: Tuple]: ABIPack[T] = new ABIPack[T] {
     val packs = SummonUtils.summonAll[ABIPack, T]
     def typeName: String = "(" + packs.map(_.typeName).mkString(",") + ")"
@@ -85,8 +47,7 @@ object ABIPack {
             (acc._1 ++ item._2, acc._2, dynamicOffset)
           } else {
             // 动态类型在静态部分保留offset
-            val offsetBytes =
-              ABIPack.alignTo32(BigInt(acc._3).toByteArray, "left")
+            val offsetBytes = common.padUint(BigInt(acc._3))
             println("offset:" + acc._3)
             (
               acc._1 ++ offsetBytes,
@@ -111,7 +72,7 @@ object ABIPack {
           (
             acc._1.appended(data),
             // 对齐到32字节
-            acc._2 + alignLength(item.staticSize)
+            acc._2 + common.alignLength(item.staticSize)
           )
         } else {
           val dynamicOffset = BigInt(bytes.slice(acc._2, acc._2 + 32)).toInt
@@ -123,7 +84,7 @@ object ABIPack {
           )
         }
       })
-      val unlifted = unliftEither(result._1)
+      val unlifted = common.unliftEither(result._1)
       unlifted.map(item => {
         Tuple.fromArray(item.toArray).asInstanceOf[T]
       })
