@@ -114,21 +114,19 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
       }
     }
     def createTable(table: Table[_]) = {
+      if(table.columnsMap.contains("id")) {
+        throw Exception("custom id not allowed on :"+ table.tableName)
+      }
       // default and nullable
       val createStmt: CreateTableColumnStep = {
         val create = jooqConn.createTable(table.tableName)
-        val createWithID = if (!table.columnsMap.contains("id")) {
-          create.column("id", SQLDataType.INTEGER.identity(true))
-        } else {
-          create
-        }
+        val createWithID = create.column("id", SQLDataType.BIGINT.identity(true))
         table.columns.foldLeft(createWithID)((b, col) => {
           var datatype = col.getDataType
           var c = b.column(col.colName, datatype)
           c
         })
       }
-
       createStmt.primaryKey("id").execute
 
       // add unique constraint
@@ -140,6 +138,7 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
             .execute
         }
       })
+
       table.indexes.foreach(idx => {
         if (idx.unique) {
           jooqConn
@@ -163,7 +162,6 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
         } else {
           val datatype = col.getDataType
           jooqConn.alterTable(current).alter(col.colName).set(datatype).execute
-
           if (col.default.isDefined) {
             jooqConn
               .alterTable(current)

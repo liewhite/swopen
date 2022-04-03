@@ -25,31 +25,33 @@ case class B(
 )
 
 case class F(
-  Dt : Option[ZonedDateTime],
-  Value: Option[BigInt],
-  Address: Array[Byte],
+  @Unique
+  fId: Long,
+  a: BigInt,
+  b: String,
+  c: ZonedDateTime
 )
 
 @main def main: Unit = {
   val a = 1
-  // val ctx = getDBContext[MySQLDialect.type](DBConfig(
-  //     host = "localhost",
-  //     username = "sa",
-  //     password = Some("123"),
-  //     db = "test"
-  //   )
-  // )
-  val ctx = getDBContext[PostgresDialect.type](
-    DBConfig(
+  val ctx = getDBContext[MySQLDialect.type](DBConfig(
       host = "localhost",
-      username = "lee",
+      username = "sa",
+      password = Some("123"),
       db = "test"
     )
   )
+  // val ctx = getDBContext[PostgresDialect.type](
+  //   DBConfig(
+  //     host = "localhost",
+  //     username = "lee",
+  //     db = "test"
+  //   )
+  // )
   import ctx._
   ctx.migrate[F]
 
-  inline def newc = query[F].insertValue(lift(F(Some(ZonedDateTime.now), Some(BigInt(-123)), "1111".getBytes)))
+  inline def newc = query[F].insertValue(lift(F(123,BigInt(10), "str", ZonedDateTime.now)))
   // Range(0, 1000).foreach(i => {
   run(newc)
   val rows = run(query[F].filter(item => true))
