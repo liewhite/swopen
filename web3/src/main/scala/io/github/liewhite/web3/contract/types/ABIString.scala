@@ -22,7 +22,7 @@ object ABIString {
     def pack(a: ABIString): Array[Byte] = {
       val bytes = a.value.getBytes
       val length = bytes.length
-      val lengthBytes = BigInt(length).toUintByte32
+      val lengthBytes = BigInt(length).toUintByte32.get
       val body = padString(a.value)
       lengthBytes ++ body
     }

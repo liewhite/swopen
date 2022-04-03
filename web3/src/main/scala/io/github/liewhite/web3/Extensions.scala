@@ -44,26 +44,26 @@ object Extensions {
 
   // 32 bytes length
   extension (i: BigInt) {
-    def toUintByte32: Array[Byte] = {
+    def toUintByte32: Option[Array[Byte]] = {
       if(i < 0) {
-        throw Exception("negative for uint found: " + i)
+        return None
       }
       val rawBytes = i.toByteArray.dropWhile(_ == 0)
       if(rawBytes.length > 32) {
-        throw Exception("too long bytes for uint: " + rawBytes.length)
+        return None
       }
-      Array.fill(32 - rawBytes.length)(0.toByte) ++ rawBytes
+      Some(Array.fill(32 - rawBytes.length)(0.toByte) ++ rawBytes)
     }
 
-    def toIntByte32: Array[Byte] = {
+    def toIntByte32: Option[Array[Byte]] = {
       val rawBytes = i.toByteArray
       if(rawBytes.length > 32) {
-        throw Exception("too long bytes for int: " + rawBytes.length)
+        return None
       }
       val paddingByte = (if (i < 0) 0xff else 0).toByte
       val paddingLen = 32 - rawBytes.length
       val paddings = Array.fill(paddingLen)(paddingByte)
-      paddings ++ rawBytes
+      Some(paddings ++ rawBytes)
     }
   }
 }

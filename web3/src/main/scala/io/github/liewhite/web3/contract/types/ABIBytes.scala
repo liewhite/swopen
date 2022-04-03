@@ -76,7 +76,7 @@ object ABIDynamicBytes {
       def dynamic: Boolean = true
 
       def pack(i: ABIDynamicBytes): Array[Byte] = {
-        val lengthBytes = BigInt(i.value.length).toUintByte32
+        val lengthBytes = BigInt(i.value.length).toUintByte32.get
         lengthBytes ++ padBytes(i.value)
       }
 

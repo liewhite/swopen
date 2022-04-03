@@ -57,7 +57,7 @@ object ABIStaticArray {
             (Array.emptyByteArray, Array.emptyByteArray, staticSize)
           )((acc, item) => {
             (
-              acc._1 ++ BigInt(acc._3).toUintByte32,
+              acc._1 ++ BigInt(acc._3).toUintByte32.get,
               acc._2 ++ item,
               acc._3 + item.length
             )
@@ -70,9 +70,9 @@ object ABIStaticArray {
           bytes: Array[Byte]
       ): Either[Exception, ABIStaticArray[V, SIZE]] = {
         if (bytes.length < vpack.staticSize * count) {
-          throw Exception(
+          return Left(Exception(
             "failed unpack array, exceed bytes boundry:" + vpack.staticSize * count
-          )
+          ))
         }
         val result = if (!vpack.dynamic) {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
@@ -135,7 +135,7 @@ object ABIDynamicArray {
       def pack(i: ABIDynamicArray[V]): Array[Byte] = {
         val count = i.value.length
 
-        val countBytes = BigInt(count).toUintByte32
+        val countBytes = BigInt(count).toUintByte32.get
         val elemDynamic = vpack.dynamic
 
         val elems = i.value.map(vpack.pack(_))
@@ -150,7 +150,7 @@ object ABIDynamicArray {
             (Array.emptyByteArray, Array.emptyByteArray, bodySize)
           )((acc, item) => {
             (
-              acc._1 ++ BigInt(acc._3).toUintByte32,
+              acc._1 ++ BigInt(acc._3).toUintByte32.get,
               acc._2 ++ item,
               acc._3 + item.length
             )
@@ -184,9 +184,9 @@ object ABIDynamicArray {
         val bodyBytes = bytes.slice(32, bytes.length)
 
         if (bodyBytes.length < vpack.staticSize * count) {
-          throw Exception(
+          return Left(Exception(
             "failed unpack array, exceed bytes boundry:" + vpack.staticSize * count
-          )
+          ))
         }
         val result = if (!elemDynamic) {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(

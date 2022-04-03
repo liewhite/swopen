@@ -48,7 +48,7 @@ object ABIPack {
             (acc._1 ++ item._2, acc._2, dynamicOffset)
           } else {
             // 动态类型在静态部分保留offset
-            val offsetBytes = BigInt(acc._3).toUintByte32
+            val offsetBytes = BigInt(acc._3).toUintByte32.get
             (
               acc._1 ++ offsetBytes,
               acc._2 ++ item._2,

@@ -49,7 +49,7 @@ object ABIIntN {
 
       def dynamic: Boolean = false
       def pack(i: ABIIntN[SIZE]): Array[Byte] =
-        i.value.toIntByte32
+        i.value.toIntByte32.get
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIIntN[SIZE]] = {
         val i = bytes.toBigInt
@@ -112,7 +112,7 @@ object ABIUintN {
         if (i.value < 0) {
           throw Exception("negative uint: " + i.value)
         }
-        i.value.toUintByte32
+        i.value.toUintByte32.get
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIUintN[SIZE]] = {
         val i = bytes.toBigUint
