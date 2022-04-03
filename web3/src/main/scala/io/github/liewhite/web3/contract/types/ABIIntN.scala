@@ -53,7 +53,11 @@ object ABIIntN {
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIIntN[SIZE]] = {
         val i = bytes.toBigInt
-        Right(ABIIntN[SIZE](i, length))
+        i match {
+          case Some(o) => 
+            Right(ABIIntN[SIZE](o, length))
+          case None => Left(Exception("failed parse int"))
+        }
       }
     }
 }
@@ -112,10 +116,15 @@ object ABIUintN {
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIUintN[SIZE]] = {
         val i = bytes.toBigUint
-        if (i < 0) {
-          Left(Exception("negative uint: " + i))
-        } else {
-          Right(ABIUintN[SIZE](i, length))
+        i match {
+          case Some(o) => {
+            if (o < 0) {
+              Left(Exception("negative uint: " + i))
+            } else {
+              Right(ABIUintN[SIZE](o, length))
+            }
+          }
+          case None => Left(Exception("failed parse uint"))
         }
       }
     }

@@ -92,15 +92,25 @@ object ABIDynamicBytes {
           )
         } else {
           val lengthBytes = bytes.slice(0, 32)
-          val length = lengthBytes.toBigUint.toInt
-          if (bytesLen < 32 + length) {
+          val lengthOption = lengthBytes.toBigUint
+          if(!lengthOption.isDefined) {
             Left(
               Exception(
-                s"bad bytes length for byte[] ,at least 32 + ${length}, got: " + bytesLen
+                s"failed parse length: " + bytesLen
               )
             )
-          } else {
-            Right(ABIDynamicBytes(bytes.slice(32, 32 + length)))
+          }else{
+            val length = lengthOption.get.toInt
+            if (bytesLen < 32 + length) {
+              Left(
+                Exception(
+                  s"bad bytes length for byte[] ,at least 32 + ${length}, got: " + bytesLen
+                )
+              )
+            } else {
+              Right(ABIDynamicBytes(bytes.slice(32, 32 + length)))
+            }
+
           }
         }
       }

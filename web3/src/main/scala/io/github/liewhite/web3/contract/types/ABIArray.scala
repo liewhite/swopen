@@ -69,6 +69,11 @@ object ABIStaticArray {
       def unpack(
           bytes: Array[Byte]
       ): Either[Exception, ABIStaticArray[V, SIZE]] = {
+        if (bytes.length < vpack.staticSize * count) {
+          throw Exception(
+            "failed unpack array, exceed bytes boundry:" + vpack.staticSize * count
+          )
+        }
         val result = if (!vpack.dynamic) {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
@@ -88,10 +93,13 @@ object ABIStaticArray {
                   .slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
                 )
                 .toBigUint
-                .toInt
-              val elemBytes = bytes.slice(elemOffset, bytes.length)
-              val elem = vpack.unpack(elemBytes)
-              acc.appended(elem)
+              if (!elemOffset.isDefined) {
+                acc.appended(Left(Exception("failed parse elemt:")))
+              } else {
+                val elemBytes = bytes.slice(elemOffset.get.toInt, bytes.length)
+                val elem = vpack.unpack(elemBytes)
+                acc.appended(elem)
+              }
             }
           )
         }
@@ -162,11 +170,24 @@ object ABIDynamicArray {
             )
           )
         }
-        val count = (bytes.slice(0, 32)).toBigUint.toInt
+        val countOption = (bytes.slice(0, 32)).toBigUint
+        if (!countOption.isDefined) {
+          return Left(
+            Exception(
+              s"not enough bytes to unpack ${vpack.typeName}[], len: ${bytes.length}"
+            )
+          )
+        }
+        val count = countOption.get.toInt
         val elemDynamic = vpack.dynamic
 
         val bodyBytes = bytes.slice(32, bytes.length)
 
+        if (bodyBytes.length < vpack.staticSize * count) {
+          throw Exception(
+            "failed unpack array, exceed bytes boundry:" + vpack.staticSize * count
+          )
+        }
         val result = if (!elemDynamic) {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
@@ -182,14 +203,21 @@ object ABIDynamicArray {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
               val elemOffset = (
-                bodyBytes.slice(
-                  vpack.staticSize * item,
-                  vpack.staticSize * (item + 1)
+                bodyBytes
+                  .slice(
+                    vpack.staticSize * item,
+                    vpack.staticSize * (item + 1)
+                  )
                 )
-              ).toBigUint.toInt
-              val elemBytes = bodyBytes.slice(elemOffset, bodyBytes.length)
-              val elem = vpack.unpack(elemBytes)
-              acc.appended(elem)
+                .toBigUint
+              if (!elemOffset.isDefined) {
+                acc.appended(Left(Exception("failed parse elem offset")))
+              } else {
+                val elemBytes = bodyBytes.slice(elemOffset.get.toInt, bodyBytes.length)
+                val elem = vpack.unpack(elemBytes)
+                acc.appended(elem)
+
+              }
             }
           )
         }

@@ -75,13 +75,21 @@ object ABIPack {
             acc._2 + common.alignLength(item.staticSize)
           )
         } else {
-          val dynamicOffset = bytes.slice(acc._2, acc._2 + 32).toBigUint.toInt
-          val dynamicBytes = bytes.slice(dynamicOffset, bytes.length)
-          val unpacked = item.unpack(dynamicBytes)
-          (
-            acc._1.appended(unpacked),
-            acc._2 + 32
-          )
+          val dynamicOffsetOption = bytes.slice(acc._2, acc._2 + 32).toBigUint
+          dynamicOffsetOption match {
+            case Some(dynamicOffset) => {
+              val dynamicBytes = bytes.slice(dynamicOffset.toInt, bytes.length)
+              val unpacked = item.unpack(dynamicBytes)
+              (
+                acc._1.appended(unpacked),
+                acc._2 + 32
+              )
+            }
+            case None => (
+                acc._1.appended(Left(Exception("failed parse dynamicOffset"))),
+                acc._2 + 32
+            )
+          }
         }
       })
       val unlifted = common.unliftEither(result._1)

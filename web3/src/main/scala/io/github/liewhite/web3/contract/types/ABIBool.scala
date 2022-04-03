@@ -30,10 +30,15 @@ object ABIBool {
 
     def unpack(bytes: Array[Byte]): Either[Exception, ABIBool] = {
       val v = bytes.toBigUint
-      if(v.toInt == 1) {
-        Right(ABIBool(true))
-      }else{
-        Right(ABIBool(false))
+      v match {
+        case Some(i) => {
+          if(i.toInt == 1) {
+            Right(ABIBool(true))
+          }else{
+            Right(ABIBool(false))
+          }
+        }
+        case None => Left(Exception("failed parse bool"))
       }
     }
   }

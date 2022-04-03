@@ -15,17 +15,17 @@ class ABIPackTest extends AnyFunSuite {
   test("bytes to uint") {
     assert {
       val hex = "0xffff".toBytes.toOption.get
-      val i = hex.toBigUint
+      val i = hex.toBigUint.get
       i == BigInt(0xffff)
     }
     assert {
       val hex = "0x00ffff".toBytes.toOption.get
-      val i = hex.toBigUint
+      val i = hex.toBigUint.get
       i == BigInt(0xffff)
     }
     assert {
       val hex = Array.fill(256)(0xff.toByte)
-      val i = hex.toBigUint
+      val i = hex.toBigUint.get
       i == BigInt(Array[Byte](0) ++ hex)
     }
   }
@@ -33,19 +33,19 @@ class ABIPackTest extends AnyFunSuite {
   test("bytes to int") {
     assert {
       val hex = "0xffff".toBytes.toOption.get
-      val i = hex.toBigInt
+      val i = hex.toBigInt.get
       i == -1
     }
 
     assert {
       val hex = "0x00ffff".toBytes.toOption.get
-      val i = hex.toBigInt
+      val i = hex.toBigInt.get
       i == BigInt(0xffff)
     }
 
     assert {
       val hex = Array.fill(256)(0xff.toByte)
-      val i = hex.toBigInt
+      val i = hex.toBigInt.get
       i == BigInt(-1)
     }
   }

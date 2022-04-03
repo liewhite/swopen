@@ -131,7 +131,7 @@ class ABIPackTest extends AnyFunSuite {
       val result = summon[ABIPack[ABIUintN[32]]].unpack(bytes)
       println(result.toOption.get.value)
       println(Array.fill(32)(0xff.toByte).toBigUint)
-      result.toOption.get.value == Array.fill(32)(0xff.toByte).toBigUint
+      result.toOption.get.value == Array.fill(32)(0xff.toByte).toBigUint.get
     }
   }
 

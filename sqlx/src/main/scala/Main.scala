@@ -29,13 +29,16 @@ case class F(
   @Unique
   fId: Long,
   a: BigInt,
+  @Length(35)
   b: String,
-  c: ZonedDateTime
+  c: ZonedDateTime,
+  @Length(35)
+  d: String,
 )
 
 @main def main: Unit = {
   val idg = Snowflake(123)
-  val a = 1
+  // val a = 1
   val ctx = getDBContext[MySQLDialect.type](DBConfig(
       host = "localhost",
       username = "sa",
@@ -52,12 +55,12 @@ case class F(
   // )
   import ctx._
   ctx.migrate[F]
-  Range(0,10000).foreach(i => {
-    val data = Range(0,100).map(item => {
-      F(idg.nextId,BigInt(10), "str", ZonedDateTime.now)
-    })
-    run(liftQuery(data).foreach(i => query[F].insertValue(i)))
-  })
+  // Range(0,10000).foreach(i => {
+  //   val data = Range(0,100).map(item => {
+  //     F(idg.nextId,BigInt(10), "str", ZonedDateTime.now)
+  //   })
+  //   run(liftQuery(data).foreach(i => query[F].insertValue(i)))
+  // })
 
   // val rows = run(query[F].filter(item => true))
   // rows.foreach(item => {

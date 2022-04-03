@@ -15,12 +15,18 @@ import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.Extensions.*
 
 
-class ABIPackIntegerTest extends AnyFunSuite {
-  test("pack max uint") {
+class ABIArrayTest extends AnyFunSuite {
+  test("dynamic array of address") {
     assert {
-      val data = Array.fill(32)(0xff.toByte)
-      val decoder = summon[ABIPack[ABIUint]].unpack(data).toOption.get
-      decoder.value == (Array[Byte](0.toByte) ++ Array.fill(32)(0xff.toByte)).toBigUint.get
+      val data = "0x0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000bb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c0000000000000000000000008e876f6cd486508814cb5e2ffaeeca0bce58f506"
+      val p = summon[ABIPack[ABIDynamicArray[ABIAddress]]]
+      println(p.unpack(data.toBytes.toOption.get).toOption.get.value.map(_.value))
+      true
     }
+    // assert {
+    //   val i = ABIIntN[32](BigInt(-1), 32)
+    //   println(i.toBytes.toHex())
+    //   i.toBytes.toHex() == "0x01"
+    // }
   }
 }

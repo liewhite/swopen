@@ -24,12 +24,21 @@ object Extensions {
       prefix + Hex.encodeHex(bs).mkString
     }
     // bytes to Uint 
-    def toBigUint: BigInt = {
+    def toBigUint: Option[BigInt] = {
+      if(bs.length == 0) {
+        None
+      }
       // pad sign 0 manually
-      BigInt(Array[Byte](0) ++ bs)
+      Some(BigInt(Array[Byte](0) ++ bs))
     }
-    def toBigInt: BigInt = {
-      BigInt(bs)
+
+    def toBigInt: Option[BigInt] = {
+      try{
+        Some(BigInt(bs))
+      }catch {
+        case _ => None
+
+      }
     }
   }
 
