@@ -1,11 +1,16 @@
 package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.common.*
+import io.github.liewhite.web3.Extensions.*
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIIntN[SIZE <: Int](value: BigInt, size: Int)
+case class ABIIntN[SIZE <: Int](value: BigInt, size: Int){
+  def toBytes: Array[Byte] = {
+    value.toByteArray
+  }
+}
 
 object ABIIntN {
   inline given IntNConverter[SIZE <: Int]
@@ -44,16 +49,21 @@ object ABIIntN {
 
       def dynamic: Boolean = false
       def pack(i: ABIIntN[SIZE]): Array[Byte] =
-        padInt(i.value)
+        i.value.toIntByte32
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIIntN[SIZE]] = {
-        val i = BigInt(bytes)
+        val i = bytes.toBigInt
         Right(ABIIntN[SIZE](i, length))
       }
     }
 }
 
-case class ABIUintN[SIZE <: Int](value: BigInt, size: Int)
+case class ABIUintN[SIZE <: Int](value: BigInt, size: Int){
+  // remove leading 0
+  def toBytes: Array[Byte] = {
+    value.toByteArray.dropWhile(_ == 0)
+  }
+}
 
 object ABIUintN {
   inline given UintNConverter[SIZE <: Int]
@@ -98,10 +108,10 @@ object ABIUintN {
         if (i.value < 0) {
           throw Exception("negative uint: " + i.value)
         }
-        padUint(i.value)
+        i.value.toUintByte32
 
       def unpack(bytes: Array[Byte]): Either[Exception, ABIUintN[SIZE]] = {
-        val i = BigInt(bytes)
+        val i = bytes.toBigUint
         if (i < 0) {
           Left(Exception("negative uint: " + i))
         } else {

@@ -2,6 +2,7 @@ package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.common.*
+import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
 
@@ -21,7 +22,7 @@ object ABIString {
     def pack(a: ABIString): Array[Byte] = {
       val bytes = a.value.getBytes
       val length = bytes.length
-      val lengthBytes = padUint(BigInt(length))
+      val lengthBytes = BigInt(length).toUintByte32
       val body = padString(a.value)
       lengthBytes ++ body
     }
@@ -36,7 +37,7 @@ object ABIString {
         )
       } else {
         val lengthBytes = bytes.slice(0, 32)
-        val length = BigInt(lengthBytes).toInt
+        val length = lengthBytes.toBigUint.toInt
         if (bytesLen < 32 + length) {
           Left(
             Exception(

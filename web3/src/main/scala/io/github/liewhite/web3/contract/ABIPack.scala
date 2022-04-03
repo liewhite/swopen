@@ -1,6 +1,7 @@
 package io.github.liewhite.web3.contract
 import scala.compiletime.constValue
 import io.github.liewhite.common.SummonUtils
+import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.common
 import scala.math
 
@@ -47,8 +48,7 @@ object ABIPack {
             (acc._1 ++ item._2, acc._2, dynamicOffset)
           } else {
             // 动态类型在静态部分保留offset
-            val offsetBytes = common.padUint(BigInt(acc._3))
-            println("offset:" + acc._3)
+            val offsetBytes = BigInt(acc._3).toUintByte32
             (
               acc._1 ++ offsetBytes,
               acc._2 ++ item._2,
@@ -75,7 +75,7 @@ object ABIPack {
             acc._2 + common.alignLength(item.staticSize)
           )
         } else {
-          val dynamicOffset = BigInt(bytes.slice(acc._2, acc._2 + 32)).toInt
+          val dynamicOffset = bytes.slice(acc._2, acc._2 + 32).toBigUint.toInt
           val dynamicBytes = bytes.slice(dynamicOffset, bytes.length)
           val unpacked = item.unpack(dynamicBytes)
           (

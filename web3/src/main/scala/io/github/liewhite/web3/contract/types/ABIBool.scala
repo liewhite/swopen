@@ -2,6 +2,7 @@ package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.common.*
+import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.contract.ABIPack
 
 case class ABIBool(value: Boolean)
@@ -28,7 +29,7 @@ object ABIBool {
     }
 
     def unpack(bytes: Array[Byte]): Either[Exception, ABIBool] = {
-      val v = BigInt(bytes) 
+      val v = bytes.toBigUint
       if(v.toInt == 1) {
         Right(ABIBool(true))
       }else{

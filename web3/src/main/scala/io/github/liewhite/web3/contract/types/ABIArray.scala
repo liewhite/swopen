@@ -1,6 +1,7 @@
 package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.common.*
+import io.github.liewhite.web3.Extensions.*
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
 import io.github.liewhite.web3.contract.SizeValidator
@@ -56,7 +57,7 @@ object ABIStaticArray {
             (Array.emptyByteArray, Array.emptyByteArray, staticSize)
           )((acc, item) => {
             (
-              acc._1 ++ padUint(BigInt(acc._3)),
+              acc._1 ++ BigInt(acc._3).toUintByte32,
               acc._2 ++ item,
               acc._3 + item.length
             )
@@ -72,16 +73,22 @@ object ABIStaticArray {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
               val elemBytes =
-                bytes.slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
+                bytes.slice(
+                  vpack.staticSize * item,
+                  vpack.staticSize * (item + 1)
+                )
               acc.appended(vpack.unpack(elemBytes))
             }
           )
         } else {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
-              val elemOffset = BigInt(
-                bytes.slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
-              ).toInt
+              val elemOffset = (
+                bytes
+                  .slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
+                )
+                .toBigUint
+                .toInt
               val elemBytes = bytes.slice(elemOffset, bytes.length)
               val elem = vpack.unpack(elemBytes)
               acc.appended(elem)
@@ -120,7 +127,7 @@ object ABIDynamicArray {
       def pack(i: ABIDynamicArray[V]): Array[Byte] = {
         val count = i.value.length
 
-        val countBytes = padUint(BigInt(count))
+        val countBytes = BigInt(count).toUintByte32
         val elemDynamic = vpack.dynamic
 
         val elems = i.value.map(vpack.pack(_))
@@ -135,7 +142,7 @@ object ABIDynamicArray {
             (Array.emptyByteArray, Array.emptyByteArray, bodySize)
           )((acc, item) => {
             (
-              acc._1 ++ padUint(BigInt(acc._3)),
+              acc._1 ++ BigInt(acc._3).toUintByte32,
               acc._2 ++ item,
               acc._3 + item.length
             )
@@ -148,10 +155,14 @@ object ABIDynamicArray {
       def unpack(
           bytes: Array[Byte]
       ): Either[Exception, ABIDynamicArray[V]] = {
-        if(bytes.length < 32) {
-          return Left(Exception(s"not enough bytes to unpack ${vpack.typeName}[], len: ${bytes.length}"))
+        if (bytes.length < 32) {
+          return Left(
+            Exception(
+              s"not enough bytes to unpack ${vpack.typeName}[], len: ${bytes.length}"
+            )
+          )
         }
-        val count = BigInt(bytes.slice(0,32)).toInt
+        val count = (bytes.slice(0, 32)).toBigUint.toInt
         val elemDynamic = vpack.dynamic
 
         val bodyBytes = bytes.slice(32, bytes.length)
@@ -160,25 +171,29 @@ object ABIDynamicArray {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
               val elemBytes =
-                bodyBytes.slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
+                bodyBytes.slice(
+                  vpack.staticSize * item,
+                  vpack.staticSize * (item + 1)
+                )
               acc.appended(vpack.unpack(elemBytes))
             }
           )
         } else {
           Range(0, count).foldLeft(Vector.empty[Either[Exception, V]])(
             (acc, item) => {
-              val elemOffset = BigInt(
-                bodyBytes.slice(vpack.staticSize * item, vpack.staticSize * (item + 1))
-              ).toInt
+              val elemOffset = (
+                bodyBytes.slice(
+                  vpack.staticSize * item,
+                  vpack.staticSize * (item + 1)
+                )
+              ).toBigUint.toInt
               val elemBytes = bodyBytes.slice(elemOffset, bodyBytes.length)
               val elem = vpack.unpack(elemBytes)
               acc.appended(elem)
             }
           )
         }
-        unliftEither(result).map(item =>
-          ABIDynamicArray[V](item.toVector)
-        )
+        unliftEither(result).map(item => ABIDynamicArray[V](item.toVector))
       }
     }
 }

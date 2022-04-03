@@ -1,6 +1,7 @@
 package io.github.liewhite.web3.contract.types
 
 import io.github.liewhite.web3.types.Address
+import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
@@ -30,10 +31,9 @@ object ABIAddress {
       if(bytes.length != 32) {
         return Left(Exception("address in abi encoding must be 32 bytes, got" + bytes.length))
       }
-      if(BigInt(bytes.slice(0,12)) != 0) {
+      if(bytes.slice(0,12).toBigUint != 0) {
         return Left(Exception("address in abi encoding must start with 12 zero bytes"))
       }
-
       BytesType.fromBytes[Address](bytes.slice(12,32)).map(ABIAddress(_))
     }
   }

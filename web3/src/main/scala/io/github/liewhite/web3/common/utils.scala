@@ -12,22 +12,8 @@ def alignLength(length: Int, align: Int = 32): Int = {
     }
 }
 
-// pading 0 at left to 32 bytes
-def padUint(i: BigInt): Array[Byte] = {
-  val bytes = i.toByteArray
-  Array.fill(32 - bytes.length)(0.toByte) ++ bytes
-}
-
 def padLeftZero(bytes: Array[Byte]):Array[Byte] = {
   new Array[Byte](32 - bytes.length) ++ bytes
-}
-
-def padInt(i: BigInt): Array[Byte] = {
-  val bytes = i.toByteArray
-  val paddingByte = (if (i < 0) 0xff else 0).toByte
-  val paddingLen = 32 - bytes.length
-  val paddings = Array.fill(paddingLen)(paddingByte)
-  paddings ++ bytes
 }
 
 def padAddress(i: ABIAddress): Array[Byte] = {

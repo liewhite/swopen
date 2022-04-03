@@ -19,14 +19,42 @@ object Extensions {
 
   extension (bs: Array[Byte]) {
     def toAddress: Either[Exception, Address] = BytesType.fromBytes[Address](bs)
-    def toHex(withPrefix: Boolean = true): Either[Exception, String] = {
+    def toHex(withPrefix: Boolean = true): String = {
       val prefix = if(withPrefix) "0x" else ""
-        try {
-            Right(prefix + Hex.encodeHex(bs).mkString)
-        }catch {
-            case e:Exception => Left(e)
-        }
+      prefix + Hex.encodeHex(bs).mkString
+    }
+    // bytes to Uint 
+    def toBigUint: BigInt = {
+      // pad sign 0 manually
+      BigInt(Array[Byte](0) ++ bs)
+    }
+    def toBigInt: BigInt = {
+      BigInt(bs)
     }
   }
 
+  // 32 bytes length
+  extension (i: BigInt) {
+    def toUintByte32: Array[Byte] = {
+      if(i < 0) {
+        throw Exception("negative for uint found: " + i)
+      }
+      val rawBytes = i.toByteArray.dropWhile(_ == 0)
+      if(rawBytes.length > 32) {
+        throw Exception("too long bytes for uint: " + rawBytes.length)
+      }
+      Array.fill(32 - rawBytes.length)(0.toByte) ++ rawBytes
+    }
+
+    def toIntByte32: Array[Byte] = {
+      val rawBytes = i.toByteArray
+      if(rawBytes.length > 32) {
+        throw Exception("too long bytes for int: " + rawBytes.length)
+      }
+      val paddingByte = (if (i < 0) 0xff else 0).toByte
+      val paddingLen = 32 - rawBytes.length
+      val paddings = Array.fill(paddingLen)(paddingByte)
+      paddings ++ rawBytes
+    }
+  }
 }
