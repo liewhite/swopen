@@ -1,6 +1,7 @@
 package main
 import scala.compiletime.*
 import io.github.liewhite.sqlx.*
+import io.github.liewhite.common.Snowflake
 import io.github.liewhite.sqlx.annotation.{Unique, Index}
 import scala.jdk.CollectionConverters.*
 import javax.sql.DataSource
@@ -33,6 +34,7 @@ case class F(
 )
 
 @main def main: Unit = {
+  val idg = Snowflake(123)
   val a = 1
   val ctx = getDBContext[MySQLDialect.type](DBConfig(
       host = "localhost",
@@ -50,13 +52,16 @@ case class F(
   // )
   import ctx._
   ctx.migrate[F]
-
-  inline def newc = query[F].insertValue(lift(F(123,BigInt(10), "str", ZonedDateTime.now)))
-  // Range(0, 1000).foreach(i => {
-  run(newc)
-  val rows = run(query[F].filter(item => true))
-  rows.foreach(item => {
-    println(item)
+  Range(0,10000).foreach(i => {
+    val data = Range(0,100).map(item => {
+      F(idg.nextId,BigInt(10), "str", ZonedDateTime.now)
+    })
+    run(liftQuery(data).foreach(i => query[F].insertValue(i)))
   })
+
+  // val rows = run(query[F].filter(item => true))
+  // rows.foreach(item => {
+  //   println(item)
+  // })
   // })
 }
