@@ -62,6 +62,13 @@ object Table {
     //   }
     // }
     val primaries = primaryKey().map(item => if (item.isEmpty) false else true)
+    if(primaries.count(identity) > 1) {
+      throw Exception("table has at most one primary key:"+ tName)
+    } 
+    if(primaries.count(identity) == 0) {
+      throw Exception("table must has one primary key:"+ tName)
+    } 
+
     val uniques = unique().map(item => if (item.isEmpty) false else true)
 
     val len = length().map(item => if (item.isEmpty) None else Some(item(0).l))
@@ -94,7 +101,7 @@ object Table {
         val default = defaults.get(fieldNames(index))
         val typeLen = len(index)
 
-        Field(tName, name, names(index), unique, default,typeLen, tp)
+        Field(tName, name, names(index), primaries(index), unique, default,typeLen, tp)
       }
     }
 

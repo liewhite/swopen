@@ -16,6 +16,7 @@ case class Field[T](
     fieldName: String,
     // database table name
     colName: String,
+    primary: Boolean,
     unique: Boolean,
     default: Option[Any],
     length: Option[Int],

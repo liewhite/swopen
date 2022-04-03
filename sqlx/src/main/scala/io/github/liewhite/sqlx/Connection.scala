@@ -117,19 +117,13 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
       // default and nullable
       val createStmt: CreateTableColumnStep = {
         val create = jooqConn.createTable(table.tableName)
-        val createWithID = if (!table.columnsMap.contains("id")) {
-          create.column("id", SQLDataType.INTEGER.identity(true))
-        } else {
-          create
-        }
-        table.columns.foldLeft(createWithID)((b, col) => {
-          var datatype = col.getDataType
+        table.columns.foldLeft(create)((b, col) => {
+          var datatype = col.getDataType.identity(col.primary)
           var c = b.column(col.colName, datatype)
           c
         })
       }
-
-      createStmt.primaryKey("id").execute
+      createStmt.primaryKey(table.columns.filter(_.primary)(0).colName).execute
 
       // add unique constraint
       table.columns.foreach(item => {
@@ -158,33 +152,40 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
     def updateTable(table: Table[_], current: jooq.Table[_]) = {
       // 新增column, column 比较， 只新增， 不删除, 不重命名
       table.columns.foreach(col => {
-        if (current.field(col.colName) == null) {
-          createColumn(current, col)
-        } else {
-          val datatype = col.getDataType
-          jooqConn.alterTable(current).alter(col.colName).set(datatype).execute
-
-          if (col.default.isDefined) {
+        if (col.primary) {} else {
+          if (current.field(col.colName) == null) {
+            createColumn(current, col)
+          } else {
+            val datatype = col.getDataType
             jooqConn
               .alterTable(current)
               .alter(col.colName)
-              .setDefault(col.default.get)
+              .set(datatype)
               .execute
-          } else {
-            if (col.t.nullable) {
+            if (col.default.isDefined) {
               jooqConn
                 .alterTable(current)
                 .alter(col.colName)
-                .dropDefault()
+                .setDefault(col.default.get)
                 .execute
             } else {
-              migratorLogger.info(
-                s"skip dropping default on not null column: ${col.modelName}.${col.colName}"
-              )
+              if (col.t.nullable) {
+                jooqConn
+                  .alterTable(current)
+                  .alter(col.colName)
+                  .dropDefault()
+                  .execute
+              } else {
+                migratorLogger.info(
+                  s"skip dropping default on not null column: ${col.modelName}.${col.colName}"
+                )
+              }
             }
           }
+
         }
       })
+
       // postgresql: 定义为Unique的会出现在这里 : "uk_xx"
       // mysql: 定义为Unique或者唯一索引会出现在这里, 如果同时定义了unique和唯一索引，会出现多次
       // 用库中结构来适配代码定义
@@ -211,9 +212,9 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
 
       // Mysql:  会查询到所有普通索引, 没有唯一索引和唯一约束
       // postgres: 查询到所有索引， 没有唯一约束
-      val oldIdxes = (current.getIndexes.asScala.map(item =>
-        item.getName
-      ) ++ currentUniques.filter(_.startsWith("ui:"))).filter(!_.startsWith("uk:"))
+      val oldIdxes =
+        (current.getIndexes.asScala.map(item => item.getName) ++ currentUniques
+          .filter(_.startsWith("ui:"))).filter(!_.startsWith("uk:"))
 
       val newIdxes = table.indexes.map(item => item.indexName)
 
@@ -221,12 +222,12 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
         if (!oldIdxes.contains(idx)) {
           val names_unique = idx.split(":")
           val names = names_unique(1).split("-").toVector
-          val unique = if(names_unique(0) == "i") false else true
+          val unique = if (names_unique(0) == "i") false else true
           if (unique) {
-              jooqConn
-                .createUniqueIndex(idx)
-                .on(current.getName, names*)
-                .execute
+            jooqConn
+              .createUniqueIndex(idx)
+              .on(current.getName, names*)
+              .execute
           } else {
             jooqConn
               .createIndex(idx)
@@ -239,7 +240,7 @@ trait Migrator[Dialect <: SqlIdiom, Naming <: NamingStrategy] {
       oldIdxes.foreach(idx => {
         val names_unique = idx.split(":")
         val names = names_unique(1).split("-").toVector
-        val unique = if(names_unique(0) == "i") false else true
+        val unique = if (names_unique(0) == "i") false else true
         if (!newIdxes.contains(idx)) {
           jooqConn
             .dropIndex(idx)

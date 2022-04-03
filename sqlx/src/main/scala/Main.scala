@@ -8,6 +8,10 @@ import io.getquill.*
 import com.zaxxer.hikari.HikariDataSource
 import java.time.ZonedDateTime
 import io.github.liewhite.sqlx.annotation.Length
+import io.github.liewhite.sqlx.annotation.Primary
+import io.getquill.context.jdbc.JdbcContext
+import io.getquill.idiom.Idiom
+import io.getquill.context.sql.idiom.SqlIdiom
 
 case class B(
     id: Int,
@@ -24,11 +28,16 @@ case class B(
     d: Int = 1123 // index 要求顺序， 但是默认值
 )
 
-case class F(
-  Dt : Option[ZonedDateTime],
-  Value: Option[BigInt],
-  Address: Array[Byte],
-)
+case class G(
+  a: Int,
+  @Primary()
+  id: Long = 0
+){
+  inline def create[A <: SqlIdiom, N <: NamingStrategy](ctx: JdbcContext[A,N]) = {
+    import ctx._
+    query[G].insertValue(this)
+  }
+}
 
 @main def main: Unit = {
   val a = 1
@@ -47,14 +56,17 @@ case class F(
     )
   )
   import ctx._
-  ctx.migrate[F]
+  
+  ctx.migrate[G]
 
-  inline def newc = query[F].insertValue(lift(F(Some(ZonedDateTime.now), Some(BigInt(-123)), "1111".getBytes)))
+  val g = G(1)
+
+  inline def create = query[G].insert(p => (p.a -> 1))
+  run(create)
   // Range(0, 1000).foreach(i => {
-  run(newc)
-  val rows = run(query[F].filter(item => true))
-  rows.foreach(item => {
-    println(item)
-  })
+  // val rows = run(query[G].filter(item => true))
+  // rows.foreach(item => {
+  //   println(item)
+  // })
   // })
 }
