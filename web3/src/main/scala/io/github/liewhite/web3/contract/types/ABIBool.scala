@@ -5,7 +5,7 @@ import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIBool(value: Boolean)
+case class ABIBool(value: Boolean) extends ABIType
 
 object ABIBool {
   given ConvertFromScala[Boolean, ABIBool] with {

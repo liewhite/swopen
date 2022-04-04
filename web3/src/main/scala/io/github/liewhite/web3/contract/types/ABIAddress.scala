@@ -6,7 +6,7 @@ import io.github.liewhite.web3.common.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIAddress(value: Address)
+case class ABIAddress(value: Address) extends ABIType
 
 object ABIAddress {
   given ConvertFromScala[String, ABIAddress] with {
@@ -19,6 +19,13 @@ object ABIAddress {
       BytesType.fromBytes[Address](s).map(ABIAddress(_))
     }
   }
+
+  given ConvertFromScala[Address, ABIAddress] with {
+    def fromScala(s: Address): Either[Exception, ABIAddress] = {
+      Right(ABIAddress(s))
+    }
+  }
+
   given ABIPack[ABIAddress] with {
     def staticSize: Int = 32
     def typeName: String = s"address"

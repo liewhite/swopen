@@ -6,11 +6,7 @@ import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIIntN[SIZE <: Int](value: BigInt, size: Int){
-  def toBytes: Array[Byte] = {
-    value.toByteArray
-  }
-}
+case class ABIIntN[SIZE <: Int](value: BigInt, size: Int) extends ABIType
 
 object ABIIntN {
   inline given IntNConverter[SIZE <: Int]
@@ -62,12 +58,7 @@ object ABIIntN {
     }
 }
 
-case class ABIUintN[SIZE <: Int](value: BigInt, size: Int){
-  // remove leading 0
-  def toBytes: Array[Byte] = {
-    value.toByteArray.dropWhile(_ == 0)
-  }
-}
+case class ABIUintN[SIZE <: Int](value: BigInt, size: Int) extends ABIType
 
 object ABIUintN {
   inline given UintNConverter[SIZE <: Int]

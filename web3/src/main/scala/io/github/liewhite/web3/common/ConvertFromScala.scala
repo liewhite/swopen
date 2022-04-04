@@ -10,6 +10,10 @@ trait ConvertFromScala[-S, +A] {
   def fromScala(s: S): Either[Exception, A]
 }
 object ConvertFromScala {
+  given UnitConverter: ConvertFromScala[Unit, Unit] with {
+    def fromScala(t: Unit) = Right(t)
+  }
+
   given EmptyTupleConverter: ConvertFromScala[EmptyTuple, EmptyTuple] with {
     def fromScala(t: EmptyTuple) = Right(t)
   }

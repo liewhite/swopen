@@ -8,7 +8,7 @@ import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.common.unliftEither
 import scala.annotation.tailrec
 
-case class ABIStaticArray[T, SIZE <: Int](value: Vector[T], length: Int) {}
+case class ABIStaticArray[T, SIZE <: Int](value: Vector[T], length: Int) extends ABIType {}
 
 object ABIStaticArray {
   inline given StaticArrayConverter[V1, V2, SIZE <: Int](using
@@ -110,7 +110,7 @@ object ABIStaticArray {
     }
 }
 
-case class ABIDynamicArray[T](value: Vector[T]) {}
+case class ABIDynamicArray[T](value: Vector[T])  extends ABIType{}
 
 object ABIDynamicArray {
   given DynamicArrayConverter[V1, V2](using

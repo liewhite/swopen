@@ -6,7 +6,7 @@ import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIString(value: String)
+case class ABIString(value: String) extends ABIType
 
 object ABIString {
 

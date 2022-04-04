@@ -22,6 +22,17 @@ trait ABIPack[T] {
 }
 
 object ABIPack {
+  inline given ABIPack[Unit] = new ABIPack[Unit] {
+    def typeName: String = "()"
+
+    def dynamic: Boolean = false
+
+    def staticSize: Int = 0
+
+    def pack(t: Unit): Array[Byte] = Array.emptyByteArray
+    def unpack(bytes: Array[Byte]): Either[Exception, Unit] = Right(())
+  }
+
   inline given [T <: Tuple]: ABIPack[T] = new ABIPack[T] {
     val packs = SummonUtils.summonAll[ABIPack, T]
     def typeName: String = "(" + packs.map(_.typeName).mkString(",") + ")"

@@ -6,7 +6,7 @@ import io.github.liewhite.web3.contract.SizeValidator
 import scala.compiletime.constValue
 import io.github.liewhite.web3.contract.ABIPack
 
-case class ABIStaticBytes[SIZE <: Int](value: Array[Byte], size: Int)
+case class ABIStaticBytes[SIZE <: Int](value: Array[Byte], size: Int) extends ABIType
 
 object ABIStaticBytes {
   inline given [SIZE <: Int]
@@ -58,7 +58,7 @@ object ABIStaticBytes {
     }
 }
 
-case class ABIDynamicBytes(value: Array[Byte])
+case class ABIDynamicBytes(value: Array[Byte]) extends ABIType
 
 object ABIDynamicBytes {
   inline given ConvertFromScala[Array[Byte], ABIDynamicBytes] = {

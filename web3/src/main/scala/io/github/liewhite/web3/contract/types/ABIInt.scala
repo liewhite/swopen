@@ -7,11 +7,7 @@ import io.github.liewhite.web3.contract.SizeValidator
 import io.github.liewhite.web3.contract.ABIPack
 
 
-case class ABIInt(value: BigInt) {
-  def toBytes: Array[Byte] = {
-    value.toByteArray
-  }
-}
+case class ABIInt(value: BigInt) extends ABIType
 
 object ABIInt {
   inline given IntConverter: ConvertFromScala[Int, ABIInt] =
@@ -49,12 +45,7 @@ object ABIInt {
     }
 }
 
-case class ABIUint(value: BigInt){
-  // remove leading 0
-  def toBytes: Array[Byte] = {
-    value.toByteArray.dropWhile(_ == 0)
-  }
-}
+case class ABIUint(value: BigInt) extends ABIType
 
 object ABIUint {
   inline given  UintConverter:ConvertFromScala[Int, ABIUint] =

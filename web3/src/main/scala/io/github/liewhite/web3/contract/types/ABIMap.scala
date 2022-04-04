@@ -3,7 +3,7 @@ package io.github.liewhite.web3.contract.types
 import io.github.liewhite.web3.common.ConvertFromScala
 import scala.annotation.tailrec
 
-case class ABIMap[K, V](value: Map[K, V])
+case class ABIMap[K, V](value: Map[K, V]) extends ABIType
 
 object ABIMap {
   given [K1, K2, V1, V2](using

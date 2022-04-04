@@ -65,6 +65,7 @@ object Extensions {
       val paddings = Array.fill(paddingLen)(paddingByte)
       Some(paddings ++ rawBytes)
     }
+
   }
   extension[T] (i: Option[T]) {
     def ! = {
