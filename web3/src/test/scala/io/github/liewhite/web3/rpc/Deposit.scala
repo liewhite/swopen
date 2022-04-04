@@ -18,10 +18,10 @@ class DepositTest extends AnyFunSuite {
 
   val depositFunc = ABIFunction[Unit,Unit]("deposit")
   test("deposit"){
-    assert {
-      val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
-      val receipt = client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
-      true
-    }
+    // assert {
+    //   val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+    //   val receipt = client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
+    //   true
+    // }
   }
 }

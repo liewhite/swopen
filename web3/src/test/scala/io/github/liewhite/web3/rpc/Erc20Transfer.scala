@@ -14,26 +14,25 @@ import io.github.liewhite.web3.contract.types.ABIAddress
 import io.github.liewhite.web3.contract.types.ABIUintN
 import io.github.liewhite.web3.types.Address
 
-class Erc20TransferTest extends AnyFunSuite {
+// class Erc20TransferTest extends AnyFunSuite {
 
-  val transferFunc = ABIFunction[(ABIAddress,ABIUintN[256]),Unit]("transfer")
+  // val transferFunc = ABIFunction[(ABIAddress,ABIUintN[256]),Unit]("transfer")
 
-  val depositFunc = ABIFunction[Unit,Unit]("deposit")
+  // val depositFunc = ABIFunction[Unit,Unit]("deposit")
 
-  test("erc20 transfer") {
-    assert {
-      val token = "0x44d886916d8275556037a61f065f350937f714ea"
-      val receipt = client.transact(transferFunc)(Address.fromHex(token).!, (wallet.getAccount(1).address, 100))
-      receipt.isSuccess && receipt.get.isStatusOK
-    }
-
-  }
-  test("deposit"){
-    assert {
-      val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
-      val receipt = client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
-      println(receipt.get)
-      true
-    }
-  }
-}
+  // test("erc20 transfer") {
+  //   assert {
+  //     val token = "0x44d886916d8275556037a61f065f350937f714ea"
+  //     val receipt = client.transact(transferFunc)(Address.fromHex(token).!, (wallet.getAccount(1).address, 100))
+  //     receipt.isSuccess && receipt.get.isStatusOK
+  //   }
+  // }
+  // test("deposit"){
+  //   assert {
+  //     val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+  //     val receipt = client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
+  //     println(receipt.get)
+  //     true
+  //   }
+  // }
+// }

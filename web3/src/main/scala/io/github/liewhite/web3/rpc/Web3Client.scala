@@ -103,11 +103,14 @@ class Web3ClientWithCredential(
               value.bigInteger,
               inputString
             )
-          val n: BigInt =
+          val estimateResult = 
             client
               .ethEstimateGas(call)
               .send
-              .getAmountUsed
+          if(estimateResult.hasError) {
+              throw Exception("estimate gas err:" + estimateResult.getError.getMessage)
+          }
+          val n: BigInt = estimateResult.getAmountUsed
           n
         }
       }
