@@ -2,6 +2,7 @@ package io.github.liewhite.web3
 import org.scalatest.funsuite.AnyFunSuite
 import io.github.liewhite.web3.Extensions.*
 import scala.math
+import scala.language.postfixOps
 
 class ABIPackTest extends AnyFunSuite {
   test("convert bytes to hex") {

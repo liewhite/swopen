@@ -21,7 +21,6 @@ object ABIAddress {
   }
   given ABIPack[ABIAddress] with {
     def staticSize: Int = 32
-
     def typeName: String = s"address"
     def dynamic: Boolean = false
     def pack(a: ABIAddress): Array[Byte] = {
