@@ -1,19 +1,19 @@
-package io.github.liewhite.web3.rpc
+// package io.github.liewhite.web3.rpc
 
-import scala.language.postfixOps
-import org.scalatest.funsuite.AnyFunSuite
-import org.web3j.crypto.WalletUtils
-import org.web3j.crypto.Bip44WalletUtils
-import io.github.liewhite.web3.Extensions.*
-import io.github.liewhite.web3.wallet.Bip44Wallet
-import io.github.liewhite.web3.common
-import org.web3j.protocol.http.HttpService
-import org.web3j.protocol.Web3j
-import io.github.liewhite.web3.contract.ABIFunction
-import io.github.liewhite.web3.contract.types.ABIAddress
-import io.github.liewhite.web3.contract.types.ABIUintN
-import io.github.liewhite.web3.types.Address
-import io.github.liewhite.web3.contract.types.ABIDynamicArray
+// import scala.language.postfixOps
+// import org.scalatest.funsuite.AnyFunSuite
+// import org.web3j.crypto.WalletUtils
+// import org.web3j.crypto.Bip44WalletUtils
+// import io.github.liewhite.web3.Extensions.*
+// import io.github.liewhite.web3.wallet.Bip44Wallet
+// import io.github.liewhite.web3.common
+// import org.web3j.protocol.http.HttpService
+// import org.web3j.protocol.Web3j
+// import io.github.liewhite.web3.contract.ABIFunction
+// import io.github.liewhite.web3.contract.types.ABIAddress
+// import io.github.liewhite.web3.contract.types.ABIUintN
+// import io.github.liewhite.web3.types.Address
+// import io.github.liewhite.web3.contract.types.ABIDynamicArray
 
 // class SwapExactETHForTokensTest extends AnyFunSuite {
 
@@ -31,8 +31,8 @@ import io.github.liewhite.web3.contract.types.ABIDynamicArray
 //             Address.fromHex("0xc778417e063141139fce010982780140aa0cd5ab").!,
 //             Address.fromHex("0xaD6D458402F60fD3Bd25163575031ACDce07538D").!
 //           ),
-//           Address.fromHex("0x6ac39785f4145b595313840dc6e1d2a753d87e1f").!,
-//           "0x1a6f117391".toBytes.!.toBigUint.!,
+//           Client.wallet.getAccount(0).address,
+//           "0x1a6f11713911".toBytes.!.toBigUint.!,
 //         ),
 //         value = common.GWei * 200_000_000
 //       )

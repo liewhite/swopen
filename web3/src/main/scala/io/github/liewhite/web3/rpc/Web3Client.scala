@@ -103,12 +103,14 @@ class Web3ClientWithCredential(
               value.bigInteger,
               inputString
             )
-          val estimateResult = 
+          val estimateResult =
             client
               .ethEstimateGas(call)
               .send
-          if(estimateResult.hasError) {
-              throw Exception("estimate gas err:" + estimateResult.getError.getMessage)
+          if (estimateResult.hasError) {
+            throw Exception(
+              "estimate gas err:" + estimateResult.getError.getMessage
+            )
           }
           val n: BigInt = estimateResult.getAmountUsed
           n
@@ -135,10 +137,11 @@ class Web3ClientWithCredential(
       gasPrice: Option[BigInt] = None,
       gasLimit: Option[BigInt] = None,
       value: BigInt = 0,
-      block: Option[BigInt]
+      block: Option[BigInt] = None
   )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
     val input = converter.fromScala(params).!
-    val inputString = function.packInput(params).toHex()
+    val inputString = function.packInputWithSelector(params).toHex()
+    logger.info("input:" + inputString)
 
     val nonceValue = nonce match {
       case Some(o) => o
@@ -160,39 +163,53 @@ class Web3ClientWithCredential(
         n
       }
     }
-    val gasLimitValue = gasLimit match {
+    val gasLimitValue: BigInt = gasLimit match {
       case Some(o) => o
       case None => {
-        val n: BigInt =
+        val tx =
+          Transaction.createEthCallTransaction(
+            account.address.toString,
+            to.toString,
+            inputString
+          )
+        val estimateResult =
           client
-            .ethEstimateGas(
-              Transaction.createEthCallTransaction(
-                account.address.toString,
-                to.toString,
-                inputString
-              )
-            )
+            .ethEstimateGas(tx)
             .send
-            .getAmountUsed
-        n
+        if (estimateResult.hasError) {
+          throw Exception(
+            "estimate gas err:" + estimateResult.getError.getMessage
+          )
+        }
+        estimateResult.getAmountUsed
       }
     }
+    val b = block match {
+      case Some(o) =>
+        DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
+      case None => DefaultBlockParameterName.LATEST
+    }
+
+
     val result = client
       .ethCall(
         Transaction.createFunctionCallTransaction(
           account.address.toString,
           nonceValue.bigInteger,
           gasPriceValue.bigInteger,
+          // BigInt(0).bigInteger,
           gasLimitValue.bigInteger,
           to.toString,
           value.bigInteger,
           inputString
         ),
-        DefaultBlockParameterNumber(block.get.bigInteger)
+        b
       )
       .send
-      .getValue
-    function.unpackOutput(result.toBytes.!).toTry
+    if(result.isReverted) {
+      throw Exception("call reverted:" + result.getRevertReason)
+    }
+    function.unpackOutput(result.getValue.toBytes.!).toTry
   }
 }
 
