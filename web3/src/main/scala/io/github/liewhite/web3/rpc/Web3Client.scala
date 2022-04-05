@@ -36,6 +36,7 @@ class Web3ClientWithCredential(
 ) extends RawTransactionManager(
       client,
       account.toCredential,
+      client.ethChainId.send.getChainId.longValue,
       retries,
       sleepDuration
     ) {
@@ -190,7 +191,6 @@ class Web3ClientWithCredential(
       case None => DefaultBlockParameterName.LATEST
     }
 
-
     val result = client
       .ethCall(
         Transaction.createFunctionCallTransaction(
@@ -206,7 +206,7 @@ class Web3ClientWithCredential(
         b
       )
       .send
-    if(result.isReverted) {
+    if (result.isReverted) {
       throw Exception("call reverted:" + result.getRevertReason)
     }
     function.unpackOutput(result.getValue.toBytes.!).toTry
