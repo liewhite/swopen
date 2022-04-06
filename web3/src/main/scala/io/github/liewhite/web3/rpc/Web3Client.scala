@@ -143,73 +143,14 @@ class Web3ClientWithCredential(
     val input = converter.fromScala(params).!
     val inputString = function.packInputWithSelector(params).toHex()
     logger.info("input:" + inputString)
-
-    val nonceValue = nonce match {
-      case Some(o) => o
-      case None => {
-        val n: BigInt = client
-          .ethGetTransactionCount(
-            account.address.toString,
-            DefaultBlockParameterName.LATEST
-          )
-          .send
-          .getTransactionCount
-        n
-      }
-    }
-    val gasPriceValue = gasPrice match {
-      case Some(o) => o
-      case None => {
-        val n: BigInt = client.ethGasPrice().send.getGasPrice
-        n
-      }
-    }
-    val gasLimitValue: BigInt = gasLimit match {
-      case Some(o) => o
-      case None => {
-        val tx =
-          Transaction.createEthCallTransaction(
-            account.address.toString,
-            to.toString,
-            inputString
-          )
-        val estimateResult =
-          client
-            .ethEstimateGas(tx)
-            .send
-        if (estimateResult.hasError) {
-          throw Exception(
-            "estimate gas err:" + estimateResult.getError.getMessage
-          )
-        }
-        estimateResult.getAmountUsed
-      }
-    }
     val b = block match {
       case Some(o) =>
         DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
       case None => DefaultBlockParameterName.LATEST
     }
 
-    val result = client
-      .ethCall(
-        Transaction.createFunctionCallTransaction(
-          account.address.toString,
-          nonceValue.bigInteger,
-          gasPriceValue.bigInteger,
-          // BigInt(0).bigInteger,
-          gasLimitValue.bigInteger,
-          to.toString,
-          value.bigInteger,
-          inputString
-        ),
-        b
-      )
-      .send
-    if (result.isReverted) {
-      throw Exception("call reverted:" + result.getRevertReason)
-    }
-    function.unpackOutput(result.getValue.toBytes.!).toTry
+    val result = rawTransactionManger.sendCall(to.toHex, inputString,b)
+    function.unpackOutput(result.toBytes.!).toTry
   }
 }
 
