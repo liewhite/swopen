@@ -142,7 +142,6 @@ class Web3ClientWithCredential(
   )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
     val input = converter.fromScala(params).!
     val inputString = function.packInputWithSelector(params).toHex()
-    logger.info("input:" + inputString)
     val b = block match {
       case Some(o) =>
         DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
