@@ -26,15 +26,17 @@ case class B(
 )
 
 case class F(
-  @Unique
-  fId: Long,
-  a: BigInt,
-  @Length(35)
-  b: String,
-  c: ZonedDateTime,
-  @Length(35)
-  d: String,
+  s: String,
+  i: BigInt,
+  dt: ZonedDateTime,
+  opt: Option[ZonedDateTime],
 )
+
+
+// extension (inline left: ZonedDateTime) {
+//   inline def >(right: ZonedDateTime) =  quote(infix"$left > $right".pure.as[Boolean])
+//   inline def <(right: ZonedDateTime) =  quote(infix"$left < $right".pure.as[Boolean])
+// }
 
 @main def main: Unit = {
   val idg = Snowflake(123)
@@ -55,16 +57,26 @@ case class F(
   // )
   import ctx._
   ctx.migrate[F]
-  // Range(0,10000).foreach(i => {
+  // Range(0,1000).foreach(i => {
   //   val data = Range(0,100).map(item => {
-  //     F(idg.nextId,BigInt(10), "str", ZonedDateTime.now)
+  //     F("1",1,ZonedDateTime.now, Some(ZonedDateTime.now))
   //   })
   //   run(liftQuery(data).foreach(i => query[F].insertValue(i)))
   // })
+  val a = BigDecimal(1)
+  val b = BigDecimal(1)
+  inline def c = a > b
 
-  // val rows = run(query[F].filter(item => true))
+  val result = run(query[F].filter(item2 => item2.i gt lift(1)))
+
+  // inline def select2 =quote{ query[F].filter(item => item.i > lift(BigInt(1))) }
+  // ctx.run(select2)
+
+  inline def select3 =quote{ query[F].filter(item => liftQuery(Vector(1)).contains(item.i)) }
+  // inline def select3 =quote{ query[F].filter(item => item in Vector(1,2,3)) }
+  val result2 = run(select3)
+  // ctx.run(select3)
   // rows.foreach(item => {
   //   println(item)
-  // })
   // })
 }

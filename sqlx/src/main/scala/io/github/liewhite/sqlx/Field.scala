@@ -78,6 +78,10 @@ object TField {
     def dataType: DataType[_] = SQLDataType.DECIMAL_INTEGER(65)
   }
 
+  given TField[BigDecimal] with {
+    def dataType: DataType[_] = SQLDataType.DECIMAL_INTEGER(65)
+  }
+
   given TField[ZonedDateTime] with {
     def dataType: DataType[_] = SQLDataType.BIGINT
   }
