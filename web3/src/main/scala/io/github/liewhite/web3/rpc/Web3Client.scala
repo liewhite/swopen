@@ -41,9 +41,6 @@ class Web3ClientWithCredential(
       sleepDuration
     ) {
   private val logger = Logger("transaction")
-  private val rawTransactionManger =
-    new RawTransactionManager(client, account.toCredential)
-
   def transfer(to: Address, value: BigDecimal): Try[TxHash] = {
     val t = new Transfer(client, this).sendFunds(
       to.toString,
@@ -148,7 +145,7 @@ class Web3ClientWithCredential(
       case None => DefaultBlockParameterName.LATEST
     }
 
-    val result = rawTransactionManger.sendCall(to.toHex, inputString,b)
+    val result = sendCall(to.toHex, inputString,b)
     function.unpackOutput(result.toBytes.!).toTry
   }
 }
