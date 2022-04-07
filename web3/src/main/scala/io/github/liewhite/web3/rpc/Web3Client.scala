@@ -53,6 +53,10 @@ class Web3ClientWithCredential(
     })
   }
 
+  /**
+   * 
+   * 发起交易
+   * */
   def transact[IN, OUT, T](function: ABIFunction[IN, OUT])(
       to: Address,
       params: T,
@@ -128,6 +132,34 @@ class Web3ClientWithCredential(
     }
   }
 
+  /**
+   * 
+   * 读取合约数据
+   * 
+   * */
+  def read[IN, OUT, T](function: ABIFunction[IN, OUT])(
+      to: Address,
+      params: T,
+      block: Option[BigInt] = None
+  )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
+    Try{
+      val input = converter.fromScala(params).!
+      val inputString = function.packInputWithSelector(params).toHex()
+      val b = block match {
+        case Some(o) =>
+          DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
+        case None => DefaultBlockParameterName.LATEST
+      }
+      val result = sendCall(to.toHex, inputString, b)
+      function.unpackOutput(result.toBytes.!).toOption.get
+    }
+  }
+
+  /**
+   * 
+   * 模拟执行
+   * 
+   * */
   def call[IN, OUT, T](function: ABIFunction[IN, OUT])(
       to: Address,
       params: T,
@@ -135,18 +167,72 @@ class Web3ClientWithCredential(
       gasPrice: Option[BigInt] = None,
       gasLimit: Option[BigInt] = None,
       value: BigInt = 0,
-      block: Option[BigInt] = None
-  )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
-    val input = converter.fromScala(params).!
-    val inputString = function.packInputWithSelector(params).toHex()
-    val b = block match {
-      case Some(o) =>
-        DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
-      case None => DefaultBlockParameterName.LATEST
-    }
+      block: Option[BigInt] = None,
+  )(using converter: ConvertFromScala[T, IN]):Try[OUT] = {
+    Try {
+      val input = converter.fromScala(params).!
+      val inputString =
+        (function.selector ++ function.packInput(params)).toHex()
 
-    val result = sendCall(to.toHex, inputString,b)
-    function.unpackOutput(result.toBytes.!).toTry
+      val b = block match {
+        case Some(o) =>
+          DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
+        case None => DefaultBlockParameterName.LATEST
+      }
+      val nonceValue = nonce match {
+        case Some(o) => o.bigInteger
+        case None => getNonce
+      }
+      val gasPriceValue = gasPrice match {
+        case Some(o) => o
+        case None => {
+          val n: BigInt = client.ethGasPrice().send.getGasPrice
+          n
+        }
+      }
+      val call =
+        Transaction.createFunctionCallTransaction(
+          account.address.toString,
+          nonceValue,
+          null,
+          null,
+          to.toString,
+          value.bigInteger,
+          inputString
+        )
+      val gasLimitValue = gasLimit match {
+        case Some(o) => o
+        case None => {
+          val estimateResult =
+            client
+              .ethEstimateGas(call)
+              .send
+          if (estimateResult.hasError) {
+            throw Exception(
+              "estimate gas err:" + estimateResult.getError.getMessage
+            )
+          }
+          val n: BigInt = estimateResult.getAmountUsed
+          n
+        }
+      }
+      val tx = Transaction.createFunctionCallTransaction(
+        getFromAddress,
+        nonceValue,
+        gasPriceValue.bigInteger,
+        gasLimitValue.bigInteger,
+        to.toString,
+        value.bigInteger,
+        inputString
+      )
+
+      val sendResult = client.ethCall(tx, b).send
+      logger.info("tx hash:" + sendResult.getResult)
+      if(sendResult.isReverted) {
+        throw Exception("execution reverted:" + sendResult.getRevertReason)
+      }
+      function.unpackOutput(sendResult.getResult.toBytes.!).!
+    }
   }
 }
 

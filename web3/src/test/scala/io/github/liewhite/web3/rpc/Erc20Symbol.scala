@@ -22,7 +22,7 @@ class Erc20SymbolTest extends AnyFunSuite {
   test("erc20 balance") {
     assert {
       val token = "0xc778417e063141139fce010982780140aa0cd5ab"
-      val receipt = Client.client.call(bFunc)(
+      val receipt = Client.client.read(bFunc)(
         Address.fromHex(token).!,
         ()
       )
