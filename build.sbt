@@ -75,7 +75,7 @@ lazy val web3 = (project in file("web3"))
   .dependsOn(json, common,sqlx)
 
 lazy val root = (project in file("."))
-  .aggregate(json, common, jsonContrib, web3, sqlx)
+  .aggregate(json, common, jsonContrib, web3, sqlx, config)
   .settings(
     publish / skip := true
   )
