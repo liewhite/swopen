@@ -12,6 +12,15 @@ class ABIPackTest extends AnyFunSuite {
       bytes.toHex(true) == hex
     }
   }
+  test("hex to bytes") {
+    assert {
+      val odd = "0x0fffff"
+      val even = "0xfffff"
+      odd.toBytes.!.toBigInt == even.toBytes.!.toBigInt
+      &&  odd.toBytes.!.toBigUint == even.toBytes.!.toBigUint
+    }
+  }
+
 
   test("bytes to uint") {
     assert {
