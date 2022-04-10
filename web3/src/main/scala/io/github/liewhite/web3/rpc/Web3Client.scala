@@ -29,8 +29,8 @@ import java.math.BigInteger
 case class SendTransactionOption(
 )
 class Web3ClientWithCredential(
-    client: Web3j,
-    account: Account,
+    val client: Web3j,
+    val account: Account,
     retries: Int = 20,
     sleepDuration: Int = 15 * 1000
 ) extends RawTransactionManager(
