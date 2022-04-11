@@ -2,14 +2,16 @@ package io.github.liewhite.web3
 
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.types.BytesType
+import io.github.liewhite.json.JsonExtensions
+import io.github.liewhite.common
 import org.apache.commons.codec.binary.Hex
 
-object Extensions {
+object Extensions extends common.CommonExtensions with JsonExtensions {
     extension (s: String) {
         def toAddress: Either[Exception, Address]   = BytesType.fromString[Address](s)
         def toBytes: Either[Exception, Array[Byte]] = {
-            val without0x = if (s.startsWith("0x")) s.slice(2, s.length) else s
-            val evenLength = if(without0x.length % 2 == 0) without0x else "0" + without0x
+            val without0x  = if (s.startsWith("0x")) s.slice(2, s.length) else s
+            val evenLength = if (without0x.length % 2 == 0) without0x else "0" + without0x
 
             try {
                 Right(Hex.decodeHex(evenLength))
@@ -68,19 +70,6 @@ object Extensions {
             Some(paddings ++ rawBytes)
         }
 
-    }
-    extension [T](i: Option[T]) {
-        def ! = {
-            i.get
-        }
-    }
-    extension [E <: java.lang.Throwable, T](i: Either[E, T]) {
-        def ! = {
-            i match {
-                case Right(o) => o
-                case Left(e)  => throw e
-            }
-        }
     }
 
 }

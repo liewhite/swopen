@@ -2,8 +2,6 @@ package io.github.liewhite.common
 
 import scala.compiletime.*
 import scala.quoted.*
-import io.circe.Json
-import io.circe.syntax.*
 
 /**
  * 
@@ -48,7 +46,7 @@ object DefaultValue{
     }
     catch {
       case _ =>
-        '{mkGiven(List.empty[String],List.empty[Json])}
+        '{mkGiven(List.empty[String],List.empty[Any])}
     }
 
   }

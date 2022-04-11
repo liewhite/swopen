@@ -1,7 +1,5 @@
 package io.github.liewhite.web3.common
 
-import io.github.liewhite.web3.types.Address
-import io.github.liewhite.json.codec.Encoder
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 

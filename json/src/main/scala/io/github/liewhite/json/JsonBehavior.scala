@@ -6,19 +6,26 @@ import scala.compiletime.summonInline
 import io.github.liewhite.json.codec.Encoder
 import io.github.liewhite.json.codec.{DecodeException,Decoder}
 import io.circe.Json
+import io.circe.parser
+import io.circe.ParsingFailure
 
 
-/**
- * encode -> schema(modify -> validate) -> serialze
- * deserialze -> schema(validate -> modify) -> decode
- * //暂时可以不实现modify, 就rennme一个需求。 可以直接用反引号写
- * 
- */
-object JsonBehavior:
-  extension [T](t:T)
+trait JsonExtensions{
+
+  extension [T](t:T) {
     def encode(using encoder:  Encoder[T]): Json =
       encoder.encode(t)
+  }
 
-  extension (t:Json)
+  extension (t:Json) {
     def decode[T](using decoder:Decoder[T]):Either[DecodeException, T] = decoder.decode(t)
+  }
+
+  extension (s: String) {
+    def parseToJson: Either[ParsingFailure, Json] = parser.parse(s)
+  }
+
+}
+
+object JsonBehavior extends JsonExtensions
   

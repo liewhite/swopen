@@ -4,7 +4,6 @@ import io.getquill.*
 import io.getquill.context.jdbc.JdbcContext
 import java.time.ZonedDateTime
 import io.getquill.idiom.Idiom
-import cats.implicits
 import io.getquill.context.sql.idiom.SqlIdiom
 import java.util.Date
 import java.time.Instant
