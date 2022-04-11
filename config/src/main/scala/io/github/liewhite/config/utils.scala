@@ -6,5 +6,10 @@ import io.circe.yaml.parser
 import scala.io.Source
 
 def loadConfig[T: Decoder](path: String = "./conf/config.yaml"): Either[Exception, T] = {
-    parser.parse(Source.fromFile(path).mkString).flatMap(data=> data.decode)
+    val file = Source.fromFile(path)
+    try {
+        parser.parse(file.mkString).flatMap(data => data.decode)
+    } finally {
+        file.close
+    }
 }
