@@ -15,8 +15,7 @@ case class Bip44Wallet(mnemonic: String,password: String) {
     def getAccount(index: Int): Account = {
         val path = Array[Int](44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, index);
         val keyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, path)
-        val cred = Credentials.create(keyPair)
-        Account(Address.fromHex(cred.getAddress)!,keyPair)
+        Account(keyPair)
     }
 }
 

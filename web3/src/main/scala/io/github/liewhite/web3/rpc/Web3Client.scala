@@ -74,7 +74,7 @@ class Web3ClientWithCredential(
                 case None    => {
                     val n: BigInt = client
                         .ethGetTransactionCount(
-                          account.address.toString,
+                          account.getAddress.toString,
                           DefaultBlockParameterName.LATEST
                         )
                         .send
@@ -94,7 +94,7 @@ class Web3ClientWithCredential(
                 case None    => {
                     val call           =
                         Transaction.createFunctionCallTransaction(
-                          account.address.toString,
+                          account.getAddress.toString,
                           nonceValue.bigInteger,
                           gasPriceValue.bigInteger,
                           BigInteger.valueOf(0),
@@ -183,7 +183,7 @@ class Web3ClientWithCredential(
             }
             val call          =
                 Transaction.createFunctionCallTransaction(
-                  account.address.toString,
+                  account.getAddress.toString,
                   nonceValue,
                   null,
                   null,

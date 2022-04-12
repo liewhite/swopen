@@ -12,56 +12,61 @@ import io.github.liewhite.sqlx.TField
 import java.sql.SQLData
 import org.jooq.impl.SQLDataType
 import org.jooq.DataType
+import org.web3j.crypto.Keys
 
 class Address(val bytes: Array[Byte]) {
-  override def toString: String = {
-    bytes.toHex()
-  }
+    override def toString: String = {
+        bytes.toHex()
+    }
 
-  def lowerCaseString: String = {
-    toString.toLowerCase
-  }
-  override def equals(that: Any): Boolean = bytes.sameElements(that.asInstanceOf[Address].bytes)
+    def lowerCaseString: String = {
+        toString.toLowerCase
+    }
 
-  override def hashCode: Int = {
-    bytes.toHex().hashCode
-  }
+    def toCheckSum: String = {
+        Keys.toChecksumAddress(toString)
+    }
+
+    override def equals(that: Any): Boolean = bytes.sameElements(that.asInstanceOf[Address].bytes)
+
+    override def hashCode: Int = {
+        bytes.toHex().hashCode
+    }
 }
 
-
 object Address {
-  given BytesType[Address] with {
-    def create(bytes: Array[Byte]): Address = {
-      Address(bytes)
-    }
-    def length: Option[Int] = Some(20)
+    given BytesType[Address] with {
+        def create(bytes: Array[Byte]): Address = {
+            Address(bytes)
+        }
+        def length: Option[Int]                 = Some(20)
 
-    def bytes(addr: Address): Array[Byte] = addr.bytes
-  }
-  def fromHex(hex: String): Either[Exception, Address] = {
-    BytesType.fromString[Address](hex)
-  }
-  def fromBytes(bytes: Array[Byte]): Either[Exception, Address] = {
-    BytesType.fromBytes[Address](bytes)
-  }
-  given Encoder[Address] with {
-    def encode(t: Address): Json = Json.fromString(t.bytes.toHex())
-  }
-  given Decoder[Address] with {
-    def decode(
-        data: Json,
-        withDefaults: Boolean = true
-    ): Either[DecodeException, Address] = {
-      data.asString.flatMap(s => Address.fromHex(s).toOption) match {
-        case Some(o) => Right(o)
-        case None => Left(DecodeException("failed decode address from: " + data))
-      }
+        def bytes(addr: Address): Array[Byte] = addr.bytes
     }
-  }
+    def fromHex(hex: String): Either[Exception, Address] = {
+        BytesType.fromString[Address](hex)
+    }
+    def fromBytes(bytes: Array[Byte]): Either[Exception, Address] = {
+        BytesType.fromBytes[Address](bytes)
+    }
+    given Encoder[Address] with {
+        def encode(t: Address): Json = Json.fromString(t.bytes.toHex())
+    }
+    given Decoder[Address] with {
+        def decode(
+            data: Json,
+            withDefaults: Boolean = true
+        ): Either[DecodeException, Address] = {
+            data.asString.flatMap(s => Address.fromHex(s).toOption) match {
+                case Some(o) => Right(o)
+                case None    => Left(DecodeException("failed decode address from: " + data))
+            }
+        }
+    }
 
-  given MappedEncoding[String, Address](item => Address.fromHex(item).!)
-  given MappedEncoding[Address, String](_.toString)
-  given TField[Address] with {
-    def dataType: DataType[_] = SQLDataType.CHAR(42)
-  }
+    given MappedEncoding[String, Address](item => Address.fromHex(item).!)
+    given MappedEncoding[Address, String](_.toString)
+    given TField[Address] with {
+        def dataType: DataType[_] = SQLDataType.CHAR(42)
+    }
 }
