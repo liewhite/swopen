@@ -16,13 +16,13 @@
 
 // class DepositTest extends AnyFunSuite {
 
-//   val depositFunc = ABIFunction[Unit,Unit]("deposit")
-//   test("deposit"){
-//     assert {
-//       val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
-//       val receipt = Client.client.call(depositFunc)(Address.fromHex(deposit).!,(),value = 1 * common.Wei)
-//       println(receipt)
-//       receipt.isSuccess && receipt.get == ()
+//     val depositFunc = ABIFunction[Unit, Unit]("deposit")
+//     test("deposit") {
+//         assert {
+//             val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+//             val receipt = Client.client
+//                 .call(depositFunc)(Address.fromHex(deposit).!, (), value = 1 * common.Wei)
+//             receipt.isSuccess && receipt.get == ()
+//         }
 //     }
-//   }
 // }

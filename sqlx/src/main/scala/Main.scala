@@ -1,82 +1,63 @@
 package main
-import scala.compiletime.*
+
 import io.github.liewhite.sqlx.*
-import io.github.liewhite.common.Snowflake
-import io.github.liewhite.sqlx.annotation.{Unique, Index}
-import scala.jdk.CollectionConverters.*
-import javax.sql.DataSource
+import io.github.liewhite.sqlx.annotation.{Unique, Index, Length}
 import io.getquill.*
-import com.zaxxer.hikari.HikariDataSource
 import java.time.ZonedDateTime
-import io.github.liewhite.sqlx.annotation.Length
+import org.jooq.impl.SQLDataType
+import org.jooq.DataType
 
-case class B(
-    id: Int,
-    // @Unique()
-    idb: Int,
-    //
-    @Index("i_aa_bb")
-    @Index("i_bb")
-    Bb: Option[Int],
-    //
-    @Index("i_aa_bb")
-    @Index("i_aa", unique = true)
-    Aa: Int = 1123, // index 要求顺序， 但是默认值
-    d: Int = 1123 // index 要求顺序， 但是默认值
+class CustomField(val value: String)
+
+// custom datatypes support with just serveral givens
+object CustomField {
+    given TField[CustomField] with {
+        def dataType: DataType[_] = SQLDataType.CLOB
+    }
+    given MappedEncoding[CustomField, String](_.value)
+    given MappedEncoding[String, CustomField](CustomField(_))
+}
+
+case class T(
+    @Unique // create unique constraint on table
+    fId: Long,
+
+    @Index("a-b")
+    i:   BigInt,
+
+    @Length(35)   // column length, works for type with length(like varchar), or ignore
+    @Index("a-b") // index with same name will create multi-column index
+    s: String = "default in db", // this'll set default value in table
+
+    dt: ZonedDateTime,
+
+    @Length(35)
+    os: Option[String], // nullable in table
+
+    @Length(1000)
+    customField: CustomField // use custom datatypes
 )
-
-case class F(
-  s: String,
-  i: BigInt,
-  dt: ZonedDateTime,
-  opt: Option[ZonedDateTime],
-)
-
-
-// extension (inline left: ZonedDateTime) {
-//   inline def >(right: ZonedDateTime) =  quote(infix"$left > $right".pure.as[Boolean])
-//   inline def <(right: ZonedDateTime) =  quote(infix"$left < $right".pure.as[Boolean])
-// }
 
 @main def main: Unit = {
-  val idg = Snowflake(123)
-  // val a = 1
-  val ctx = getDBContext[MySQLDialect.type](DBConfig(
-      host = "localhost",
-      username = "sa",
-      password = Some("123"),
-      db = "test"
+    // connnect to db
+    val ctx = getDBContext[MySQLDialect.type](
+      DBConfig(
+        host = "localhost",
+        username = "sa",
+        password = Some("123"),
+        db = "test"
+      )
     )
-  )
-  // val ctx = getDBContext[PostgresDialect.type](
-  //   DBConfig(
-  //     host = "localhost",
-  //     username = "lee",
-  //     db = "test"
-  //   )
-  // )
-  import ctx._
-  ctx.migrate[F]
-  // Range(0,1000).foreach(i => {
-  //   val data = Range(0,100).map(item => {
-  //     F("1",1,ZonedDateTime.now, Some(ZonedDateTime.now))
-  //   })
-  //   run(liftQuery(data).foreach(i => query[F].insertValue(i)))
-  // })
-  val a = BigDecimal(1)
-  val b = BigDecimal(1)
-  inline def c = a > b
+    import ctx._
 
-  val result = run(query[F].filter(item2 => item2.i gt lift(1)))
+    // auto mapping case class to db table
+    ctx.migrate[T]
 
-  // inline def select2 =quote{ query[F].filter(item => item.i > lift(BigInt(1))) }
-  // ctx.run(select2)
+    // insert into table
+    run(query[T].insertValue(lift(T(1, 2, "Bob", ZonedDateTime.now, None, CustomField("Alice")))))
 
-  inline def select3 =quote{ query[F].filter(item => liftQuery(Vector(1)).contains(item.i)) }
-  // inline def select3 =quote{ query[F].filter(item => item in Vector(1,2,3)) }
-  val result2 = run(select3)
-  // ctx.run(select3)
-  // rows.foreach(item => {
-  //   println(item)
-  // })
+    // query from table
+    val rows = run(query[T].filter(item => item.fId == 1))
+
+    rows.foreach(println)
 }
