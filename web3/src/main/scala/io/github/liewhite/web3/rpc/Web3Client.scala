@@ -25,109 +25,15 @@ import scala.concurrent.duration.Duration
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import com.typesafe.scalalogging.Logger
 import java.math.BigInteger
+import org.web3j.tx.ReadonlyTransactionManager
+import org.web3j.tx.ClientTransactionManager
 
-class Web3ClientWithCredential(
-    val client:    Web3j,
-    val account:   Account,
-    retries:       Int = 20,
-    sleepDuration: Int = 15 * 1000
-) extends RawTransactionManager(
-      client,
-      account.toCredential,
-      client.ethChainId.send.getChainId.longValue,
-      retries,
-      sleepDuration
-    ) {
-    private val logger = Logger("transaction")
-
-    def transfer(to: Address, value: BigDecimal): Try[TxHash] = {
-        val t = new Transfer(client, this).sendFunds(
-          to.toString,
-          value.bigDecimal,
-          Convert.Unit.WEI
-        )
-        Try({
-            val receipt = t.send
-            TxHash.fromHex(receipt.getTransactionHash).toOption.get
-        })
-    }
-
-    /** 发起交易
-      */
-    def transact[IN, OUT, T](function: ABIFunction[IN, OUT])(
-        to: Address,
-        params: T,
-        nonce: Option[BigInt] = None,
-        gasPrice: Option[BigInt] = None,
-        gasLimit: Option[BigInt] = None,
-        //   baseFee: Option[BigInt] = None,
-        //   maxPriorityFee: Option[BigInt] = None,
-        value: BigInt = 0
-    )(using converter: ConvertFromScala[T, IN]): Try[TransactionReceipt] = {
-        Try {
-            val input       = converter.fromScala(params).!
-            val inputString =
-                (function.selector ++ function.packInput(params)).toHex()
-
-            val nonceValue    = nonce match {
-                case Some(o) => o
-                case None    => {
-                    val n: BigInt = client
-                        .ethGetTransactionCount(
-                          account.getAddress.toString,
-                          DefaultBlockParameterName.LATEST
-                        )
-                        .send
-                        .getTransactionCount
-                    n
-                }
-            }
-            val gasPriceValue = gasPrice match {
-                case Some(o) => o
-                case None    => {
-                    val n: BigInt = client.ethGasPrice().send.getGasPrice
-                    n
-                }
-            }
-            val gasLimitValue = gasLimit match {
-                case Some(o) => o
-                case None    => {
-                    val call           =
-                        Transaction.createFunctionCallTransaction(
-                          account.getAddress.toString,
-                          nonceValue.bigInteger,
-                          gasPriceValue.bigInteger,
-                          BigInteger.valueOf(0),
-                          to.toString,
-                          value.bigInteger,
-                          inputString
-                        )
-                    val estimateResult =
-                        client
-                            .ethEstimateGas(call)
-                            .send
-                    if (estimateResult.hasError) {
-                        throw Exception(
-                          "estimate gas err:" + estimateResult.getError.getMessage
-                        )
-                    }
-                    val n: BigInt      = estimateResult.getAmountUsed
-                    n
-                }
-            }
-            val tx            = RawTransaction.createTransaction(
-              nonceValue.bigInteger,
-              gasPriceValue.bigInteger,
-              gasLimitValue.bigInteger,
-              to.toString,
-              value.bigInteger,
-              inputString
-            )
-            val sendResult    = signAndSend(tx)
-            logger.info("tx hash:" + sendResult.getTransactionHash)
-            processResponse(sendResult)
-        }
-    }
+class Web3Client(
+    val client:      Web3j,
+    val fromAddress: Address
+) {
+    val txManager        = ReadonlyTransactionManager(client, fromAddress.toHex)
+    protected val logger = Logger("transaction")
 
     /** 读取合约数据
       */
@@ -144,9 +50,57 @@ class Web3ClientWithCredential(
                     DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
                 case None    => DefaultBlockParameterName.LATEST
             }
-            val result      = sendCall(to.toHex, inputString, b)
+            val result      = txManager.sendCall(to.toHex, inputString, b)
             function.unpackOutput(result.toBytes.!).toOption.get
         }
+    }
+
+    def getPendingNonce: BigInt = {
+        val n: BigInt = client
+            .ethGetTransactionCount(
+              fromAddress.toString,
+              DefaultBlockParameterName.PENDING
+            )
+            .send
+            .getTransactionCount
+        n
+
+    }
+    def gasPrice = {
+        val fromNode: BigInt = client.ethGasPrice.send.getGasPrice
+        fromNode
+
+    }
+
+    def estimateGas(
+        from: Address,
+        to: Address,
+        nonce: BigInt,
+        value: BigInt,
+        input: Array[Byte]
+    ): BigInt = {
+        val callData =
+            Transaction.createFunctionCallTransaction(
+              fromAddress.toString,
+              nonce.bigInteger,
+              null,
+              null,
+              to.toString,
+              value.bigInteger,
+              input.toHex()
+            )
+
+        val estimateResult =
+            client
+                .ethEstimateGas(callData)
+                .send
+        if (estimateResult.hasError) {
+            throw Exception(
+              "estimate gas err:" + estimateResult.getError.getMessage
+            )
+        }
+        val n: BigInt      = estimateResult.getAmountUsed
+        n
     }
 
     /** 模拟执行
@@ -161,9 +115,7 @@ class Web3ClientWithCredential(
         block: Option[BigInt] = None
     )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
         Try {
-            val input       = converter.fromScala(params).!
-            val inputString =
-                (function.selector ++ function.packInput(params)).toHex()
+            val input = function.selector ++ function.packInput(params)
 
             val b             = block match {
                 case Some(o) =>
@@ -171,8 +123,8 @@ class Web3ClientWithCredential(
                 case None    => DefaultBlockParameterName.LATEST
             }
             val nonceValue    = nonce match {
-                case Some(o) => o.bigInteger
-                case None    => getNonce
+                case Some(o) => o
+                case None    => getPendingNonce
             }
             val gasPriceValue = gasPrice match {
                 case Some(o) => o
@@ -181,40 +133,20 @@ class Web3ClientWithCredential(
                     n
                 }
             }
-            val call          =
-                Transaction.createFunctionCallTransaction(
-                  account.getAddress.toString,
-                  nonceValue,
-                  null,
-                  null,
-                  to.toString,
-                  value.bigInteger,
-                  inputString
-                )
+
             val gasLimitValue = gasLimit match {
                 case Some(o) => o
-                case None    => {
-                    val estimateResult =
-                        client
-                            .ethEstimateGas(call)
-                            .send
-                    if (estimateResult.hasError) {
-                        throw Exception(
-                          "estimate gas err:" + estimateResult.getError.getMessage
-                        )
-                    }
-                    val n: BigInt      = estimateResult.getAmountUsed
-                    n
-                }
+                case None    => estimateGas(fromAddress, to, nonceValue, value, input)
             }
-            val tx            = Transaction.createFunctionCallTransaction(
-              getFromAddress,
-              nonceValue,
+
+            val tx = Transaction.createFunctionCallTransaction(
+              fromAddress.toHex,
+              nonceValue.bigInteger,
               gasPriceValue.bigInteger,
               gasLimitValue.bigInteger,
               to.toString,
               value.bigInteger,
-              inputString
+              input.toHex()
             )
 
             val sendResult = client.ethCall(tx, b).send

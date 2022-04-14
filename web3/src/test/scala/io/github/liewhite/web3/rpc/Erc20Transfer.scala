@@ -22,17 +22,18 @@
 
 //   test("erc20 transfer") {
 //     assert {
-//       val token = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"
-//       val receipt = Client.client.transact(transferFunc)(Address.fromHex(token).!, (Client.wallet.getAccount(1).address, BigInt("111111111111111111111111")))
+//       val token = "0x110a13FC3efE6A245B50102D2d79B3E76125Ae83"
+//       val receipt = Client.client.transact(transferFunc)(Address.fromHex(token).!, (Client.wallet.getAccount(1).getAddress, BigInt(1)))
+//       println(receipt)
 //       receipt.isSuccess && receipt.get.isStatusOK
 //     }
 //   }
-//   // test("deposit"){
-//   //   assert {
-//   //     val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
-//   //     val receipt = client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
-//   //     println(receipt.get)
-//   //     true
-//   //   }
-//   // }
+//   test("deposit"){
+//     assert {
+//       val deposit = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+//       val receipt = Client.client.transact(depositFunc)(Address.fromHex(deposit).!,(),value = common.GWei)
+//       println(receipt.get)
+//       true
+//     }
+//   }
 // }

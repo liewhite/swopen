@@ -21,12 +21,13 @@
 //   test("erc20 balance") {
 //     assert {
 //       val token = "0xc778417e063141139fce010982780140aa0cd5ab"
-//       val receipt = Client.client.read(bFunc)(
+//       val receipt = Client.readonlyClient.read(bFunc)(
 //         Address.fromHex(token).!,
-//         Tuple1(Client.wallet.getAccount(0).address),
-//         // Tuple1(Address.fromHex("0xaba462f5d4170db0a4b58fbc1567abad3a186d24").!)
-//         block = Some(BigInt(12162606))
+//         // Tuple1(Client.wallet.getAccount(0).getAddress),
+//         Tuple1(Address.fromHex("0xaba462f5d4170db0a4b58fbc1567abad3a186d24").!),
+//         // block = Some(BigInt(12162606))
 //       )
+//       println(receipt)
 //       if (receipt.isSuccess) {
 //         println(receipt.get.value)
 //       }

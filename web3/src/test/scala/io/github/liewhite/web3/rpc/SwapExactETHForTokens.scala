@@ -31,7 +31,7 @@
 //             Address.fromHex("0xc778417e063141139fce010982780140aa0cd5ab").!,
 //             Address.fromHex("0xaD6D458402F60fD3Bd25163575031ACDce07538D").!
 //           ),
-//           Client.wallet.getAccount(0).address,
+//           Client.client.account.getAddress,
 //           "0x1a6f11713911".toBytes.!.toBigUint.!,
 //         ),
 //         value = common.GWei * 200_000_000
