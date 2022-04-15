@@ -57,7 +57,7 @@ case class T(
     run(query[T].insertValue(lift(T(1, 2, "Bob", ZonedDateTime.now, None, CustomField("Alice")))))
 
     // query from table
-    val rows = run(query[T].filter(item => item.fId == 1))
+    val rows = run(query[T].filter(item => item.fId == 1).forUpdate)
 
     rows.foreach(println)
 }
