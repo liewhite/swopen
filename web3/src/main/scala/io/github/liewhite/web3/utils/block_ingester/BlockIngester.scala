@@ -4,7 +4,6 @@ import io.github.liewhite.web3.Extensions.*
 import org.web3j.protocol.websocket.WebSocketService
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.websocket.events.NewHead
-import client.ClientPool
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.web3j.protocol.core.DefaultBlockParameterNumber
@@ -13,6 +12,7 @@ import scala.concurrent.duration.Duration
 import org.web3j.protocol.core.methods.response.EthBlock
 import java.util.concurrent.LinkedBlockingQueue
 import io.github.liewhite.web3.utils.block_ingester.state.*
+import io.github.liewhite.web3.utils.client.ClientPool
 
 class BlockIngester(
     name:          String,
