@@ -24,7 +24,7 @@ class DBStateStorage(dbConfig: DBConfig)
         }
     }
     def save(b: BlockIngesterState) = {
-        val exists = run(query[DBState].filter(_.ingesterId == lift(b.name)))
+        val exists = run(query[DBState].filter(_.ingesterId == lift(b.name)).forUpdate)
         if(!exists.isEmpty) {
             run(query[DBState].filter(_.ingesterId == lift(b.name)).update(p => p.nextBlock -> lift(b.nextBlock.longValue)) )
         }else{

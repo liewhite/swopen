@@ -88,7 +88,7 @@ trait RawCodecs[I <: SqlIdiom, N <: NamingStrategy] { this: JdbcContext[I, N] =>
     }
 
     // mysql for update clause
-    extension [T](q: Query[T]) {
+    extension [T](inline q: Query[T]) {
         inline def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
     }
 }
