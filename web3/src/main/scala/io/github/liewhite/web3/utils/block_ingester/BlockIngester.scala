@@ -14,6 +14,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import io.github.liewhite.web3.utils.block_ingester.state.*
 import io.github.liewhite.web3.utils.client.ClientPool
 
+case class BlockInfo(
+    data: EthBlock.Block,
+    history: Boolean
+)
+
 class BlockIngester(
     name:          String,
     wssUrl:        String,
@@ -25,7 +30,7 @@ class BlockIngester(
 ) {
     val clients = ClientPool(rpcUrls)
 
-    def start(handler: Vector[EthBlock.Block] => Unit): Unit = {
+    def start(handler: Vector[BlockInfo] => Unit): Unit = {
         val initState =
             storage.load(name) match {
                 case Some(s) => {
@@ -81,18 +86,18 @@ class BlockIngester(
           batchSize,
           handler
         )
-        callHandler(handler, Vector(firstBlock), transactional)
+        callHandler(handler, Vector(BlockInfo(firstBlock, false)), transactional)
         var itemState = stateAfterFillGap
         queue.forEach(item => {
-            callHandler(handler, Vector(item), transactional)
+            callHandler(handler, Vector(BlockInfo(item,false)), transactional)
             itemState = itemState.copy(nextBlock = BigInt(item.getNumber) + 1)
             storage.save(itemState)
         })
     }
 
     def callHandler(
-        handler: Vector[EthBlock.Block] => Unit,
-        block: Vector[EthBlock.Block],
+        handler: Vector[BlockInfo] => Unit,
+        block: Vector[BlockInfo],
         transactional: Boolean
     ): Unit = {
         try {
@@ -113,7 +118,7 @@ class BlockIngester(
         state: BlockIngesterState,
         to: Int, // exclusive
         batchSize: Int,
-        handler: Vector[EthBlock.Block] => Unit
+        handler: Vector[BlockInfo] => Unit
     ): BlockIngesterState = {
         val from = state.nextBlock.intValue
         Range(
@@ -123,7 +128,7 @@ class BlockIngester(
         ).foldLeft(state)((acc, start) => {
             val end = Vector(start + batchSize, to).min
             val blocks = fetchBlocks(start, end)
-            callHandler(handler, blocks.toVector, transactional)
+            callHandler(handler, blocks.map(BlockInfo(_, true)).toVector, transactional)
             val newState = acc.copy(nextBlock = end)
             storage.save(acc)
             newState
