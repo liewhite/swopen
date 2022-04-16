@@ -3,19 +3,19 @@ package io.github.liewhite.web3.utils.block_ingester.state
 import io.github.liewhite.sqlx.*
 import io.getquill.*
 
-case class DBState(
+case class DbState(
     ingesterId: String,
     nextBlock:  Long
 )
 
-class DBStateStorage(dbConfig: DBConfig)
+class DbStateStorage(dbConfig: DBConfig)
     extends TBlockStateStorage {
     val ctx = getDBContext[MySQLDialect.type](dbConfig)
     import ctx._
-    ctx.migrate[DBState]
+    ctx.migrate[DbState]
 
     def load(name: String) = {
-        val state = run(query[DBState].filter(a => a.ingesterId == lift(name)))
+        val state = run(query[DbState].filter(a => a.ingesterId == lift(name)))
         if (state.isEmpty) {
             None
         } else {
@@ -24,11 +24,11 @@ class DBStateStorage(dbConfig: DBConfig)
         }
     }
     def save(b: BlockIngesterState) = {
-        val exists = run(query[DBState].filter(_.ingesterId == lift(b.name)).forUpdate)
+        val exists = run(query[DbState].filter(_.ingesterId == lift(b.name)).forUpdate)
         if(!exists.isEmpty) {
-            run(query[DBState].filter(_.ingesterId == lift(b.name)).update(p => p.nextBlock -> lift(b.nextBlock.longValue)) )
+            run(query[DbState].filter(_.ingesterId == lift(b.name)).update(p => p.nextBlock -> lift(b.nextBlock.longValue)) )
         }else{
-            run(query[DBState].insertValue(lift(DBState(b.name,b.nextBlock.longValue))))
+            run(query[DbState].insertValue(lift(DbState(b.name,b.nextBlock.longValue))))
         }
     }
 }
