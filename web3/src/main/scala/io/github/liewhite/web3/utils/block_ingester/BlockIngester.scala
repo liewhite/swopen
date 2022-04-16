@@ -15,7 +15,7 @@ import io.github.liewhite.web3.utils.block_ingester.state.*
 import io.github.liewhite.web3.utils.client.ClientPool
 
 case class BlockInfo(
-    data: EthBlock.Block,
+    data:    EthBlock.Block,
     history: Boolean
 )
 
@@ -36,13 +36,13 @@ class BlockIngester(
                 case Some(s) => {
                     s
                 }
-                case None => {
+                case None    => {
                     val nextBlock: BigInt = startBlock match {
                         case Some(b) => b
-                        case None =>
+                        case None    =>
                             clients.getClient.ethBlockNumber.send.getBlockNumber
                     }
-                    val create = BlockIngesterState(name, nextBlock)
+                    val create            = BlockIngesterState(name, nextBlock)
                     storage.save(create)
                     create
                 }
@@ -54,23 +54,17 @@ class BlockIngester(
         val stateAfterHistory =
             ingestHistory(initState, latestBlockNum.intValue, batchSize, handler)
 
-        val wss = WebSocketService(wssUrl, false)
+        val wss               = WebSocketService(wssUrl, false)
         wss.connect
-        val wssClient = Web3j.build(wss)
-        val queue = LinkedBlockingQueue[EthBlock.Block]()
+        val wssClient         = Web3j.build(wss)
+        val queue             = LinkedBlockingQueue[EthBlock.Block]()
         wssClient
             .newHeadsNotifications()
             .subscribe(
               h => {
-                  val num =
+                  val num   =
                       h.getParams.getResult.getNumber.toBytes.!.toBigUint.!
-                  val block = clients.getClient
-                      .ethGetBlockByNumber(
-                        DefaultBlockParameterNumber(num.longValue),
-                        true
-                      )
-                      .send
-                      .getBlock
+                  val block = getBlockWithRetries(num.longValue)
 
                   queue.put(block)
               },
@@ -79,7 +73,7 @@ class BlockIngester(
                   System.exit(1)
               }
             )
-        val firstBlock = queue.take
+        val firstBlock        = queue.take
         val stateAfterFillGap = ingestHistory(
           stateAfterHistory,
           firstBlock.getNumber.intValue,
@@ -87,12 +81,13 @@ class BlockIngester(
           handler
         )
         callHandler(handler, Vector(BlockInfo(firstBlock, false)), transactional)
-        var itemState = stateAfterFillGap
-        queue.forEach(item => {
-            callHandler(handler, Vector(BlockInfo(item,false)), transactional)
+        var itemState         = stateAfterFillGap
+        while(true) {
+            val item = queue.take
+            callHandler(handler, Vector(BlockInfo(item, false)), transactional)
             itemState = itemState.copy(nextBlock = BigInt(item.getNumber) + 1)
             storage.save(itemState)
-        })
+        }
     }
 
     def callHandler(
@@ -126,8 +121,8 @@ class BlockIngester(
           to,
           batchSize
         ).foldLeft(state)((acc, start) => {
-            val end = Vector(start + batchSize, to).min
-            val blocks = fetchBlocks(start, end)
+            val end      = Vector(start + batchSize, to).min
+            val blocks   = fetchBlocks(start, end)
             callHandler(handler, blocks.map(BlockInfo(_, true)).toVector, transactional)
             val newState = acc.copy(nextBlock = end)
             storage.save(acc)
@@ -163,5 +158,21 @@ class BlockIngester(
                 fetchBlocks(from, to)
             }
         })
+    }
+
+    def getBlockWithRetries(num: Long): EthBlock.Block = {
+        val block = clients.getClient
+            .ethGetBlockByNumber(
+              DefaultBlockParameterNumber(num.longValue),
+              true
+            )
+            .send
+            .getBlock
+        if(block == null) {
+            Thread.sleep(200)
+            getBlockWithRetries(num)
+        }else{
+            block
+        }
     }
 }
