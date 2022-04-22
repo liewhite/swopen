@@ -2,10 +2,12 @@ package io.github.liewhite.web3.types
 
 import io.github.liewhite.web3.Extensions.*
 
-
-abstract class BytesType(val bytes: Array[Byte], length: Int){
+abstract class BytesType(val bytes: Array[Byte], length: Int) {
+    if (bytes.length != length) {
+        throw IllegalArgumentException("bytes length must be " + bytes.length)
+    }
     def toHex: String = {
-      "0x" + bytes.toHex
+        bytes.toHex()
     }
 
     override def toString: String = {

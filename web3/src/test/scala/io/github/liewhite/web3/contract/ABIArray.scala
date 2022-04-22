@@ -20,7 +20,7 @@ class ABIArrayTest extends AnyFunSuite {
     assert {
       val data = "0x0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000bb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c0000000000000000000000008e876f6cd486508814cb5e2ffaeeca0bce58f506"
       val p = summon[ABIPack[ABIDynamicArray[ABIAddress]]]
-      println(p.unpack(data.toBytes.toOption.get).toOption.get.value.map(_.value))
+      println(p.unpack(data.toBytes).value.map(_.value))
       true
     }
     // assert {

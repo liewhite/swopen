@@ -58,29 +58,29 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack int") {
     assert {
       val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIIntN[8]]].unpack(bytes)
-      result.toOption.get.value == BigInt(2)
+      result.value == BigInt(2)
     }
     assert {
       val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIInt]].unpack(bytes)
-      result.toOption.get.value == BigInt(2)
+      result.value == BigInt(2)
     }
   }
   test("unpack neg int") {
     assert {
       val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIIntN[8]]].unpack(bytes)
-      result.toOption.get.value == BigInt(-1)
+      result.value == BigInt(-1)
     }
     assert {
       val hexStr = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIInt]].unpack(bytes)
-      result.toOption.get.value == BigInt(-1)
+      result.value == BigInt(-1)
     }
   }
 
@@ -113,25 +113,25 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack uint") {
     assert {
       val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIUintN[8]]].unpack(bytes)
-      result.toOption.get.value == BigInt(2)
+      result.value == BigInt(2)
     }
     assert {
       val hexStr = "0000000000000000000000000000000000000000000000000000000000000002"
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIUint]].unpack(bytes)
-      result.toOption.get.value == BigInt(2)
+      result.value == BigInt(2)
     }
   }
   test("unpack neg uint") {
     assert {
       val hexStr = Range(0,32).map(item => "ff").mkString
-      val bytes = hexStr.toBytes.toOption.get
+      val bytes = hexStr.toBytes
       val result = summon[ABIPack[ABIUintN[32]]].unpack(bytes)
-      println(result.toOption.get.value)
+      println(result.value)
       println(Array.fill(32)(0xff.toByte).toBigUint)
-      result.toOption.get.value == Array.fill(32)(0xff.toByte).toBigUint.get
+      result.value == Array.fill(32)(0xff.toByte).toBigUint
     }
   }
 
@@ -146,17 +146,17 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack string") {
     assert {
-      val bytes = "0x000000000000000000000000000000000000000000000000000000000000000de4b8ade6968720616e6420656e00000000000000000000000000000000000000".toBytes.toOption.get
+      val bytes = "0x000000000000000000000000000000000000000000000000000000000000000de4b8ade6968720616e6420656e00000000000000000000000000000000000000".toBytes
       val str = "中文 and en"
       val result = summon[ABIPack[ABIString]].unpack(bytes)
-      result.toOption.get.value == str
+      result.value == str
     }
   }
 
   test("pack address") {
    assert {
       val addrHex = "000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
-      val addr = ABIAddress(BytesType.fromString[Address](addrHex).toOption.get)
+      val addr = ABIAddress(Address(addrHex))
       val result = summon[ABIPack[ABIAddress]].pack(addr)
       val resultHex = result.toHex(false)
       resultHex.slice(24,64) == addrHex
@@ -166,17 +166,17 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack address") {
     assert {
       val addrHex = "0x000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
-      val bytes = addrHex.toBytes.toOption.get
+      val bytes = addrHex.toBytes
       val result = summon[ABIPack[ABIAddress]].unpack(padLeftZero(bytes))
-      result.toOption.get.value.toString == addrHex
+      result.value.toString == addrHex
     }
   }
   test("unpack address with zero prefix") {
     assert {
       val addrHex = "0x000f72912fbe295c5155e8b6f94fc6d2c214ee9f"
-      val bytes = addrHex.toBytes.toOption.get
+      val bytes = addrHex.toBytes
       val result = summon[ABIPack[ABIAddress]].unpack(padLeftZero(bytes))
-      result.toOption.get.value.toString == addrHex
+      result.value.toString == addrHex
     }
   }
   test("pack bool") {
@@ -195,47 +195,47 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack bool") {
     assert {
       val tHex = "0000000000000000000000000000000000000000000000000000000000000001"
-      val tBytes = tHex.toBytes.toOption.get
+      val tBytes = tHex.toBytes
       val result = summon[ABIPack[ABIBool]].unpack(tBytes)
-      result.toOption.get.value
+      result.value
     }
 
     assert {
       val tHex = "0000000000000000000000000000000000000000000000000000000000000000"
-      val tBytes = tHex.toBytes.toOption.get
+      val tBytes = tHex.toBytes
       val result = summon[ABIPack[ABIBool]].unpack(tBytes)
-      !result.toOption.get.value
+      !result.value
     }
   }
 
   test("unpack static bytes") {
     assert {
-      val bytes = "1111111111111111111111111111000000000000000000000000000000000000".toBytes.toOption.get
+      val bytes = "1111111111111111111111111111000000000000000000000000000000000000".toBytes
       val result = summon[ABIPack[ABIStaticBytes[14]]].unpack(bytes)
-      val target = "1111111111111111111111111111".toBytes.toOption.get
+      val target = "1111111111111111111111111111".toBytes
 
-      result.toOption.get.value.sameElements(target)
+      result.value.sameElements(target)
     }
     assert {
-      val bytes = "1111111111111111111111111111000000000000000000000000000000000000".toBytes.toOption.get
+      val bytes = "1111111111111111111111111111000000000000000000000000000000000000".toBytes
       val result = summon[ABIPack[ABIStaticBytes[15]]].unpack(bytes)
-      val target = "1111111111111111111111111111".toBytes.toOption.get
+      val target = "1111111111111111111111111111".toBytes
 
-      !result.toOption.get.value.sameElements(target)
+      !result.value.sameElements(target)
     }
   }
   test("pack static bytes") {
     assert {
-      val bytes = "1111111111111111111111111111".toBytes.toOption.get
+      val bytes = "1111111111111111111111111111".toBytes
       val result = summon[ABIPack[ABIStaticBytes[14]]].pack(ABIStaticBytes[14](bytes,14))
-      val target = "1111111111111111111111111111000000000000000000000000000000000000".toBytes.toOption.get
+      val target = "1111111111111111111111111111000000000000000000000000000000000000".toBytes
 
       result.sameElements(target)
     }
     assert {
-      val bytes = "111111111111111111111111111111".toBytes.toOption.get
+      val bytes = "111111111111111111111111111111".toBytes
       val result = summon[ABIPack[ABIStaticBytes[15]]].pack(ABIStaticBytes[15](bytes,15))
-      val target = "1111111111111111111111111111110000000000000000000000000000000000".toBytes.toOption.get
+      val target = "1111111111111111111111111111110000000000000000000000000000000000".toBytes
 
       result.sameElements(target)
     }
@@ -243,9 +243,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("pack dynamic bytes") {
     assert {
-      val bytes = "222222".toBytes.toOption.get
+      val bytes = "222222".toBytes
       val result = summon[ABIPack[ABIDynamicBytes]].pack(ABIDynamicBytes(bytes))
-      val target = "00000000000000000000000000000000000000000000000000000000000000032222220000000000000000000000000000000000000000000000000000000000".toBytes.toOption.get
+      val target = "00000000000000000000000000000000000000000000000000000000000000032222220000000000000000000000000000000000000000000000000000000000".toBytes
 
       result.sameElements(target)
     }
@@ -253,10 +253,10 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack dynamic bytes") {
     assert {
-      val bytes = "00000000000000000000000000000000000000000000000000000000000000032222220000000000000000000000000000000000000000000000000000000000".toBytes.toOption.get
+      val bytes = "00000000000000000000000000000000000000000000000000000000000000032222220000000000000000000000000000000000000000000000000000000000".toBytes
       val result = summon[ABIPack[ABIDynamicBytes]].unpack(bytes)
-      val target = "222222".toBytes.toOption.get
-      result.toOption.get.value.sameElements(target)
+      val target = "222222".toBytes
+      result.value.sameElements(target)
     }
   }
 
@@ -270,10 +270,10 @@ class ABIPackTest extends AnyFunSuite {
   test("unpack static tuple") {
     assert {
       val data = "000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000001"
-      val bytes = data.toBytes.toOption.get
+      val bytes = data.toBytes
       val o = summon[ABIPack[(ABIIntN[32], ABIBool)]].unpack(bytes)
-      val v1 = o.toOption.get._1
-      val v2 = o.toOption.get._2
+      val v1 = o._1
+      val v2 = o._2
       v1.value == 123&& v2.value == true
     }
   }
@@ -287,9 +287,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack dynamic tuple") {
     assert {
-      val data = "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000036173640000000000000000000000000000000000000000000000000000000000".toBytes.toOption.get
+      val data = "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000036173640000000000000000000000000000000000000000000000000000000000".toBytes
       val decoded = summon[ABIPack[(ABIString, ABIBool)]].unpack(data)
-      decoded.toOption.get._1.value == "asd" && decoded.toOption.get._2.value == true
+      decoded._1.value == "asd" && decoded._2.value == true
     }
   }
 
@@ -303,9 +303,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack static array") {
     assert {
-      val data = "000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000005".toBytes.toOption.get
+      val data = "000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000005".toBytes
       val decoded = summon[ABIPack[ABIStaticArray[ABIIntN[8],3]]].unpack(data)
-      decoded.toOption.get.value.map(_.value.toInt) == Vector(3,4,5)
+      decoded.value.map(_.value.toInt) == Vector(3,4,5)
     }
   }
 
@@ -319,9 +319,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack static array with dynamic") {
     assert {
-      val data = "000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000161000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016300000000000000000000000000000000000000000000000000000000000000".toBytes.toOption.get
+      val data = "000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000161000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016300000000000000000000000000000000000000000000000000000000000000".toBytes
       val decoded = summon[ABIPack[ABIStaticArray[ABIString,3]]].unpack(data)
-      decoded.toOption.get.value.map(_.value).toVector == Vector("a","b","c")
+      decoded.value.map(_.value).toVector == Vector("a","b","c")
     }
   }
 
@@ -335,9 +335,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack dynamic array") {
     assert {
-      val data = "0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004".toBytes.toOption.get
+      val data = "0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004".toBytes
       val decoded = summon[ABIPack[ABIDynamicArray[ABIIntN[8]]]].unpack(data)
-      decoded.toOption.get.value.map(_.value.toInt) == Vector(1,2,4)
+      decoded.value.map(_.value.toInt) == Vector(1,2,4)
     }
   }
 
@@ -351,9 +351,9 @@ class ABIPackTest extends AnyFunSuite {
 
   test("unpack dynamic array with dynamic elem") {
     assert {
-      val data = "0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000".toBytes.toOption.get
+      val data = "0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000".toBytes
       val decoded = summon[ABIPack[ABIDynamicArray[ABIString]]].unpack(data)
-      decoded.toOption.get.value.map(_.value) == Vector("a","b")
+      decoded.value.map(_.value) == Vector("a","b")
     }
   }
 }

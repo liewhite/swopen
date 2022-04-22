@@ -19,8 +19,8 @@ class ABIPackIntegerTest extends AnyFunSuite {
   test("pack max uint") {
     assert {
       val data = Array.fill(32)(0xff.toByte)
-      val decoder = summon[ABIPack[ABIUint]].unpack(data).toOption.get
-      decoder.value == (Array[Byte](0.toByte) ++ Array.fill(32)(0xff.toByte)).toBigUint.get
+      val decoder = summon[ABIPack[ABIUint]].unpack(data)
+      decoder.value == (Array[Byte](0.toByte) ++ Array.fill(32)(0xff.toByte)).toBigUint
     }
   }
 }

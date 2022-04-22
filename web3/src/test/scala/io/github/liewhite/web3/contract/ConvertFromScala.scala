@@ -22,7 +22,7 @@ class ConvertFromScalaTest extends AnyFunSuite {
         summon[ConvertFromScala[Vector[Boolean], ABIStaticArray[ABIBool, 10]]]
       val b =
         summon[ConvertFromScala[Vector[Int], ABIStaticArray[ABIIntN[8], 10]]]
-      b.fromScala(Vector(1,2,3,4)).toOption.get.length == 10
+      b.fromScala(Vector(1,2,3,4)).length == 10
     }
   }
 }

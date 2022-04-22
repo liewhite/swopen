@@ -8,7 +8,7 @@ class ABIPackTest extends AnyFunSuite {
   test("convert bytes to hex") {
     assert {
       val hex = "0xffff"
-      val bytes = hex.toBytes.toOption.get
+      val bytes = hex.toBytes
       bytes.toHex(true) == hex
     }
   }
@@ -16,46 +16,46 @@ class ABIPackTest extends AnyFunSuite {
     assert {
       val odd = "0x0fffff"
       val even = "0xfffff"
-      odd.toBytes.!.toBigInt == even.toBytes.!.toBigInt
-      &&  odd.toBytes.!.toBigUint == even.toBytes.!.toBigUint
+      odd.toBytes.toBigInt == even.toBytes.toBigInt
+      &&  odd.toBytes.toBigUint == even.toBytes.toBigUint
     }
   }
 
 
   test("bytes to uint") {
     assert {
-      val hex = "0xffff".toBytes.toOption.get
-      val i = hex.toBigUint.get
+      val hex = "0xffff".toBytes
+      val i = hex.toBigUint
       i == BigInt(0xffff)
     }
     assert {
-      val hex = "0x00ffff".toBytes.toOption.get
-      val i = hex.toBigUint.get
+      val hex = "0x00ffff".toBytes
+      val i = hex.toBigUint
       i == BigInt(0xffff)
     }
     assert {
       val hex = Array.fill(256)(0xff.toByte)
-      val i = hex.toBigUint.get
+      val i = hex.toBigUint
       i == BigInt(Array[Byte](0) ++ hex)
     }
   }
 
   test("bytes to int") {
     assert {
-      val hex = "0xffff".toBytes.toOption.get
-      val i = hex.toBigInt.get
+      val hex = "0xffff".toBytes
+      val i = hex.toBigInt
       i == -1
     }
 
     assert {
-      val hex = "0x00ffff".toBytes.toOption.get
-      val i = hex.toBigInt.get
+      val hex = "0x00ffff".toBytes
+      val i = hex.toBigInt
       i == BigInt(0xffff)
     }
 
     assert {
       val hex = Array.fill(256)(0xff.toByte)
-      val i = hex.toBigInt.get
+      val i = hex.toBigInt
       i == BigInt(-1)
     }
   }

@@ -24,17 +24,17 @@ class Bip44Test extends AnyFunSuite {
       val secret: BigInt = account.keyPair.getPrivateKey
 
       account.getAddress.bytes.toHex().toLowerCase == "0x116b68bA80C67909b28c77002c21A05e7D5C914B".toLowerCase &&
-      secret.toUintByte32.!.toHex() == "0xafc3f9dc70207e83b09962e65f8fa623d05194cfdac9a1dd5e09490d46f48afd"
+      secret.toUintByte32.toHex() == "0xafc3f9dc70207e83b09962e65f8fa623d05194cfdac9a1dd5e09490d46f48afd"
     }
   }
   test("account 2") {
     assert {
       val account = wallet.getAccount(2)
       val secret: BigInt = account.keyPair.getPrivateKey
-      println(secret.toUintByte32.!.toHex())
+      println(secret.toUintByte32.toHex())
 
       account.getAddress.bytes.toHex().toLowerCase == "0xb1973b0436d4A30ccCf3beF60D8aebc9B827E2F3".toLowerCase &&
-      secret.toUintByte32.!.toHex() == "0xc19b6a5756e0a80d5c2853cb4f9f1ecb945baef00ef4a159e25e4ad113aa55b6"
+      secret.toUintByte32.toHex() == "0xc19b6a5756e0a80d5c2853cb4f9f1ecb945baef00ef4a159e25e4ad113aa55b6"
     }
   }
 }
