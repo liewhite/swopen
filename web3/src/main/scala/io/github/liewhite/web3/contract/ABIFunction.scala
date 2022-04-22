@@ -23,31 +23,6 @@ class ABIFunction[IN, OUT](
     val name: String
 )(using inPack: ABIPack[IN], outPack: ABIPack[OUT]) {
 
-  def apply[T](
-      contract: Address,
-      input: T,
-      nonce: Option[BigInt] = None,
-      gasPrice: Option[BigInt] = None,
-      gasLimit: Option[BigInt] = None,
-      baseFee: Option[BigInt] = None,
-      maxPriorityFee: Option[BigInt] = None,
-      value: BigInt = 0,
-      dryRun: Boolean = false,
-      blockNum: Option[BigInt] = None
-  )(
-      client: Web3ClientWithCredential
-  )(using
-      converter: ConvertFromScala[T, IN]
-  ): Either[Exception, OUT] = {
-    val data = converter.fromScala(input)
-    val d = data.!
-    // val rawTransaction = RawTransaction.createTransaction()
-    // client.rawTransactionManger.signAndSend()
-    // call contract on chain
-    // client.ethCall()
-    ???
-  }
-
   def functionSignature: String = name + inPack.typeName
   def selector: Array[Byte] = {
     val fsignature = name + inPack.typeName
@@ -58,16 +33,16 @@ class ABIFunction[IN, OUT](
   def packInput[T](
       args: T
   )(using converter: ConvertFromScala[T, IN]): Array[Byte] = {
-    inPack.pack(converter.fromScala(args).toOption.get)
+    inPack.pack(converter.fromScala(args))
   }
 
   def packInputWithSelector[T](
       args: T
   )(using converter: ConvertFromScala[T, IN]): Array[Byte] = {
-    selector ++ inPack.pack(converter.fromScala(args).toOption.get)
+    selector ++ inPack.pack(converter.fromScala(args))
   }
 
-  def unpackInput(args: Array[Byte]): Either[Exception, IN] = {
+  def unpackInput(args: Array[Byte]): IN = {
     val params = if (args.startsWith(selector)) {
       args.drop(4)
     } else {
@@ -79,10 +54,10 @@ class ABIFunction[IN, OUT](
   def packOutput[T](
       args: T
   )(using converter: ConvertFromScala[T, OUT]): Array[Byte] = {
-    outPack.pack(converter.fromScala(args).toOption.get)
+    outPack.pack(converter.fromScala(args))
   }
 
-  def unpackOutput(args: Array[Byte]): Either[Exception, OUT] = {
+  def unpackOutput(args: Array[Byte]): OUT = {
     outPack.unpack(args)
   }
 

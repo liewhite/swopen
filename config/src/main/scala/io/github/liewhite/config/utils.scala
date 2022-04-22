@@ -1,14 +1,17 @@
 package io.github.liewhite.config
 
-import io.github.liewhite.json.codec.Decoder
-import io.github.liewhite.json.JsonBehavior.*
+import io.github.liewhite.json.SwopenJson.*
 import io.circe.yaml.parser
 import scala.io.Source
 
-def loadConfig[T: Decoder](path: String = "./conf/config.yaml"): Either[Exception, T] = {
+def loadConfig[T: ReadWriter](path: String = "./conf/config.yaml"): T = {
     val file = Source.fromFile(path)
     try {
-        parser.parse(file.mkString).flatMap(data => data.decode)
+        val cfg = parser.parse(file.mkString).map(data => read[T](data.noSpaces)) match {
+            case Left(e) => throw e
+            case Right(o) => o
+        }
+        cfg
     } finally {
         file.close
     }

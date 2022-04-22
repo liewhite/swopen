@@ -43,7 +43,7 @@ class Web3Client(
         block: Option[BigInt] = None
     )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
         Try {
-            val input       = converter.fromScala(params).!
+            val input       = converter.fromScala(params)
             val inputString = function.packInputWithSelector(params).toHex()
             val b           = block match {
                 case Some(o) =>
@@ -51,7 +51,7 @@ class Web3Client(
                 case None    => DefaultBlockParameterName.LATEST
             }
             val result      = txManager.sendCall(to.toHex, inputString, b)
-            function.unpackOutput(result.toBytes.!).toOption.get
+            function.unpackOutput(result.toBytes)
         }
     }
 
@@ -154,7 +154,7 @@ class Web3Client(
             if (sendResult.isReverted) {
                 throw Exception("execution reverted:" + sendResult.getRevertReason)
             }
-            function.unpackOutput(sendResult.getResult.toBytes.!).!
+            function.unpackOutput(sendResult.getResult.toBytes)
         }
     }
 }

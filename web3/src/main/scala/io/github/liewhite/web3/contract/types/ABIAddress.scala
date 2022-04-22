@@ -10,19 +10,19 @@ case class ABIAddress(value: Address) extends ABIType
 
 object ABIAddress {
   given ConvertFromScala[String, ABIAddress] with {
-    def fromScala(s: String): Either[Exception, ABIAddress] = {
-      BytesType.fromString[Address](s).map(ABIAddress(_))
+    def fromScala(s: String): ABIAddress = {
+      ABIAddress(Address(s))
     }
   }
   given ConvertFromScala[Array[Byte], ABIAddress] with {
-    def fromScala(s: Array[Byte]): Either[Exception, ABIAddress] = {
-      BytesType.fromBytes[Address](s).map(ABIAddress(_))
+    def fromScala(s: Array[Byte]): ABIAddress = {
+      ABIAddress(Address(s))
     }
   }
 
   given ConvertFromScala[Address, ABIAddress] with {
-    def fromScala(s: Address): Either[Exception, ABIAddress] = {
-      Right(ABIAddress(s))
+    def fromScala(s: Address): ABIAddress = {
+      ABIAddress(s)
     }
   }
 
@@ -33,17 +33,15 @@ object ABIAddress {
     def pack(a: ABIAddress): Array[Byte] = {
       padAddress(a)
     }
-    def unpack(bytes: Array[Byte]): Either[Exception, ABIAddress] = {
+    def unpack(bytes: Array[Byte]): ABIAddress = {
       if(bytes.length != 32) {
-        return Left(Exception("address in abi encoding must be 32 bytes, got" + bytes.length))
+        throw Exception("address in abi encoding must be 32 bytes, got" + bytes.length)
       }
-      if(!bytes.slice(0,12).toBigUint.isDefined) {
-        return Left(Exception("address in abi encoding must start with 12 zero bytes"))
+
+      if(bytes.slice(0,12).toBigUint != 0) {
+        throw Exception("address in abi encoding must start with 12 zero bytes")
       }
-      if(bytes.slice(0,12).toBigUint.get != 0) {
-        return Left(Exception("address in abi encoding must start with 12 zero bytes"))
-      }
-      BytesType.fromBytes[Address](bytes.slice(12,32)).map(ABIAddress(_))
+      ABIAddress(Address(bytes.slice(12,32)))
     }
   }
 }

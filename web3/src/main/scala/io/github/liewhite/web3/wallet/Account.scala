@@ -7,7 +7,7 @@ import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
 
 case class Account(keyPair: Bip32ECKeyPair) {
-    def getAddress = Address.fromHex(Keys.getAddress(keyPair)).!
+    def getAddress = Address(Keys.getAddress(keyPair))
     def toCredential: Credentials = {
         Credentials.create(keyPair)
     }

@@ -63,7 +63,7 @@ class BlockIngester(
             .subscribe(
               h => {
                   val num   =
-                      h.getParams.getResult.getNumber.toBytes.!.toBigUint.!
+                      h.getParams.getResult.getNumber.toBytes.toBigUint
                   val block = getBlockWithRetries(num.longValue)
 
                   queue.put(block)

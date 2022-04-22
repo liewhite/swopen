@@ -50,7 +50,7 @@ class Web3ClientWithCredential(
         )
         Try({
             val receipt = t.send
-            TxHash.fromHex(receipt.getTransactionHash).toOption.get
+            TxHash(receipt.getTransactionHash)
         })
     }
 

@@ -53,30 +53,6 @@ trait RawCodecs[I <: SqlIdiom, N <: NamingStrategy] { this: JdbcContext[I, N] =>
         )
     }
 
-    // extension (inline left: ZonedDateTime) {
-    //   inline def > (right: ZonedDateTime) = quote(
-    //     infix"$left > $right".pure.as[Boolean]
-    //   )
-    //   inline def >=(right: ZonedDateTime) = quote(
-    //     infix"$left >= $right".pure.as[Boolean]
-    //   )
-    //   inline def < (right: ZonedDateTime) = quote(
-    //     infix"$left < $right".pure.as[Boolean]
-    //   )
-    //   inline def <=(right: ZonedDateTime) = quote(
-    //     infix"$left <= $right".pure.as[Boolean]
-    //   )
-    //   inline def ==(right: ZonedDateTime) = quote(
-    //     infix"$left = $right".pure.as[Boolean]
-    //   )
-    // }
-
-    // extension (inline left: scala.math.BigInt) {
-    //   inline def > (right: BigInt) = quote(
-    //     infix"$left > $right".pure.as[Boolean]
-    //   )
-    // }
-
     extension [T](inline left: T) {
         inline def gt(right: T)  = quote(infix"$left > $right".pure.as[Boolean])
         inline def gte(right: T) = quote(infix"$left >= $right".pure.as[Boolean])

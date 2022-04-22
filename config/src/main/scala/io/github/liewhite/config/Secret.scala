@@ -1,26 +1,25 @@
 package io.github.liewhite.config
 
-import io.github.liewhite.json.codec.{Encoder, Decoder,DecodeException}
+import io.github.liewhite.json.SwopenJson.*
 import io.circe.Json
+import upickle.core.Visitor
 
 class Secret(val s: String) {
     override def toString: String = "******"
 }
 
 object Secret {
-    given Encoder[Secret] with {
-        def encode(t: Secret): Json = Json.fromString(t.toString)
-    }
-
-    given Decoder[Secret] with {
-        def decode(
-            data: Json,
-            withDefaults: Boolean = true
-        ): Either[DecodeException, Secret] = {
-            data.asString.map(Secret(_)) match {
-                case Some(o) => Right(o)
-                case None => Left(DecodeException("failed deocde secret"))
-            }
+    given Writer[Secret] with {
+        def write0[V](
+            out: Visitor[_, V],
+            v: Secret
+        ): V = {
+            out.visitString(v.s,-1)
         }
+    }
+    given Reader[Secret] = {
+        new Reader.Delegate[Any, Secret](summon[Reader[String]].map(s => {
+            Secret(s)
+        }))
     }
 }

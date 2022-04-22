@@ -54,10 +54,10 @@ case class T(
     ctx.migrate[T]
 
     // insert into table
-    run(query[T].insertValue(lift(T(1, 2, "Bob", ZonedDateTime.now, None, CustomField("Alice")))))
+    run(query[T].insertValue(lift(T(3, 2, "Bob", ZonedDateTime.now, None, CustomField("Alice")))))
 
     // query from table
-    val rows = run(query[T].filter(item => item.fId == lift(1)).forUpdate)
+    val rows = run(query[T].filter(item => liftQuery(Vector(1,2,3)).contains( item.fId)).forUpdate)
 
     rows.foreach(println)
 }

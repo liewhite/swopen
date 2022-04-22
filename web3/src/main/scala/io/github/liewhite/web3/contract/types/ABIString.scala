@@ -10,54 +10,40 @@ case class ABIString(value: String) extends ABIType
 
 object ABIString {
 
-  given ConvertFromScala[String, ABIString] with {
-    def fromScala(s: String): Either[Exception, ABIString] = Right(ABIString(s))
-  }
-
-  given ABIPack[ABIString] with {
-    def dynamic: Boolean = true
-
-    def staticSize: Int = 32
-    def typeName:String = s"string"
-    def pack(a: ABIString): Array[Byte] = {
-      val bytes = a.value.getBytes
-      val length = bytes.length
-      val lengthBytes = BigInt(length).toUintByte32.get
-      val body = padString(a.value)
-      lengthBytes ++ body
+    given ConvertFromScala[String, ABIString] with {
+        def fromScala(s: String): ABIString = ABIString(s)
     }
 
-    def unpack(bytes: Array[Byte]): Either[Exception, ABIString] = {
-      val bytesLen = bytes.length
-      if (bytesLen < 32) {
-        Left(
-          Exception(
-            "bad bytes length for string ,at least 32, got: " + bytesLen
-          )
-        )
-      } else {
-        val lengthBytes = bytes.slice(0, 32)
-        val lengthOption = lengthBytes.toBigUint
-        if(!lengthOption.isDefined) {
-          Left(
-            Exception(
-              s"failed parse length: " + bytesLen
-            )
-          )
-        }else{
-          val length = lengthOption.get.toInt
-          if (bytesLen < 32 + length) {
-            Left(
-              Exception(
-                s"bad bytes length for string ,at least 32 + ${length}, got: " + bytesLen
-              )
-            )
-          } else {
-            Right(ABIString(new String(bytes.slice(32, 32 + length))))
-          }
+    given ABIPack[ABIString] with {
+        def dynamic: Boolean = true
 
+        def staticSize: Int                 = 32
+        def typeName: String                = s"string"
+        def pack(a: ABIString): Array[Byte] = {
+            val bytes       = a.value.getBytes
+            val length      = bytes.length
+            val lengthBytes = BigInt(length).toUintByte32
+            val body        = padString(a.value)
+            lengthBytes ++ body
         }
-      }
+
+        def unpack(bytes: Array[Byte]): ABIString = {
+            val bytesLen = bytes.length
+            if (bytesLen < 32) {
+                throw Exception(
+                  "bad bytes length for string ,at least 32, got: " + bytesLen
+                )
+            } else {
+                val lengthBytes = bytes.slice(0, 32)
+                val length      = lengthBytes.toBigUint.intValue
+                if (bytesLen < 32 + length) {
+                    throw Exception(
+                      s"bad bytes length for string ,at least 32 + ${length}, got: " + bytesLen
+                    )
+                } else {
+                    ABIString(new String(bytes.slice(32, 32 + length)))
+                }
+            }
+        }
     }
-  }
 }
