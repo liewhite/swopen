@@ -3,7 +3,7 @@ package io.github.liewhite.web3.types
 import org.scalatest.funsuite.AnyFunSuite
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.Extensions.!
-import io.github.liewhite.json.SwopenJson.*
+import io.github.liewhite.json._
 import scala.collection.mutable
 
 class AddressTest extends AnyFunSuite {
@@ -31,14 +31,14 @@ class AddressTest extends AnyFunSuite {
             val a  = Address("0xBAa79A975DeaF7147cb002A202Fb81BC67cC928f")
             val b  = Address("0xbAa79A975DeaF7147cb002A202Fb81BC67cC928f")
             val m  = mutable.Map(a -> 1, b -> 2)
-            val aj = a.toJsonStr()
-            val bj = b.toJsonStr()
+            val aj = a.toJson
+            val bj = b.toJson
             a == b
             && a.hashCode == b.hashCode
             && m.toVector.length == 1
             && aj == "\"0xBAa79A975DeaF7147cb002A202Fb81BC67cC928f\"".toLowerCase
             && bj == "\"0xBAa79A975DeaF7147cb002A202Fb81BC67cC928f\"".toLowerCase
-            && read[Address](aj) == a
+            && aj.fromJsonMust[Address] == a
         }
     }
 }

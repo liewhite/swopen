@@ -32,7 +32,8 @@ lazy val json = (project in file("json"))
       log4jDeps,
       libraryDependencies ++= Seq(
         "com.novocode" % "junit-interface" % "0.11" % "test",
-        "com.lihaoyi" %% "upickle" % "1.6.0",
+        // "com.lihaoyi" %% "upickle" % "1.6.0",
+        "dev.zio" % "zio-json_3" % "0.3.0-RC7",
       )
     )
     .dependsOn(common)

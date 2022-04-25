@@ -1,15 +1,15 @@
 package com.liewhite.json
 
 import org.junit.*
-import io.github.liewhite.json.SwopenJson.*
-import java.time.ZonedDateTime
+import io.github.liewhite.json._
+import java.time.OffsetDateTime
 
 
 class TestEncode:
   @Test
   def zoned = {
-    val datetime = ZonedDateTime.now()
-    val j = datetime.toJsonStr()
-    val parsed = read[ZonedDateTime](j)
-    assert(parsed.isEqual(datetime))
+    val datetime = OffsetDateTime.now()
+    val j = datetime.toJson
+    val parsed = j.fromJsonMust[OffsetDateTime]
+    assert(parsed.equals(datetime))
   }

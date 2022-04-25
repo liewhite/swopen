@@ -1,25 +1,14 @@
 package io.github.liewhite.config
 
-import io.github.liewhite.json.SwopenJson.*
 import io.circe.Json
-import upickle.core.Visitor
+import zio.json.JsonEncoder
+import zio.json.JsonDecoder
 
 class Secret(val s: String) {
     override def toString: String = "******"
 }
 
 object Secret {
-    given Writer[Secret] with {
-        def write0[V](
-            out: Visitor[_, V],
-            v: Secret
-        ): V = {
-            out.visitString(v.s,-1)
-        }
-    }
-    given Reader[Secret] = {
-        new Reader.Delegate[Any, Secret](summon[Reader[String]].map(s => {
-            Secret(s)
-        }))
-    }
+    given JsonEncoder[Secret] = JsonEncoder.string.contramap(_.s)
+    given JsonDecoder[Secret] = JsonDecoder.string.map(Secret(_))
 }
