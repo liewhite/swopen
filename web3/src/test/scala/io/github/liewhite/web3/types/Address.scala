@@ -15,6 +15,9 @@ class AddressTest extends AnyFunSuite {
         assertThrows[Exception] {
             Address("0xffffff")
         }
+        assertThrows[IllegalArgumentException] {
+            Address("0x0000000000000000000000000000000000000000")
+        }
 
         assert {
             val addr = "0xf88140b1f0fa5d2100492b3dc182b1b0c987873b"

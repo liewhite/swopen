@@ -44,7 +44,7 @@ class Web3ReadOnlyClient(
                 case None    => DefaultBlockParameterName.LATEST
             }
             val result      = txManager.sendCall(to.toHex, inputString, b)
-            function.unpackOutput(result.toBytes)
+            function.unpackOutput(result.hexToBytes)
         }
     }
 

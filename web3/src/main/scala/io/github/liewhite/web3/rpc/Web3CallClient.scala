@@ -132,7 +132,7 @@ class Web3CallClient(
             if (sendResult.isReverted) {
                 throw Exception("execution reverted:" + sendResult.getRevertReason)
             }
-            function.unpackOutput(sendResult.getResult.toBytes)
+            function.unpackOutput(sendResult.getResult.hexToBytes)
         }
     }
 }

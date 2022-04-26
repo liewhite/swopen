@@ -11,9 +11,9 @@ import org.jooq.DataType
 import org.web3j.crypto.Keys
 import zio.json._
 
-class Address(bytes: Array[Byte]) extends BytesType(bytes,20) {
+class Address(bytes: Array[Byte]) extends BytesType(bytes,20, false) {
     def this(hex: String) = {
-        this(hex.toBytes)
+        this(hex.hexToBytes)
     }
 
     def toCheckSum: String = {

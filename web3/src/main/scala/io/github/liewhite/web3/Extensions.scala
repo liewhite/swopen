@@ -1,23 +1,19 @@
 package io.github.liewhite.web3
 
-import io.github.liewhite.web3.types.Address
-import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.common
 import org.apache.commons.codec.binary.Hex
 
 object Extensions extends common.CommonExtensions {
     extension (s: String) {
-        def toAddress: Address   = Address(s)
-        def toBytes: Array[Byte] = {
+        def hexToBytes: Array[Byte] = {
             val without0x  = if (s.startsWith("0x")) s.slice(2, s.length) else s
+            // 差一位自动补位
             val evenLength = if (without0x.length % 2 == 0) without0x else "0" + without0x
             Hex.decodeHex(evenLength)
         }
     }
 
     extension (bs: Array[Byte]) {
-        def toAddress: Address = Address(bs)
-
         def toHex(withPrefix: Boolean = true): String = {
             val prefix = if (withPrefix) "0x" else ""
             prefix + Hex.encodeHex(bs).mkString
