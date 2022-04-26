@@ -9,10 +9,6 @@ import io.github.liewhite.web3.Extensions.*
 import io.github.liewhite.web3.contract.types.ABIAddress
 
 import io.github.liewhite.web3.common.ConvertFromScala
-import org.web3j.protocol.Web3j
-import io.github.liewhite.web3.wallet.Bip44Wallet
-import io.github.liewhite.web3.rpc.Web3ClientWithCredential
-import org.web3j.crypto.RawTransaction
 
 // a contract function with static type
 // IN is Tuple of ABITypes, OUT is ABITypes
