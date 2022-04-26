@@ -1,13 +1,12 @@
 package io.github.liewhite.web3.wallet
 
-import scala.language.postfixOps
 import org.scalatest.funsuite.AnyFunSuite
 import org.web3j.crypto.WalletUtils
 import org.web3j.crypto.Bip44WalletUtils
 import io.github.liewhite.web3.Extensions.*
 
 class Bip44Test extends AnyFunSuite {
-  val wallet = Bip44Wallet.fromMnemonic("finish universe napkin torch blur movie approve inspire purse easily false same","")!
+  val wallet = Bip44Wallet.fromMnemonic("finish universe napkin torch blur movie approve inspire purse easily false same","")
 
   test("master account") {
     assert {

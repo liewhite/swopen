@@ -26,12 +26,12 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt
 import com.typesafe.scalalogging.Logger
 import java.math.BigInteger
 
-class Web3ClientWithCredential(
+class Web3TransactionClient(
     client:        Web3j,
     val account:   Account,
     retries:       Int = 20,
     sleepDuration: Int = 15 * 1000
-) extends Web3Client(client, account.getAddress) {
+) extends Web3CallClient(client, account.getAddress) {
     val rawTxManager = RawTransactionManager(
       client,
       account.toCredential,

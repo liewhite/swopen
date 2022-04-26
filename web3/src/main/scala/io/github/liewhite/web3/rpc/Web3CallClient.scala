@@ -28,32 +28,10 @@ import java.math.BigInteger
 import org.web3j.tx.ReadonlyTransactionManager
 import org.web3j.tx.ClientTransactionManager
 
-class Web3Client(
-    val client:      Web3j,
+class Web3CallClient(
+    client:      Web3j,
     val fromAddress: Address
-) {
-    val txManager        = ReadonlyTransactionManager(client, fromAddress.toHex)
-    protected val logger = Logger("transaction")
-
-    /** 读取合约数据
-      */
-    def read[IN, OUT, T](function: ABIFunction[IN, OUT])(
-        to: Address,
-        params: T,
-        block: Option[BigInt] = None
-    )(using converter: ConvertFromScala[T, IN]): Try[OUT] = {
-        Try {
-            val input       = converter.fromScala(params)
-            val inputString = function.packInputWithSelector(params).toHex()
-            val b           = block match {
-                case Some(o) =>
-                    DefaultBlockParameterNumber(BigInteger.valueOf(o.longValue))
-                case None    => DefaultBlockParameterName.LATEST
-            }
-            val result      = txManager.sendCall(to.toHex, inputString, b)
-            function.unpackOutput(result.toBytes)
-        }
-    }
+) extends Web3ReadOnlyClient(client) {
 
     def getPendingNonce: BigInt = {
         val n: BigInt = client

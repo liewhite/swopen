@@ -1,6 +1,5 @@
 package io.github.liewhite.web3.rpc
 
-import scala.language.postfixOps
 import io.github.liewhite.web3.Extensions.*
 
 import io.github.liewhite.web3.wallet.Bip44Wallet
@@ -12,7 +11,7 @@ object Client {
     .fromMnemonic(
       "finish universe napkin torch blur movie approve inspire purse easily false same",
       ""
-    ) !
+    )
 
   val hp = new HttpService(
     // "https://speedy-nodes-nyc.moralis.io/e8f1edbf0ef6e4a9c3c72015/eth/ropsten/archive"
@@ -20,7 +19,7 @@ object Client {
     // "https://eth-hk1.csnodes.com/v1/973eeba6738a7d8c3bd54f91adcbea89"
   )
   val web3 = Web3j.build(hp)
-  val readonlyClient = Web3Client(web3, wallet.getAccount(0).getAddress)
-  val client = Web3ClientWithCredential(web3, wallet.getAccount(0))
+  val readonlyClient = Web3ReadOnlyClient(web3)
+  val client = Web3TransactionClient(web3, wallet.getAccount(0))
 
 }

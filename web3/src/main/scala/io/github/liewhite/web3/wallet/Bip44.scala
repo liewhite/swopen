@@ -8,23 +8,25 @@ import io.github.liewhite.web3.types.BytesType
 import io.github.liewhite.web3.types.Address
 import io.github.liewhite.web3.Extensions.*
 
-case class Bip44Wallet(mnemonic: String,password: String) {
-    val seed = MnemonicUtils.generateSeed(mnemonic, password);
+case class Bip44Wallet(mnemonic: String, password: String) {
+    val seed          = MnemonicUtils.generateSeed(mnemonic, password);
     val masterKeypair = Bip32ECKeyPair.generateKeyPair(seed);
 
     def getAccount(index: Int): Account = {
-        val path = Array[Int](44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, index);
+        val path    = Array[Int](
+          44 | Bip32ECKeyPair.HARDENED_BIT,
+          60 | Bip32ECKeyPair.HARDENED_BIT,
+          0 | Bip32ECKeyPair.HARDENED_BIT,
+          0,
+          index
+        );
         val keyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, path)
         Account(keyPair)
     }
 }
 
 object Bip44Wallet {
-    def fromMnemonic(mnemonic: String,password: String): Either[Exception, Bip44Wallet] = {
-        try {
-            Right(Bip44Wallet(mnemonic, password))
-        }catch {
-            case e: Exception => Left(e)
-        }
+    def fromMnemonic(mnemonic: String, password: String): Bip44Wallet = {
+        Bip44Wallet(mnemonic, password)
     }
 }
